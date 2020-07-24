@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58f31c3eb0750a6448c6e4a94c09b7b7, type: 3}
+  m_Name: 3_Devil Crok
+  m_EditorClassIdentifier: 
+  cardID: 3
+  cardName: Devil Crok
+  type: 3
+  skillName: "L\xE9lekrabl\xE1s"
+  skillDescription: "Haszn\xE1lhatja egy m\xE1sik j\xE1t\xE9kos egyik vesztes Crokj\xE1nak
+    k\xE9pess\xE9g\xE9t."
+  power: 6
+  intelligence: 6
+  reflex: 6
+  cardImage: {fileID: 21300000, guid: 1127b21b3c3732a44979b66bebaf8af4, type: 3}
