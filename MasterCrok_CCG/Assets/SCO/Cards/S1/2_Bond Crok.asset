@@ -17,8 +17,9 @@ MonoBehaviour:
   type: 10
   skillName: "Tr\xFCkk\xF6s fordulat"
   skillDescription: "Megv\xE1ltoztathatod a harc t\xEDpus\xE1t: Er\u0151, Intelligencia,
-    vagy Reflex"
+    vagy Reflex."
+  IsAQuickSkill: 0
   power: 5
   intelligence: 6
   reflex: 7
-  cardImage: {fileID: 21300000, guid: 231a60cb844936a468ad03e7585a49d4, type: 3}
+  cardImage: {fileID: 21300000, guid: ecf256c8425013a449c6ae67dd3ea988, type: 3}

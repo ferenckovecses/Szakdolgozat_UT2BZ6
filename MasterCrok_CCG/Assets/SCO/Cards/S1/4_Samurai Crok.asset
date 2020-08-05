@@ -17,6 +17,7 @@ MonoBehaviour:
   type: 1
   skillName: "Els\u0151 v\xE1g\xE1s"
   skillDescription: "Azonnal hat\xE1stalan\xEDtja az ellenfelek k\xE9pess\xE9geit."
+  IsAQuickSkill: 1
   power: 6
   intelligence: 4
   reflex: 8

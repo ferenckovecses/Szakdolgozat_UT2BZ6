@@ -18,6 +18,7 @@ MonoBehaviour:
   skillName: Ima
   skillDescription: "Azonnal hat\xE1stalan\xEDtja a [D\xE9mon] Crokok k\xE9pess\xE9geit,
     vagy h\xFAzhatsz egy lapot."
+  IsAQuickSkill: 1
   power: 2
   intelligence: 7
   reflex: 2
