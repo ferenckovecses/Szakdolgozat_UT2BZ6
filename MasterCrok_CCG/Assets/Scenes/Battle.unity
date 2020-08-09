@@ -869,16 +869,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75d2e9055f501c849b13be35c41a2adf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  controller: {fileID: 1332418253}
   prefabPlayerUI: {fileID: 735356920331122807, guid: 0c75f0d68a616e44c8c390a5a6801db1,
     type: 3}
-  playerFields: []
   canvas: {fileID: 915578985}
   drawButton: {fileID: 499137381}
   discardButton: {fileID: 1432895120}
   cardPrefab: {fileID: 9174424197998691639, guid: bdc0816bc1e6d3048921f51d452ab698,
     type: 3}
-  cards: []
-  cardField: {fileID: 0}
 --- !u!4 &1963019886
 Transform:
   m_ObjectHideFlags: 0

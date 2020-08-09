@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+/*
+Feladata: A játék, illetve a játékos adatmodellje. Játék indulásakor a játékos játékprofilja betöltődik a player változóba,
+majd a játékvezérlőtől kap utasításokat (felhúzás, lerakás, státuszok változatatása)
+*/
+
 public enum TurnStatus{WaitingForTurn, ChooseStat, ChooseCard, OutOfCards, CardPlayed, ChooseSkill, Finished};
 public enum TurnResult{Winner, Loser, TurnNotEnded};
 public enum TurnRole{Attacker, Defender};
