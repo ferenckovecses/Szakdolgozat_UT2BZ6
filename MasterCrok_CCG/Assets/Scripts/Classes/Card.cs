@@ -40,6 +40,11 @@ public class Card : ScriptableObject
 		return this.cardID;
 	}
 
+	public int[] GetAttributes()
+	{
+		return new int[3] {power,intelligence,reflex};
+	}
+
 	public CardType GetCardType()
 	{
 		return this.type;

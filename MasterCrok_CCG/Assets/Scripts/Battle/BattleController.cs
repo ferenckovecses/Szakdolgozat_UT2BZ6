@@ -14,18 +14,26 @@ Játékos -> UI <-> [Játékvezérlő] <-> Szerver || Player model
 
 public class BattleController : MonoBehaviour
 {
-	public int numberOfPlayers = 2;
+    GameData_Controller dataController;
+    int numberOfPlayers;
 	public BattleUI_Controller UI;
 
     // Start is called before the first frame update
     void Start()
     {
-        UI.CreatePlayerFields(numberOfPlayers);
+        GenerateUI();
     }
 
     // Update is called once per frame
     void Update()
     {
         
+    }
+
+    void GenerateUI()
+    {
+        dataController = GameObject.Find("GameData_Controller").GetComponent<GameData_Controller>();
+        numberOfPlayers = dataController.GetOpponents();
+        UI.CreatePlayerFields(numberOfPlayers);
     }
 }

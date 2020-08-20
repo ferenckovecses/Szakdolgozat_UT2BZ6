@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
+using TMPro;
 
 /*
 Feladata: A játék UI vezérlője kezeli, minden PlayerUIelements egy-egy játékosnak az aktuális játékbeli állását reprezentálja
@@ -15,18 +17,27 @@ Adatfolyam:
 [System.Serializable]
 public class PlayerUIelements : MonoBehaviour
 {
+
+    [Header("UI Vezérlő")]
+    BattleUI_Controller controller;
+
     [Header("Játékos mező referenciák")]
     public GameObject handField;
     public GameObject activeCardField;
     public Image deckImage;
     public Image lostCardImage;
     public Image winnerCardImage;
+    public Sprite defaultCardImage;
+    public TMP_Text deckSize;
 
 
     [Header("Kártyákkal kapcsolatos változók")]
-    public List<GameObject> cards;
+    public GameObject cardPrefab;
+    public List<GameObject> cardsInHand;
+    public List<GameObject> cardsInField;
     int cardCount;
     public bool openHand;
+    public bool isThePlayer;
 
     [Header("Kártya a kézben hatás")]
     float turningPerCard = 5f;
@@ -37,24 +48,35 @@ public class PlayerUIelements : MonoBehaviour
     int positionID;
     float x,y,rotationZ;
 
+    int cardsInDeck;
+
     void Start()
     {
-        this.cards = new List<GameObject>();
-        this.cardCount = cards.Count;
+        controller = GameObject.Find("UI_Controller").GetComponent<BattleUI_Controller>();
+        this.cardsInHand = new List<GameObject>();
+        this.cardCount = cardsInHand.Count;
+        TMP_Text deckSize = null;
     }
 
-    public void AddCard(GameObject card)
+    public void AddCardToHand(GameObject card)
     {
-        cards.Add(card);
-        cardCount = cards.Count;
-        SortCards();
+        cardsInHand.Add(card);
+        cardCount = cardsInHand.Count;
+        SortHand();
     }
 
-    public void RemoveCard(int index = 0)
+    public void RemoveCardAtIndex(int index = 0)
     {
-        cards.RemoveAt(index);
-        cardCount = cards.Count;
-        SortCards();
+        cardsInHand.RemoveAt(index);
+        cardCount = cardsInHand.Count;
+        SortHand();
+    }
+
+    public void RemoveSpecificCard(GameObject card)
+    {
+        cardsInHand.Remove(card);
+        cardCount = cardsInHand.Count;
+        SortHand();
     }
 
     public GameObject GetActiveField()
@@ -72,14 +94,14 @@ public class PlayerUIelements : MonoBehaviour
         return this.cardCount;
     }
 
-    public List<GameObject> GetCards()
+    public List<GameObject> GetcardsInHand()
     {
-        return this.cards;
+        return this.cardsInHand;
     }
 
     public GameObject GetACard(int index = 0)
     {
-        return this.cards[index];
+        return this.cardsInHand[index];
     }
 
     //Tárolja, hogy milyen pozícióban van a játékos mező
@@ -92,10 +114,46 @@ public class PlayerUIelements : MonoBehaviour
         this.rotationZ = rotZ;
     }
 
-    //Elrendezi a kézben lévő kártyákat
-    void SortCards()
-    {
 
+    //Létrehoz egy kártya prefabot a kézbe
+    public void CreateCard()
+    {
+            if(cardsInDeck > 0 || !isThePlayer)
+            {
+                GameObject temp = Instantiate(cardPrefab, Vector3.zero, Quaternion.identity, GetHandField().transform);
+                temp.transform.position = GetHandField().transform.position;
+
+                //Kép kezelése, ha nem a miénk vagy nincs open head bónusz
+                if(!openHand)
+                {
+                    temp.GetComponent<Image>().sprite = defaultCardImage;
+                }
+
+                //Kártya hozzáadása a játékos kezéhez
+                AddCardToHand(temp);
+                if(isThePlayer)
+                {
+                    cardsInDeck--;
+                    deckSize.text = cardsInDeck.ToString();
+                }
+            }
+    }
+
+    //Eltávolít egy kártya prefabot a kézből
+    public void DiscardCard()
+    {
+            //Ha van eltávolítandó kártya
+            if(GetcardsInHand().Any())
+            {
+                //Akkor távolítsa el
+                Destroy(GetACard());
+                RemoveCardAtIndex();
+            }
+    }
+
+    //Elrendezi a kézben lévő kártyákat
+    public void SortHand()
+    {
         //A középső lap(ok) listabeli indexe
         int middleCardIndex;
         int secondMiddleCardIndex;
@@ -123,8 +181,6 @@ public class PlayerUIelements : MonoBehaviour
         //A kártyákon végigmenve változtatjuk azok tulajdonságait a kívánt effekt elérésének érdekében
         for(var i = 0; i < this.GetCardCount(); i++)
         {
-
-
             ///Kártyák pozícionálása játékostér szerint
             this.GetACard(i).transform.position = Vector3.zero;
             this.GetACard(i).transform.rotation = Quaternion.Euler(0f,0f,this.rotationZ);
@@ -168,6 +224,89 @@ public class PlayerUIelements : MonoBehaviour
             this.GetACard(i).transform.rotation = Quaternion.Euler(0f,0f,cardTurning);
 
         }
+    }
+
+    public void ChangeOpenHand(bool newValue)
+    {
+        this.openHand = newValue;
+    }
+
+    public bool GetOpenHandStatus()
+    {
+        return this.openHand;
+    }
+
+    public void PutCardOnField(GameObject card)
+    {
+        RemoveSpecificCard(card);
+        cardsInField.Add(card);
+
+        //Itt még ad egy jelzést a UI controller felé, amit ő továbbít a Game Controllernek 
+    }
+
+    public void PutCardIntoWinners()
+    {
+        if(cardsInField.Any())
+        {
+            for(var i = 0; i < cardsInField.Count; i++)
+            {
+                if(i == cardsInField.Count - 1)
+                {
+                    winnerCardImage.sprite = cardsInField[i].GetComponent<Image>().sprite;
+                }
+                Destroy(cardsInField[i]);
+                
+            }
+
+            cardsInField.Clear();
+        }
+    }
+
+    public void PutCardIntoLosers()
+    {
+        if(cardsInField.Any())
+        {
+            for(var i = 0; i < cardsInField.Count; i++)
+            {
+                if(i == cardsInField.Count - 1)
+                {
+                    lostCardImage.sprite = cardsInField[i].GetComponent<Image>().sprite;
+                }
+                Destroy(cardsInField[i]);
+            }
+
+            cardsInField.Clear();
+        }
+    }
+
+    public void SetPlayerIdentity(bool newValue)
+    {
+        isThePlayer = newValue;
+    }
+
+    public bool GetPlayerIdentity()
+    {
+        return this.isThePlayer;
+    }
+
+    public void RevealCardsInHand()
+    {
+        if(this.openHand)
+        {
+            //Végigmegy a kártyákon és felfedi azokat
+        }
+    }
+
+    public void AddDeckSize(TMP_Text deckSize, int cardsInDeck)
+    {
+        this.deckSize = deckSize;
+        this.cardsInDeck = cardsInDeck;
+        deckSize.text = cardsInDeck.ToString();
+    }
+
+    public void DisplayDetails(int index, bool isActive)
+    {
+
     }
 
 }

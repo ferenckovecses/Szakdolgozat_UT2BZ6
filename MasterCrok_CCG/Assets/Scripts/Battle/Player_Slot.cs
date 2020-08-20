@@ -26,14 +26,13 @@ public class Player_Slot
 	public Card activeCard;
 
 	//Értékmódosítók
-	int powerBonus = 0;
-	int intelligenceBonus = 0;
-	int reflexBonus = 0;
+	List<StatBonus> statBonus;
 
 	//Játék közbeni státuszok tárolói
 	TurnStatus playerStatus;
 	TurnResult playerResult;
 	TurnRole playerRole;
+	
 	//Kiértékelés utáni/következő körre ható aktivált kártya hatás jelzése
 	bool hasLateEffect;
 
@@ -43,31 +42,14 @@ public class Player_Slot
 		this.cardsInHand = new List<Card>();
 		this.winnerCards = new List<Card>();
 		this.lostCards = new List<Card>();
+		this.statBonus = new List<StatBonus>();
 
 		hasLateEffect = false;
 	}
 
-
-	public void ResetBonuses()
+	public void AddBonus(StatBonus newBonus)
 	{
-		this.powerBonus = 0;
-		this.intelligenceBonus = 0;
-		this.reflexBonus = 0;
-	}
-
-	public void IncreasePower(int amount)
-	{
-		this.powerBonus += amount;
-	}
-
-	public void IncreaseIntelligence(int amount)
-	{
-		this.intelligenceBonus += amount;
-	}
-
-	public void IncreaseReflex(int amount)
-	{
-		this.reflexBonus += amount;
+		statBonus.Add(newBonus);
 	}
 
 	//A játékos paklijából a kézbe rak egy lapot.

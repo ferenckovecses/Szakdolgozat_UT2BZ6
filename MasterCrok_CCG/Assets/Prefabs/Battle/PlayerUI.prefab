@@ -53,6 +53,14 @@ MonoBehaviour:
   deckImage: {fileID: 735356921595647164}
   lostCardImage: {fileID: 735356920670623350}
   winnerCardImage: {fileID: 735356921491961364}
+  defaultCardImage: {fileID: 21300000, guid: fe67e9e94a13d7443ad769c2d159d2b1, type: 3}
+  deckSize: {fileID: 0}
+  cardPrefab: {fileID: 9174424197998691639, guid: bdc0816bc1e6d3048921f51d452ab698,
+    type: 3}
+  cardsInHand: []
+  cardsInField: []
+  openHand: 0
+  isThePlayer: 0
 --- !u!1 &735356920670623344
 GameObject:
   m_ObjectHideFlags: 0
@@ -87,8 +95,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -275, y: -310}
-  m_SizeDelta: {x: 85, y: 125}
+  m_AnchoredPosition: {x: 365, y: 50}
+  m_SizeDelta: {x: 100, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &735356920670623349
 CanvasRenderer:
@@ -111,13 +119,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.7169812, g: 0.08454966, b: 0.10312587, a: 1}
   m_RaycastTarget: 1
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 880dbc29047212c4bac38eb63c51848e, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -139,8 +147,9 @@ GameObject:
   - component: {fileID: 735356921161316105}
   - component: {fileID: 735356921161316106}
   - component: {fileID: 735356921161316107}
+  - component: {fileID: 5092602996728670949}
   m_Layer: 5
-  m_Name: PlayerPlayedCards
+  m_Name: ActiveCardField
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -162,8 +171,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: -185}
-  m_SizeDelta: {x: 400, y: 125}
+  m_AnchoredPosition: {x: 640, y: 210}
+  m_SizeDelta: {x: 400, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &735356921161316105
 CanvasRenderer:
@@ -222,10 +231,36 @@ MonoBehaviour:
   m_ChildAlignment: 4
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 75, y: 125}
-  m_Spacing: {x: 0, y: 0}
+  m_CellSize: {x: 100, y: 150}
+  m_Spacing: {x: 5, y: 0}
   m_Constraint: 2
   m_ConstraintCount: 1
+--- !u!61 &5092602996728670949
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735356921161316101}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 400, y: 150}
+  m_EdgeRadius: 0
 --- !u!1 &735356921491961366
 GameObject:
   m_ObjectHideFlags: 0
@@ -251,17 +286,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 735356921491961366}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 735356920331122806}
   m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -250, y: -185}
-  m_SizeDelta: {x: 85, y: 125}
+  m_AnchoredPosition: {x: 915, y: 50}
+  m_SizeDelta: {x: 100, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &735356921491961371
 CanvasRenderer:
@@ -284,13 +319,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.14048593, g: 0.7264151, b: 0.7084679, a: 1}
   m_RaycastTarget: 1
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 880dbc29047212c4bac38eb63c51848e, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -312,7 +347,7 @@ GameObject:
   - component: {fileID: 735356921513508915}
   - component: {fileID: 735356921513508908}
   m_Layer: 5
-  m_Name: PlayerCardField
+  m_Name: HandField
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -334,7 +369,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: -310}
+  m_AnchoredPosition: {x: 640, y: 50}
   m_SizeDelta: {x: 400, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &735356921513508915
@@ -386,7 +421,7 @@ GameObject:
   - component: {fileID: 735356921595647107}
   - component: {fileID: 735356921595647164}
   m_Layer: 5
-  m_Name: PlayerDeck
+  m_Name: Deck
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -408,8 +443,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 250, y: -185}
-  m_SizeDelta: {x: 85, y: 125}
+  m_AnchoredPosition: {x: 915, y: 200}
+  m_SizeDelta: {x: 100, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &735356921595647107
 CanvasRenderer:
@@ -432,13 +467,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.764151, g: 0.764151, b: 0.764151, a: 1}
+  m_Color: {r: 0.8867924, g: 0.8828482, b: 0.09620863, a: 1}
   m_RaycastTarget: 1
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: fe67e9e94a13d7443ad769c2d159d2b1, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

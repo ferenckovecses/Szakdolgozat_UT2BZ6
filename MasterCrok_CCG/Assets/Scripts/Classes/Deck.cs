@@ -5,11 +5,17 @@ using System.Linq;
 
 
 public enum DeckStatus {NotEnoughCard, TooManyCards, Verified};
+
 [System.Serializable]
 public class Deck
 {
-	public List<Card> cards = new List<Card>();
+	public List<Card> cards;
 	DeckStatus deckStatus;
+
+	public Deck()
+	{
+		this.cards = new List<Card>();
+	}
 
 	public void LoadDeck(string filepath)
 	{

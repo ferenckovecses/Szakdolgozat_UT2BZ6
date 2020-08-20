@@ -12,8 +12,10 @@ public class CardDex_Controller : MonoBehaviour
 	//A kártyák és UI elemek tárolói
 	public List<Card> cardList = new List<Card>();
 	List<GameObject> cardDisplayList = new List<GameObject>();
+
 	//Az enciklopédia státuszát tároló változó
 	DexState currentState;
+
 	//Prefabek és referenciák
 	public Button cardDisplayPrefab;
 	public GameObject cardDetailPrefab;
@@ -21,7 +23,6 @@ public class CardDex_Controller : MonoBehaviour
 	public GameObject UI_canvas;
 
 	GameObject displayedUI;
-
 
 	void Start()
 	{
