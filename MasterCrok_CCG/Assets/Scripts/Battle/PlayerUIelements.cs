@@ -35,9 +35,9 @@ public class PlayerUIelements : MonoBehaviour
     public GameObject cardPrefab;
     public List<GameObject> cardsInHand;
     public List<GameObject> cardsInField;
-    int cardCount;
     public bool openHand;
-    public bool isThePlayer;
+    int cardCount;
+    int cardsInDeck;
 
     [Header("Kártya a kézben hatás")]
     float turningPerCard = 5f;
@@ -48,14 +48,12 @@ public class PlayerUIelements : MonoBehaviour
     int positionID;
     float x,y,rotationZ;
 
-    int cardsInDeck;
-
     void Start()
     {
         controller = GameObject.Find("UI_Controller").GetComponent<BattleUI_Controller>();
         this.cardsInHand = new List<GameObject>();
         this.cardCount = cardsInHand.Count;
-        TMP_Text deckSize = null;
+        deckSize = null;
     }
 
     public void AddCardToHand(GameObject card)
@@ -116,27 +114,37 @@ public class PlayerUIelements : MonoBehaviour
 
 
     //Létrehoz egy kártya prefabot a kézbe
-    public void CreateCard()
+    public void CreateCard(Card data, bool visible)
     {
-            if(cardsInDeck > 0 || !isThePlayer)
-            {
-                GameObject temp = Instantiate(cardPrefab, Vector3.zero, Quaternion.identity, GetHandField().transform);
-                temp.transform.position = GetHandField().transform.position;
+        GameObject temp = Instantiate(cardPrefab, Vector3.zero, Quaternion.identity, GetHandField().transform);
+        temp.transform.position = GetHandField().transform.position;
 
-                //Kép kezelése, ha nem a miénk vagy nincs open head bónusz
-                if(!openHand)
-                {
-                    temp.GetComponent<Image>().sprite = defaultCardImage;
-                }
+        //Kép kezelése, ha nem a miénk, vagy nincs open head státusz
+        if(!visible)
+        {
+            temp.GetComponent<Image>().sprite = defaultCardImage;
+        }
+        else 
+        {
+            temp.GetComponent<CardBehaviour>().SetupCard(data);    
+        }
 
-                //Kártya hozzáadása a játékos kezéhez
-                AddCardToHand(temp);
-                if(isThePlayer)
-                {
-                    cardsInDeck--;
-                    deckSize.text = cardsInDeck.ToString();
-                }
-            }
+        //Beállítjuk a kártya láthatóságát
+        temp.GetComponent<CardBehaviour>().SetVisibility(visible);
+
+        //Kártya objektum hozzáadása a kéz mezőhöz
+        AddCardToHand(temp);
+    }
+
+    public void UpdateDeckCounter(int newDeckSize)
+    {   
+        /*
+        if(deckSize == null)
+        {
+            deckSize = GameObject.Find("DeckCounter").GetComponent<TMP_Text>();
+        }
+        */
+        deckSize.text = newDeckSize.ToString();
     }
 
     //Eltávolít egy kártya prefabot a kézből
@@ -279,16 +287,6 @@ public class PlayerUIelements : MonoBehaviour
         }
     }
 
-    public void SetPlayerIdentity(bool newValue)
-    {
-        isThePlayer = newValue;
-    }
-
-    public bool GetPlayerIdentity()
-    {
-        return this.isThePlayer;
-    }
-
     public void RevealCardsInHand()
     {
         if(this.openHand)
@@ -297,16 +295,25 @@ public class PlayerUIelements : MonoBehaviour
         }
     }
 
-    public void AddDeckSize(TMP_Text deckSize, int cardsInDeck)
+    public void AddDeckSize(TMP_Text deckSizeIn, int cardsInDeckIn)
     {
-        this.deckSize = deckSize;
-        this.cardsInDeck = cardsInDeck;
+        Debug.Log(gameObject);
+        Debug.Log("Deck Size előtte: " + this.deckSize);
+        Debug.Log("Bemenő paraméter: " + deckSizeIn);
+        this.deckSize = deckSizeIn;
+        this.cardsInDeck = cardsInDeckIn;
         deckSize.text = cardsInDeck.ToString();
+        Debug.Log("Deck Size utána: " + this.deckSize);
     }
 
-    public void DisplayDetails(int index, bool isActive)
+    public void DisplayDetails(Card data)
     {
+        controller.DisplayCardDetail(data);
+    }
 
+    public void HideDetails()
+    {
+        controller.HideCardDetail();
     }
 
 }

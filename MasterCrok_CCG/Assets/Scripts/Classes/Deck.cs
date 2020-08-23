@@ -91,6 +91,11 @@ public class Deck
 		return this.deckStatus;
 	}
 
+	public int GetDeckSize()
+	{
+		return this.cards.Count;
+	}
+
 	public Card DrawCard()
 	{
 		if(cards.Any())
@@ -104,6 +109,11 @@ public class Deck
 		{
 			return null;	
 		}
+	}
+
+	public void SortDeck()
+	{
+		this.cards = cards.OrderBy(o=>o.cardID).ToList();
 	}
 
 

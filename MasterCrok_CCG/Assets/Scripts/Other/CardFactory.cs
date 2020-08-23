@@ -54,4 +54,10 @@ public class CardFactory : MonoBehaviour
 
 		return newDeck;
 	}
+
+	public List<Card> GetAllCard()
+	{
+		return this.cardList;
+	}
+
 }

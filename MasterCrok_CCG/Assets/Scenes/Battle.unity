@@ -1274,6 +1274,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   UI: {fileID: 1963019885}
+  factory: {fileID: 208055871752038114, guid: c3b5d690ca628d7448ef1c5ec45d9635, type: 3}
 --- !u!4 &1332418254
 Transform:
   m_ObjectHideFlags: 0
@@ -1865,7 +1866,8 @@ MonoBehaviour:
     type: 3}
   prefabDetailedView: {fileID: 8287288376751720470, guid: 29fa4b5a27c54f0488be8695c52e9a44,
     type: 3}
-  playerFields: []
+  cardWithDetails: {fileID: 8287288376751720470, guid: 29fa4b5a27c54f0488be8695c52e9a44,
+    type: 3}
   playerFieldCanvas: {fileID: 915578985}
   HUDcanvas: {fileID: 1923195844}
   deckSize: {fileID: 7559531545815898241, guid: 19b57ad6c5eddd4408bf37e41e312e82,

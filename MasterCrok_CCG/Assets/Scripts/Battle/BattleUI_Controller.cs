@@ -20,22 +20,26 @@ public class BattleUI_Controller : MonoBehaviour
     public GameObject prefabPlayerUI;
     public GameObject prefabExitPanel;
     public GameObject prefabDetailedView;
-    public List<GameObject> playerFields;
+    public GameObject cardWithDetails;
+
+    [Header("Adattárolók és referenciák")]
+    public Dictionary <int, GameObject> playerFields;
     public GameObject playerFieldCanvas;
     public GameObject HUDcanvas;
     public TMP_Text deckSize;
+    GameObject cardDetailWindow;
 
-    [Header("Teszt funkció gombok")]
+    [Header("Teszt funkció elemek")]
     public Button drawButton;
     public Button discardButton;
     public Button winButton;
     public Button loseButton;
-    int cardsInDeck = 55;
 
 
     // Start is called before the first frame update
     void Start()
     {
+        playerFields = new Dictionary<int, GameObject>();
     }
 
     // Update is called once per frame
@@ -44,18 +48,12 @@ public class BattleUI_Controller : MonoBehaviour
         
     }
 
-    /*Cheat sheet:
-    P1: 0 0 R:0
-    P2: 0 0 R:180
-    P3: -280 0 R:-90
-    P4: 280 0 R:90
-    */
 
     //Elhelyezi a megadott számú játékosnak megfelelő pályaelemet
-    public void CreatePlayerFields(int playerNumber)
+    public void CreatePlayerFields(int playerNumber, List<int> keys, int playerDeckSize)
     {
-        playerFields = new List<GameObject>();
         float x,y,rotation;
+        
         for(var i = 0; i<playerNumber+1; i++)
         {
             //Pozíció és beállítások meghatározása
@@ -64,7 +62,7 @@ public class BattleUI_Controller : MonoBehaviour
                 case 0: x = 0; y = 0f; rotation = 0f; break;
                 case 1: x = 1280f; y = 720f; rotation = 180f; break;
                 case 2: x = 0f; y = 1000f; rotation = -90f; break;
-                case 3: x = 1280f; y = -360f; rotation = 90f; break;
+                case 3: x = 1280f; y = -280f; rotation = 90f; break;
                 default: x = 0f; y = 0f; rotation = 0f; break;
             }
 
@@ -74,40 +72,42 @@ public class BattleUI_Controller : MonoBehaviour
             temp.transform.rotation = Quaternion.Euler(0f,0f,rotation);
 
             //Eltárolás későbbi referenciához
-            playerFields.Add(temp);
+            playerFields.Add(keys[i], temp);
 
-            //A játékos
+            //A játékos beállítása
             if(i == 0)
             {
                 temp.name = "Player";
                 GameObject.Find("ActiveCardField").gameObject.tag = "PlayerField";
-                GetScript(i).SetPlayerIdentity(true);
-                GetScript(i).ChangeOpenHand(true);
-                //A játékosnak adunk egy pakli amount trackert
-                TMP_Text deckNumber = Instantiate(deckSize,GameObject.Find("Deck").transform.position, Quaternion.identity, GameObject.Find("Deck").transform);
-                GetScript(i).AddDeckSize(deckNumber, cardsInDeck);
+                GetScript(keys[i]).ChangeOpenHand(true);
             }
             //Az ellenfelek
             else 
             {
                 temp.name = "Opponent " + i.ToString();
-                GetScript(i).SetPlayerIdentity(false);
-                GetScript(i).ChangeOpenHand(false);  
+                GetScript(keys[i]).ChangeOpenHand(false);  
             }
 
             //Eltároljuk, hogy melyik pozícióban van a játékos mező
-            GetScript(i).SetPosition(i,x,y,rotation);
-
+            GetScript(keys[i]).SetPosition(i,x,y,rotation);
         }
+
         //A mi oldalunk legyen az utolsó a hierarchiában
-        playerFields[0].transform.SetAsLastSibling();
+        playerFields[keys[0]].transform.SetAsLastSibling();
+
+        //A játékosnak adunk egy deck számlálót
+        GameObject deck = GameObject.Find("Player/Deck");
+        TMP_Text deckNumber = Instantiate(deckSize,deck.transform.position, Quaternion.identity, deck.transform);
+        deckNumber.name = "DeckCounter";
+        GetScript(keys[0]).AddDeckSize(deckNumber, playerDeckSize);
+        
     }
 
     public void DrawCardForAll()
     {
         for(var i=0; i < playerFields.Count; i++)
         {
-            GetScript(i).CreateCard();
+            //GetScript(i).CreateCard();
         }
     }
 
@@ -130,9 +130,9 @@ public class BattleUI_Controller : MonoBehaviour
     }
 
     //Shortcut: Visszaadja a listában szereplő gameObjecten lévő scriptet, hogy közvetlenül referálhassuk 
-    PlayerUIelements GetScript(int index)
+    PlayerUIelements GetScript(int key)
     {
-        return this.playerFields[index].GetComponent<PlayerUIelements>();
+        return this.playerFields[key].GetComponent<PlayerUIelements>();
     }
 
     public void ExitBattleButton()
@@ -152,6 +152,8 @@ public class BattleUI_Controller : MonoBehaviour
         //Send signal to the game manager and server
         //Replace player with a bot
 
+        controller.ResetDecks();
+
         //Visszatérés a menübe
         SceneManager.LoadScene("Main_Menu");
     }
@@ -165,9 +167,29 @@ public class BattleUI_Controller : MonoBehaviour
     {
         GameObject detailedView = Instantiate(prefabDetailedView, HUDcanvas.transform.position,
                                 Quaternion.identity, HUDcanvas.transform);
+    }
 
+    //Továbbítja a kapott új kártya adatokat a megfelelő játékos oldalra
+    public void DisplayNewCard(Card data, int key, bool visible)
+    {
+        playerFields[key].GetComponent<PlayerUIelements>().CreateCard(data, visible);
+    }
 
+    public void RefreshDeckSize(int key, int newDeckSize)
+    {   
+        playerFields[key].GetComponent<PlayerUIelements>().UpdateDeckCounter(newDeckSize);
+    }
 
+    public void DisplayCardDetail(Card data)
+    {
+        cardDetailWindow = Instantiate(cardWithDetails, playerFieldCanvas.transform.position, Quaternion.identity, playerFieldCanvas.transform);
+        cardDetailWindow.transform.Find("CardDisplay_Controller").GetComponent<CardDisplay_Controller>().SetupDisplay(data);
+
+    }
+
+    public void HideCardDetail()
+    {
+        Destroy(cardDetailWindow);
     }
 
 }

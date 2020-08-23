@@ -9,8 +9,9 @@ public enum DexState {List, Detail};
 
 public class CardDex_Controller : MonoBehaviour
 {
-	//A kártyák és UI elemek tárolói
-	public List<Card> cardList = new List<Card>();
+    //A kártyák és UI elemek tárolói
+    public CardFactory factory;
+	List<Card> cardList;
 	List<GameObject> cardDisplayList = new List<GameObject>();
 
 	//Az enciklopédia státuszát tároló változó
@@ -26,6 +27,7 @@ public class CardDex_Controller : MonoBehaviour
 
 	void Start()
 	{
+        cardList = factory.GetAllCard();
 		currentState = DexState.List;
 
 		//Kártyák megjelenítése egymás után

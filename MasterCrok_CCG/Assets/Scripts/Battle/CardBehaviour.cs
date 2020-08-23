@@ -26,6 +26,7 @@ public class CardBehaviour : MonoBehaviour
 
     [Header("Adatok")]
     Card cardData;
+    bool visible;
 
 	private void Awake()
     {
@@ -39,15 +40,16 @@ public class CardBehaviour : MonoBehaviour
     {
         if (isDragged)
         {
+            if(detailedView)
+            {
+                detailedView = false;
+                HideDetails();
+            }
+
         	//Pozíció változtatása
             gameObject.transform.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
             //Minden további elem felett álljon a kártya
             gameObject.transform.SetParent(mainCanvas.transform);
-        }
-
-        if(detailedView)
-        {
-            //Megjeleníti nagyban a kártyát TODO
         }
     }
 
@@ -71,13 +73,17 @@ public class CardBehaviour : MonoBehaviour
 
     public void PressCard()
     {
-    	detailedView = true;
-    	//Debug.Log("Pointer Down");
+        if(visible)
+        {
+            detailedView = true;
+            GiveDetails();
+        }
     }
 
     public void ReleaseCard()
     {
-    	//Debug.Log("Pointer Up");
+        detailedView = false;
+        HideDetails();
     }
 
     public void StartDrag()
@@ -118,12 +124,23 @@ public class CardBehaviour : MonoBehaviour
     {
     	playerField.GetComponent<PlayerUIelements>().PutCardOnField(gameObject);
     	activated = true;
+        if(!visible)
+        {
+            visible = true;
+            RevealImage();
+        }
+
         this.siblingIndex = gameObject.transform.GetSiblingIndex();
     }
 
     public void SetupCard(Card data)
     {
         this.cardData = data;
+        RevealImage();
+    }
+
+    void RevealImage()
+    {
         gameObject.GetComponent<Image>().sprite = cardData.GetArt();
     }
 
@@ -134,6 +151,16 @@ public class CardBehaviour : MonoBehaviour
 
     void GiveDetails()
     {
-        playerField.GetComponent<PlayerUIelements>().DisplayDetails(siblingIndex, activated);
+        playerField.GetComponent<PlayerUIelements>().DisplayDetails(cardData);
+    }
+
+    void HideDetails()
+    {
+        playerField.GetComponent<PlayerUIelements>().HideDetails();
+    }
+
+    public void SetVisibility(bool status)
+    {
+        this.visible = status;
     }
 }

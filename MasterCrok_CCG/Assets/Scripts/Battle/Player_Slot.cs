@@ -8,7 +8,7 @@ Feladata: A játék, illetve a játékos adatmodellje. Játék indulásakor a j�
 majd a játékvezérlőtől kap utasításokat (felhúzás, lerakás, státuszok változatatása)
 */
 
-public enum TurnStatus{WaitingForTurn, ChooseStat, ChooseCard, OutOfCards, CardPlayed, ChooseSkill, Finished};
+public enum TurnStatus{WaitingForTurn, ChooseStat, ChooseCard, CardPlayed, ChooseSkill, Finished};
 public enum TurnResult{Winner, Loser, TurnNotEnded};
 public enum TurnRole{Attacker, Defender};
 
@@ -36,14 +36,16 @@ public class Player_Slot
 	//Kiértékelés utáni/következő körre ható aktivált kártya hatás jelzése
 	bool hasLateEffect;
 
-	public Player_Slot(Player player)
+	bool isThePlayer;
+
+	public Player_Slot(Player player, bool playerStatus = false)
 	{
 		this.player = player;
 		this.cardsInHand = new List<Card>();
 		this.winnerCards = new List<Card>();
 		this.lostCards = new List<Card>();
 		this.statBonus = new List<StatBonus>();
-
+		isThePlayer = playerStatus;
 		hasLateEffect = false;
 	}
 
@@ -53,17 +55,18 @@ public class Player_Slot
 	}
 
 	//A játékos paklijából a kézbe rak egy lapot.
-	public void DrawCard()
+	public Card DrawCard()
 	{
 		Card temp = player.GetActiveDeck().DrawCard();
 		if(temp != null)
 		{
 			cardsInHand.Add(temp);
+			return temp;
 		}
 
 		else 
 		{
-			SetStatus(TurnStatus.OutOfCards);	
+			return null;
 		}
 	}
 
@@ -88,6 +91,7 @@ public class Player_Slot
 		PutAway(cardsInHand);
 		PutAway(winnerCards);
 		PutAway(lostCards);
+		player.GetActiveDeck().SortDeck();
 	}
 
 	//A kör végén hívódik meg alap esetben
@@ -171,6 +175,31 @@ public class Player_Slot
 	public bool GetLateEffect()
 	{
 		return this.hasLateEffect;
+	}
+
+	public void ShuffleDeck()
+	{
+		this.player.GetActiveDeck().ShuffleDeck();
+	}
+
+	public int GetPlayerID()
+	{
+		return this.player.GetUniqueID();
+	}
+
+	public int GetDeckSize()
+	{
+		return this.player.GetActiveDeck().GetDeckSize();
+	}
+
+	public string GetNickname()
+	{
+		return this.player.GetUsername();
+	}
+
+	public bool GetPlayerStatus()
+	{
+		return isThePlayer;
 	}
 
 }

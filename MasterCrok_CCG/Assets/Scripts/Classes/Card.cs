@@ -65,5 +65,20 @@ public class Card : ScriptableObject
 		return this.reflex;
 	}
 
+	public string GetCardName()
+	{
+		return this.cardName;		
+	}
+
+	public string GetSkillName()
+	{
+		return this.skillName;
+	}
+
+	public string GetCardSkill()
+	{
+		return this.skillDescription;
+	}
+
 
 }

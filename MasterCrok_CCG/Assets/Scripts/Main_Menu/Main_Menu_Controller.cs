@@ -11,28 +11,32 @@ public enum MenuState {MainMenu, Settings, GameTypeSelect, PlayerNumberSelect, M
 public class Main_Menu_Controller : MonoBehaviour
 {
 
-    public Button buttonPrefab;
+    [Header("UI Elem Referenciák")]
     public GameObject displayPanel;
     public TMP_Text titleText;
-    public List<Button> menuButtons;
     public GameObject profilePanel;
-    public GameObject profileSelectPrefab;
     public GameObject mainCanvas;
+    public TMP_Text profileStatus;
 
+    [Header("Prefab Elemek")]
+    public Button buttonPrefab;
+    public GameObject profileSelectPrefab;
+    public GameObject notificationPanel;
 
+    [Header("Adattárolók")]
+    public List<Button> menuButtons;
     GameData_Controller dataController;
-
     MenuState currentState;
     bool needsUpdate;
-    bool isLoggedIn;
+    bool isLoggedIn = false;
 
     void Start()
     {
         dataController = GameObject.Find("GameData_Controller").GetComponent<GameData_Controller>();
         menuButtons = new List<Button>();
         currentState = MenuState.MainMenu;
+        CheckIfAlreadyLoggedIn();
         needsUpdate = true;
-        isLoggedIn = false;
     }
 
     void Update()
@@ -40,6 +44,8 @@ public class Main_Menu_Controller : MonoBehaviour
         if(needsUpdate)
         {
             needsUpdate = false;
+
+            //Menügombok változtatása menüfázis szerint
             ResetButtons();
             switch (currentState) 
             {
@@ -49,14 +55,24 @@ public class Main_Menu_Controller : MonoBehaviour
                 case MenuState.MultiplayerSettings: SetupMultiplayerMode(); break;
                 default: break;
             }
+
+            //Profil státusz üzenetének változtatása
+            if(!isLoggedIn)
+            {
+                profileStatus.text = "Nincs Aktív Profil!";
+            }
+            else 
+            {
+                profileStatus.text = "Üdv, " + dataController.GetActivePlayer().GetUsername() + "!";    
+            }
         }
     }
 
     void SetupMainMenu()
     {
         titleText.text = "Master Crok";
-        var titles = new List<string> {"Új Játék", "Bolt", "Kártya Enciklopédia", "Beállítások", "Kilépés"};
-        var functions = new List<Action> {StartNewGame, OpenShop, OpenEncyclopedia, OpenSettings, ExitGame};
+        var titles = new List<string> {"Új Játék", "Egyéb Opciók", "Információk","Kártyatár", "Kilépés"};
+        var functions = new List<Action> {StartNewGame, Other, HelpSection, OpenEncyclopedia, ExitGame};
         CreateButtons(titles, functions); 
     }
 
@@ -72,7 +88,7 @@ public class Main_Menu_Controller : MonoBehaviour
     {
         var titles = new List<string> {"1v1", "1v2", "1v3", "Vissza"};
         var functions = new List<Action>();
-        for(var i = 0; i < titles.Count-1; i++)
+        for(var i = 0; i < 3; i++)
         {
             int temp = i+1;
             functions.Add(new Action(() => StartSinglePlayer(temp)));
@@ -105,13 +121,36 @@ public class Main_Menu_Controller : MonoBehaviour
 
     public void StartNewGame()
     {
-        currentState = MenuState.GameTypeSelect;
-        needsUpdate = true;
+        if(isLoggedIn)
+        {
+            currentState = MenuState.GameTypeSelect;
+            needsUpdate = true;
+        }
+        else 
+        {
+            string msg = "Ehhez az akcióhoz be kell jelentkezned egy játékos profilba!";
+            MakeNotification(msg);    
+        }
     }
 
     public void OpenShop()
     {
         Debug.Log("Majd...");
+    }
+
+    public void HelpSection()
+    {
+        Debug.Log("TODO");
+    }
+
+    public void Credits()
+    {
+        Debug.Log("TODO");
+    }
+
+    public void Other()
+    {
+
     }
 
     public void OpenSettings()
@@ -188,6 +227,26 @@ public class Main_Menu_Controller : MonoBehaviour
     public void ProfileSelect()
     {
         Instantiate(profileSelectPrefab, mainCanvas.transform.position, Quaternion.identity, mainCanvas.transform);
+    }
+
+    public void PlayerLoginStatus(bool status)
+    {
+        needsUpdate = true;
+        isLoggedIn = status;
+    }
+
+    void MakeNotification(string msg)
+    {
+        GameObject temp = Instantiate(notificationPanel,mainCanvas.transform.position,Quaternion.identity,mainCanvas.transform);
+        temp.transform.Find("Notification_Controller").GetComponent<Notification_Controller>().ChangeText(msg);
+    }
+
+    void CheckIfAlreadyLoggedIn()
+    {
+        if(dataController.GetActivePlayer() != default(Player))
+        {
+            isLoggedIn = true;
+        }   
     }
 
 
