@@ -20,6 +20,7 @@ public class Profile_Controller : MonoBehaviour
 	[Header("Adattárolók")]
 	public List<Player> playerProfiles;
 	public List<GameObject> playerUIelements;
+	public GameObject notificationPrefab;
 	bool needsUpdate;
 
 	[Header("Prefab Elemek")]
@@ -114,7 +115,8 @@ public class Profile_Controller : MonoBehaviour
 	{
 		if(nameField.text.Length > 10)
 		{
-			statusText.text = "A név túl hosszú! Maximum 10 karakter lehet!";
+			string msg = "A név túl hosszú! Maximum 10 karakter lehet!";
+			MakeNotification(msg);
 			return false;
 		}
 		Regex rgx = new Regex(@"^[A-Za-z0-9]+$");
@@ -125,7 +127,8 @@ public class Profile_Controller : MonoBehaviour
 
 		else 
 		{
-			statusText.text = "Szabálytalan név formátum! Csak számok és az angol ABC betűi szerepelhetnek benne!";
+			string msg = "Szabálytalan név formátum! Csak számok és az angol ABC betűi szerepelhetnek benne!";
+			MakeNotification(msg);
 			return false;
 		}
 	}
@@ -142,4 +145,10 @@ public class Profile_Controller : MonoBehaviour
 		}
 		return  newID;
 	}
+
+    void MakeNotification(string msg)
+    {
+        GameObject temp = Instantiate(notificationPrefab,profileControllWindow.transform.position,Quaternion.identity,profileControllWindow.transform);
+        temp.transform.Find("Notification_Controller").GetComponent<Notification_Controller>().ChangeText(msg);
+    }
 }

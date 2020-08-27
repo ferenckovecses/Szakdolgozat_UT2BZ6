@@ -23,6 +23,7 @@ public class BattleUI_Controller : MonoBehaviour
     public GameObject cardWithDetails;
 
     [Header("Adattárolók és referenciák")]
+    public List<GameObject> positions;
     public Dictionary <int, GameObject> playerFields;
     public GameObject playerFieldCanvas;
     public GameObject HUDcanvas;
@@ -52,24 +53,11 @@ public class BattleUI_Controller : MonoBehaviour
     //Elhelyezi a megadott számú játékosnak megfelelő pályaelemet
     public void CreatePlayerFields(int playerNumber, List<int> keys, int playerDeckSize)
     {
-        float x,y,rotation;
-        
         for(var i = 0; i<playerNumber+1; i++)
         {
-            //Pozíció és beállítások meghatározása
-            switch (i) 
-            {
-                case 0: x = 0; y = 0f; rotation = 0f; break;
-                case 1: x = 1280f; y = 720f; rotation = 180f; break;
-                case 2: x = 0f; y = 1000f; rotation = -90f; break;
-                case 3: x = 1280f; y = -280f; rotation = 90f; break;
-                default: x = 0f; y = 0f; rotation = 0f; break;
-            }
 
             //Létrehozás
-            GameObject temp = Instantiate(prefabPlayerUI, Vector3.zero, Quaternion.identity, playerFieldCanvas.transform);
-            temp.transform.position = new Vector3(x,y,0f);
-            temp.transform.rotation = Quaternion.Euler(0f,0f,rotation);
+            GameObject temp = Instantiate(prefabPlayerUI, positions[i].transform.position, positions[i].transform.rotation, positions[i].transform);
 
             //Eltárolás későbbi referenciához
             playerFields.Add(keys[i], temp);
@@ -89,14 +77,14 @@ public class BattleUI_Controller : MonoBehaviour
             }
 
             //Eltároljuk, hogy melyik pozícióban van a játékos mező
-            GetScript(keys[i]).SetPosition(i,x,y,rotation);
+            GetScript(keys[i]).SetPosition(i);
         }
 
         //A mi oldalunk legyen az utolsó a hierarchiában
-        playerFields[keys[0]].transform.SetAsLastSibling();
+        positions[0].transform.SetAsLastSibling();
 
         //A játékosnak adunk egy deck számlálót
-        GameObject deck = GameObject.Find("Player/Deck");
+        GameObject deck = GameObject.Find("Field1/Player/Deck");
         TMP_Text deckNumber = Instantiate(deckSize,deck.transform.position, Quaternion.identity, deck.transform);
         deckNumber.name = "DeckCounter";
         GetScript(keys[0]).AddDeckSize(deckNumber, playerDeckSize);
@@ -115,7 +103,7 @@ public class BattleUI_Controller : MonoBehaviour
     {
         for(var i=0; i < playerFields.Count; i++)
         {
-            GetScript(i).DiscardCard();
+            //GetScript(i).DiscardCard();
         }
     }
 

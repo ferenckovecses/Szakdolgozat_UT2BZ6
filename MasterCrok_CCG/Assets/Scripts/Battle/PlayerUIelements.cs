@@ -41,14 +41,14 @@ public class PlayerUIelements : MonoBehaviour
 
     [Header("Kártya a kézben hatás")]
     float turningPerCard = 5f;
-    float cardDistance = 50f;
+    float cardDistance = 25f;
     float cardHeightDiff = 5f;
 
     [Header("UI Pozícionálás")]
     int positionID;
-    float x,y,rotationZ;
+    float rotation;
 
-    void Start()
+    void Awake()
     {
         controller = GameObject.Find("UI_Controller").GetComponent<BattleUI_Controller>();
         this.cardsInHand = new List<GameObject>();
@@ -104,20 +104,26 @@ public class PlayerUIelements : MonoBehaviour
 
     //Tárolja, hogy milyen pozícióban van a játékos mező
     //És frissíti, hogy ez milyen eltolásokkal/forgatásokkal jár
-    public void SetPosition(int id, float x, float y, float rotZ)
+    public void SetPosition(int id)
     {
         this.positionID = id;
-        this.x = x;
-        this.y = y;
-        this.rotationZ = rotZ;
+        switch (positionID) 
+        {
+            case 0: this.rotation = 0f; break;
+            case 1: this.rotation = 180f; break;
+            case 2: this.rotation = -90f; break;
+            case 3: this.rotation = 90f; break;
+            default: this.rotation = 0f; break;
+            
+        }
     }
 
 
     //Létrehoz egy kártya prefabot a kézbe
     public void CreateCard(Card data, bool visible)
     {
-        GameObject temp = Instantiate(cardPrefab, Vector3.zero, Quaternion.identity, GetHandField().transform);
-        temp.transform.position = GetHandField().transform.position;
+        GameObject temp = Instantiate(cardPrefab, GetHandField().transform.position, Quaternion.identity, GetHandField().transform);
+        temp.transform.rotation = Quaternion.Euler(0f,0f,rotation);
 
         //Kép kezelése, ha nem a miénk, vagy nincs open head státusz
         if(!visible)
@@ -138,12 +144,6 @@ public class PlayerUIelements : MonoBehaviour
 
     public void UpdateDeckCounter(int newDeckSize)
     {   
-        /*
-        if(deckSize == null)
-        {
-            deckSize = GameObject.Find("DeckCounter").GetComponent<TMP_Text>();
-        }
-        */
         deckSize.text = newDeckSize.ToString();
     }
 
@@ -190,8 +190,7 @@ public class PlayerUIelements : MonoBehaviour
         for(var i = 0; i < this.GetCardCount(); i++)
         {
             ///Kártyák pozícionálása játékostér szerint
-            this.GetACard(i).transform.position = Vector3.zero;
-            this.GetACard(i).transform.rotation = Quaternion.Euler(0f,0f,this.rotationZ);
+            this.GetACard(i).transform.position = this.GetHandField().transform.position;
 
             //Pozíciók módosítása
             if(this.positionID < 2)
@@ -223,13 +222,14 @@ public class PlayerUIelements : MonoBehaviour
 
             if(positionID == 1 || positionID == 2)
             {
-                cardTurning = this.rotationZ + (-turningPerCard * (middleCardIndex-i));
+                cardTurning = -turningPerCard * (middleCardIndex-i);
             }
             else 
             {
-                cardTurning = this.rotationZ + (turningPerCard * (middleCardIndex-i));
+                cardTurning = turningPerCard * (middleCardIndex-i);
             }
-            this.GetACard(i).transform.rotation = Quaternion.Euler(0f,0f,cardTurning);
+
+            this.GetACard(i).transform.rotation = Quaternion.Euler(0f,0f,cardTurning + rotation);
 
         }
     }
@@ -297,13 +297,9 @@ public class PlayerUIelements : MonoBehaviour
 
     public void AddDeckSize(TMP_Text deckSizeIn, int cardsInDeckIn)
     {
-        Debug.Log(gameObject);
-        Debug.Log("Deck Size előtte: " + this.deckSize);
-        Debug.Log("Bemenő paraméter: " + deckSizeIn);
         this.deckSize = deckSizeIn;
         this.cardsInDeck = cardsInDeckIn;
         deckSize.text = cardsInDeck.ToString();
-        Debug.Log("Deck Size utána: " + this.deckSize);
     }
 
     public void DisplayDetails(Card data)
