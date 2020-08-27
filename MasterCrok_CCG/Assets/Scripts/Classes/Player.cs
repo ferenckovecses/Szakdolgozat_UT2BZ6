@@ -92,5 +92,19 @@ public class Player
 		return this.uniqueID;
 	}
 
+	public Profile_Data GetData()
+	{
+		return new Profile_Data(this.GetUniqueID(), this.GetUsername(),
+			this.GetCoinBalance(), this.GetActiveDeck().GetCardList(), this.GetSecondaryDeck().GetCardList());
+	}
+
+	public static Player LoadData(Profile_Data data)
+	{
+		Player newPlayer = new Player(data.username);
+		newPlayer.SetUniqueID(data.profileID);
+		newPlayer.SetBalance(data.coinBalance);
+
+		return newPlayer;
+	}
 
 }

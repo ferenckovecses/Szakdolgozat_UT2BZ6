@@ -43,12 +43,11 @@ public class CardFactory : MonoBehaviour
 	}
 
 	//A megadott számlistából rekonstruálja a játékos elmentett pakliját
-	public Deck GetDeckFromArray(List<int> cardIdentifiers)
+	public Deck GetDeckFromList(List<int> cardIdentifiers)
 	{
 		Deck newDeck = new Deck();
-
 		for(var i = 0; i < cardIdentifiers.Count; i++)
-		{	int cardIndex = cardIdentifiers[i];
+		{	int cardIndex = cardIdentifiers[i] - 1;
 			newDeck.AddCard(cardList[cardIndex]);
 		}
 
@@ -59,5 +58,6 @@ public class CardFactory : MonoBehaviour
 	{
 		return this.cardList;
 	}
+
 
 }

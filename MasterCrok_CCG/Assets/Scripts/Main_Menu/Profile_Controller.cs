@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using TMPro;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 public class Profile_Controller : MonoBehaviour
 {
@@ -29,12 +31,13 @@ public class Profile_Controller : MonoBehaviour
 
 	int playerLimit = 100000;
 
-	void Start()
+	void Awake()
 	{
 		needsUpdate = true;
 		playerProfiles = new List<Player>();
 		playerUIelements = new List<GameObject>();
 		mainMenuController = GameObject.Find("Menu_Controller").GetComponent<Main_Menu_Controller>();
+		LoadProfiles();
 	}
 
 	void Update()
@@ -44,6 +47,66 @@ public class Profile_Controller : MonoBehaviour
 			needsUpdate = false;
 		}
 	}
+
+    public void LoadProfiles()
+    {
+        string path = Path.Combine(Application.persistentDataPath, "savedProfiles.data");
+
+        //Ellenőrzi, hogy van-e már mentésünk
+        if(File.Exists(path))
+        {
+            BinaryFormatter formatter = new BinaryFormatter();
+            FileStream stream = new FileStream(path, FileMode.Open);
+            //this.data = formatter.Deserialize(stream) as Player_Data;
+            List<Profile_Data> data = new List<Profile_Data>();
+            data = formatter.Deserialize(stream) as List<Profile_Data>;
+            stream.Close();
+
+            //Megnézzük, hogy a betöltött adatok érvényesek-e
+            if(data != default(List<Profile_Data>))
+            {
+            	//Ha igen akkor végig loopolunk rajtuk és betöltjük, megjelenítjük őket
+            	foreach (Profile_Data profile in data) 
+            	{
+		    		Player newPlayer = Player.LoadData(profile);
+		    		newPlayer.AddActiveDeck(factory.GetDeckFromList(profile.activeDeck));
+		    		//newPlayer.AddSecondaryDeck(factory.GetDeckFromList(profile.secondaryDeck));
+		    		playerProfiles.Add(newPlayer);
+		    		CreatePlayerUI(newPlayer);
+            	}
+            }
+
+            else
+            {
+                Debug.Log("Loading the game was unsuccessful!");
+            }
+
+        } 
+
+        //Ha nincs még mentés file
+        else
+        {
+            Debug.Log("Save file not found!");
+        }
+    }
+
+	//Karakter és játék adatok elmentése
+    public void SaveProfiles()
+    {
+        BinaryFormatter formatter = new BinaryFormatter();
+        string path = Path.Combine(Application.persistentDataPath, "savedProfiles.data");
+        FileStream stream = new FileStream(path, FileMode.Create);
+        List<Profile_Data> data = new List<Profile_Data>();
+
+        foreach (Player profile in playerProfiles) 
+        {
+    		data.Add(profile.GetData());
+        }
+
+        formatter.Serialize(stream,data);
+        stream.Close();
+        Debug.Log("Save Finished!");
+    }
 
 	public void NewProfile()
 	{
@@ -58,20 +121,27 @@ public class Profile_Controller : MonoBehaviour
 			playerProfiles.Add(newPlayer);
 
 			//Kiírjuk fájlba a listát
+			SaveProfiles();
 
-			//Hozzáadjuk a UI listához az elemet és módosítjuk értékeit, listához adjuk a gameobjectet
-			GameObject profile = Instantiate(profilePrefab, profileList.transform.position, Quaternion.identity, profileList.transform);
-			profile.transform.Find("Name_Panel/Name_Text").GetComponent<TMP_Text>().text = newPlayer.GetUsername();
-			profile.transform.Find("CardAmount_Panel/CardAm_Text").GetComponent<TMP_Text>().text = newPlayer.GetCardCount().ToString();
-			profile.transform.Find("CoinAmount_Panel/Coin_Text").GetComponent<TMP_Text>().text = newPlayer.GetCoinBalance().ToString();
-			profile.name = newPlayer.GetUsername();
-			profile.transform.Find("ProfileSelect_Button").GetComponent<Button>().onClick.AddListener(delegate{ChooseProfile(newPlayer);});
-			profile.transform.Find("ProfileDelete_Button").GetComponent<Button>().onClick.AddListener(delegate{RemoveProfile(profile);});
-			playerUIelements.Add(profile);
+			//Létrehozzuk és hozzáadjuk az új UI elemet a listához
+			CreatePlayerUI(newPlayer);
 
 			//Az Új Profil Hozzáadása objektumot a hierarchia aljára tesszük
 			profileAddObject.transform.SetAsLastSibling();
 		}
+	}
+
+	//Hozzáadjuk a UI listához az elemet és módosítjuk értékeit, listához adjuk a gameobjectet
+	void CreatePlayerUI(Player newPlayer)
+	{
+		GameObject profile = Instantiate(profilePrefab, profileList.transform.position, Quaternion.identity, profileList.transform);
+		profile.transform.Find("Name_Panel/Name_Text").GetComponent<TMP_Text>().text = newPlayer.GetUsername();
+		profile.transform.Find("CardAmount_Panel/CardAm_Text").GetComponent<TMP_Text>().text = newPlayer.GetCardCount().ToString();
+		profile.transform.Find("CoinAmount_Panel/Coin_Text").GetComponent<TMP_Text>().text = newPlayer.GetCoinBalance().ToString();
+		profile.name = newPlayer.GetUsername();
+		profile.transform.Find("ProfileSelect_Button").GetComponent<Button>().onClick.AddListener(delegate{ChooseProfile(newPlayer);});
+		profile.transform.Find("ProfileDelete_Button").GetComponent<Button>().onClick.AddListener(delegate{RemoveProfile(profile);});
+		playerUIelements.Add(profile);
 	}
 
 	//A kiválasztott profilt aktiválja
@@ -104,6 +174,7 @@ public class Profile_Controller : MonoBehaviour
 		playerProfiles.RemoveAt(id);
 		Destroy(profile);
 		playerUIelements.RemoveAt(id);
+		SaveProfiles();
 	}
 
 	public void GoBack()
