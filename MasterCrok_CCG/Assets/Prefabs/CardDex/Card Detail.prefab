@@ -377,56 +377,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_HorizontalFit: 0
   m_VerticalFit: 2
---- !u!1 &5916411167360642524
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7484480716078820832}
-  - component: {fileID: 4428064982938845954}
-  m_Layer: 0
-  m_Name: CardDisplay_Controller
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7484480716078820832
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5916411167360642524}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 8287288376751720469}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4428064982938845954
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5916411167360642524}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ccaadb3b19faaeb4ba8f37bb78b72238, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cardName: {fileID: 7240878846199039818}
-  skillName: {fileID: 8268386247119569970}
-  skillDetail: {fileID: 1478621029907731499}
-  power: {fileID: 8287288375451204297}
-  intelligence: {fileID: 8287288376437821509}
-  reflex: {fileID: 8287288375389181846}
-  art: {fileID: 8287288377094213365}
 --- !u!1 &6610770069741221122
 GameObject:
   m_ObjectHideFlags: 0
@@ -1640,6 +1590,7 @@ GameObject:
   - component: {fileID: 8287288376751720469}
   - component: {fileID: 8287288376751720491}
   - component: {fileID: 8287288376751720468}
+  - component: {fileID: 7490283182386733177}
   m_Layer: 5
   m_Name: Card Detail
   m_TagString: Untagged
@@ -1660,7 +1611,6 @@ RectTransform:
   m_Children:
   - {fileID: 4310063164911463073}
   - {fileID: 1616579868035434469}
-  - {fileID: 7484480716078820832}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1706,6 +1656,25 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7490283182386733177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8287288376751720470}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccaadb3b19faaeb4ba8f37bb78b72238, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cardName: {fileID: 7240878846199039818}
+  skillName: {fileID: 8268386247119569970}
+  skillDetail: {fileID: 1478621029907731499}
+  power: {fileID: 8287288375451204297}
+  intelligence: {fileID: 8287288376437821509}
+  reflex: {fileID: 8287288375389181846}
+  art: {fileID: 8287288377094213365}
 --- !u!1 &8287288377094213367
 GameObject:
   m_ObjectHideFlags: 0

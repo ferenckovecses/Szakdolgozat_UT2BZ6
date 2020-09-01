@@ -186,7 +186,7 @@ public class Main_Menu_Controller : MonoBehaviour
     public void StartSinglePlayer(int playerNumber)
     {
         dataController.SetOpponents(playerNumber);
-        SceneManager.LoadScene("Battle");
+        SceneManager.LoadScene("SinglePlayer_Battle");
     }
 
     public void StartMultiplayer()

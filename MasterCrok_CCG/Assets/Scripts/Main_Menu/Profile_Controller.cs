@@ -74,6 +74,9 @@ public class Profile_Controller : MonoBehaviour
 		    		playerProfiles.Add(newPlayer);
 		    		CreatePlayerUI(newPlayer);
             	}
+            	
+				//Az Új Profil Hozzáadása objektumot a hierarchia aljára tesszük
+				profileAddObject.transform.SetAsLastSibling();
             }
 
             else
