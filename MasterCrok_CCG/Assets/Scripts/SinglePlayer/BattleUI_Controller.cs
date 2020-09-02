@@ -6,13 +6,6 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-
-/*
-Feladata: Kapcsolatban van a játék vezérlővel, informálják egymást és a játékos számára frissíti a harci UI-t,
-hogy az aktuális játék állapotokat tükrözze,
-illetve továbbítja a vezérlőnek a játékos inputjait.
-*/
-
 public class BattleUI_Controller : MonoBehaviour
 {
     [Header("Játékvezérlő")]
@@ -24,17 +17,25 @@ public class BattleUI_Controller : MonoBehaviour
     public GameObject prefabDetailedView;
     public GameObject cardWithDetails;
     public GameObject statChoiceBox;
-
-    [Header("Adattárolók és referenciák")]
-    public List<GameObject> positions;
-    public Dictionary <int, GameObject> playerFields;
-    public GameObject playerFieldCanvas;
-    public GameObject HUDcanvas;
+    public GameObject prefabMessageText;
     public TMP_Text deckSize;
+
+    [Header("Adattárolók")]
+    public Dictionary <int, GameObject> playerFields;
+    bool isMessageOnScreen;
     GameObject cardDetailWindow;
     GameObject statPanel;
+    GameObject messageText;
+
+
+    [Header("Referenciák")]
+    public List<GameObject> positions;
+    public GameObject playerFieldCanvas;
+    public GameObject HUDcanvas;
     public TMP_Text activeStatText;
     public GameObject activeStatPanel;
+
+
 
 
 
@@ -43,9 +44,10 @@ public class BattleUI_Controller : MonoBehaviour
     void Awake()
     {
         playerFields = new Dictionary<int, GameObject>();
+        isMessageOnScreen = false;
     }
 
-    //Elhelyezi a megadott számú játékosnak megfelelő pályaelemet
+    //Elhelyezi a megadott számú játékosnak megfelelő pályaelemet a megadott pozíciókba
     public void CreatePlayerFields(int playerNumber, List<int> keys, int playerDeckSize)
     {
 
@@ -93,6 +95,7 @@ public class BattleUI_Controller : MonoBehaviour
         return this.playerFields[key].GetComponent<PlayerUIelements>();
     }
 
+    //A csatából kilépés gombjának függvénye
     public void ExitBattleButton()
     {
         //Megjeleníti a kérdőablakot
@@ -105,17 +108,16 @@ public class BattleUI_Controller : MonoBehaviour
         noBtn.onClick.AddListener(delegate{ContinueBattle(exitPanel);});        
     }
 
+    //Kilépés
     public void ExitBattle()
     {
-        //Send signal to the game manager and server
-        //Replace player with a bot
-
         controller.ResetDecks();
 
         //Visszatérés a menübe
         SceneManager.LoadScene("Main_Menu");
     }
 
+    //Játék folytatása
     public void ContinueBattle(GameObject exitPanel)
     {
         Destroy(exitPanel);
@@ -127,33 +129,51 @@ public class BattleUI_Controller : MonoBehaviour
                                 Quaternion.identity, HUDcanvas.transform);
     }
 
-    //Továbbítja a kapott új kártya adatokat a megfelelő játékos oldalra
-    public void DisplayNewCard(Card data, int key, bool visible)
+    //Továbbítja a kapott új kártya adatokat a megfelelő játékos oldalra, hogy vizuálisan megjelenítse azokat
+    public void DisplayNewCard(Card data, int key, bool visible, bool blindDraw)
     {
-        playerFields[key].GetComponent<PlayerUIelements>().CreateCard(data, visible);
+        //Ha nem vakon húztuk
+        if(!blindDraw)
+        {
+            GameObject temp = GetScript(key).CreateCard(data, visible);
+
+            //Kártya objektum hozzáadása a kéz mezőhöz
+            GetScript(key).AddCardToHand(temp);
+        }
+
+        else 
+        {
+            GameObject temp = GetScript(key).CreateCard(data, false);
+            GetScript(key).BlindSummon(temp);
+        }
     }
 
+    //Frissíti a játékos paklijának méretét a modell szerinti aktuális értékre
     public void RefreshDeckSize(int key, int newDeckSize)
     {   
-        playerFields[key].GetComponent<PlayerUIelements>().UpdateDeckCounter(newDeckSize);
+        GetScript(key).UpdateDeckCounter(newDeckSize);
     }
 
+    //Megjeleníti a kijelölt kártya részletes nézetét
     public void DisplayCardDetail(Card data)
     {
         cardDetailWindow = Instantiate(cardWithDetails, HUDcanvas.transform.position, Quaternion.identity, HUDcanvas.transform);
         cardDetailWindow.GetComponent<CardDisplay_Controller>().SetupDisplay(data);
     }
 
+    //Eltünteti a kártya részletes nézetet
     public void HideCardDetail()
     {
         Destroy(cardDetailWindow);
     }
 
+    //Megváltoztatja a harctípus szöveget az épp aktuális, játékvezérlő szerinti értékre
     public void ChangeStatText(string newType)
     {
         this.activeStatText.text = newType;
     }
 
+    //Megjeleníti a játékosnak a harctípus választó ablakot
     public void DisplayStatBox()
     {
         activeStatPanel.SetActive(false);
@@ -161,6 +181,7 @@ public class BattleUI_Controller : MonoBehaviour
         statPanel.GetComponent<StatChoice_Controller>().SetupPanel();
     }
 
+    //A Harctípus választó ablak gombjainak függvénye
     public void ChooseStat(ActiveStat stat)
     {
         activeStatPanel.SetActive(true);
@@ -168,25 +189,69 @@ public class BattleUI_Controller : MonoBehaviour
         Destroy(statPanel);
     }
 
+    //A veezérlőnek ad jelentést játékos általi kártya idézésről
     public void ReportSummon(int handIndex, int position)
     {
         int playerKey = playerFields.Keys.ElementAt(position);
         controller.ReportSummon(handIndex, playerKey);
     }
 
+    //A megadott oldalú játékosnak engedélyezi/tiltja a kártya mozgatás/húzás/lerakás interakciókat
     public void SetDragStatus(int key, bool status)
     {
         GetScript(key).SetDraggableStatus(status);
     }
 
+    //Botok UI-jának küld egy parancsot egy megadott indexű kártya lerakására/aktiválására
     public void SummonCard(int key, int index)
     {
         GetScript(key).SummonCard(index);
     }
 
+    //Felfedi a megadott oldalú játékos lerakott kártyáit
     public void RevealCards(int key)
     {
         GetScript(key).RevealCards();
+    }
+
+    //A játékmezőn megjelenít üzeneteket a játékosok számára (pl kinek a köre van, kör eredménye)
+    public bool DisplayMessage(string msg)
+    {
+        //Ha nincs még megjelenített üzenet
+        if(!isMessageOnScreen)
+        {
+            messageText = Instantiate(prefabMessageText,playerFieldCanvas.transform.position,Quaternion.identity,playerFieldCanvas.transform);
+            messageText.GetComponent<TMP_Text>().text = msg;
+            isMessageOnScreen = true;
+            return true;
+
+        }
+
+        //Ha van már épp megjelenített üzenet, akkor nem jeleníti meg rajta 
+        else
+        {
+            return false;
+        }
+    }
+
+    public void HideMessage()
+    {
+        if(isMessageOnScreen)
+        {
+            Destroy(messageText);
+            isMessageOnScreen = false;
+        }
+    }
+
+    public bool GetMessageStatus()
+    {
+        return this.isMessageOnScreen;
+    }
+
+    //Kör végén a kör eredményével parancsot küld a megfelelő játékos UI-nak, hogy rakja el a lerakott lapokat
+    public void PutCardsAway(int key, bool isWinner)
+    {
+        GetScript(key).PutCardsAway(isWinner);
     }
 
 }

@@ -68,10 +68,8 @@ public class Deck
 	}
 
 	//Fisher-Yates keverés implementálása
-	public void ShuffleDeck()
+	public void ShuffleDeck(System.Random rng)
 	{
-		System.Random rng = new System.Random();
-
 		int n = cards.Count;  
     	while (n > 1) {  
 	        n--;  

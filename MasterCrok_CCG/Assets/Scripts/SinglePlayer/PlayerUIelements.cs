@@ -125,7 +125,7 @@ public class PlayerUIelements : MonoBehaviour
 
 
     //Létrehoz egy kártya prefabot a kézbe
-    public void CreateCard(Card data, bool visible)
+    public GameObject CreateCard(Card data, bool visible)
     {
         GameObject temp = Instantiate(cardPrefab, GetHandField().transform.position, Quaternion.identity, GetHandField().transform);
         temp.transform.rotation = Quaternion.Euler(0f,0f,rotation);
@@ -142,8 +142,7 @@ public class PlayerUIelements : MonoBehaviour
         //Beállítjuk a kártya láthatóságát
         temp.GetComponent<CardBehaviour>().SetVisibility(visible);
 
-        //Kártya objektum hozzáadása a kéz mezőhöz
-        AddCardToHand(temp);
+        return temp;
     }
 
     public void UpdateDeckCounter(int newDeckSize)
@@ -271,18 +270,21 @@ public class PlayerUIelements : MonoBehaviour
         this.cardsInField.Add(card);
     }
 
+    public void BlindSummon(GameObject card)
+    {
+       //Áthelyezzük a kártyát az aktív mezőre
+        card.transform.SetParent(GetActiveField().transform);
+        this.cardsInField.Add(card);
+    }
+
     public void PutCardIntoWinners()
     {
         if(this.cardsInField.Any())
         {
-            for(var i = 0; i < cardsInField.Count; i++)
+            foreach (GameObject card in cardsInField) 
             {
-                if(i == cardsInField.Count - 1)
-                {
-                    winnerCardImage.sprite = cardsInField[i].GetComponent<Image>().sprite;
-                }
-                Destroy(cardsInField[i]);
-                
+                winnerCardImage.sprite = card.GetComponent<CardBehaviour>().GetArt();
+                Destroy(card);
             }
 
             cardsInField.Clear();
@@ -293,13 +295,10 @@ public class PlayerUIelements : MonoBehaviour
     {
         if(this.cardsInField.Any())
         {
-            for(var i = 0; i < cardsInField.Count; i++)
+            foreach (GameObject card in cardsInField) 
             {
-                if(i == cardsInField.Count - 1)
-                {
-                    lostCardImage.sprite = cardsInField[i].GetComponent<Image>().sprite;
-                }
-                Destroy(cardsInField[i]);
+                lostCardImage.sprite = card.GetComponent<CardBehaviour>().GetArt();
+                Destroy(card);
             }
 
             cardsInField.Clear();
@@ -352,6 +351,19 @@ public class PlayerUIelements : MonoBehaviour
     public bool GetDraggableStatus()
     {
         return this.draggableCards;
+    }
+
+    public void PutCardsAway(bool isWinner)
+    {
+        if(isWinner)
+        {
+            PutCardIntoWinners();
+        }
+
+        else 
+        {
+            PutCardIntoLosers();
+        }
     }
 
 }

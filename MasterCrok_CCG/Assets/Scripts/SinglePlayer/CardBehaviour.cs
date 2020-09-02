@@ -114,6 +114,7 @@ public class CardBehaviour : MonoBehaviour
 	        {
 	            gameObject.transform.position = startingPosition;
 	            gameObject.transform.SetParent(startParent.transform);
+                
                 //Kézbe visszahelyezéskor eredeti pozícióját foglalja el és rendezzük a kezet
                 gameObject.transform.SetSiblingIndex(siblingIndex);
                 playerField.GetComponent<PlayerUIelements>().SortHand();
@@ -163,5 +164,10 @@ public class CardBehaviour : MonoBehaviour
             Reveal();
         }
 
+    }
+
+    public Sprite GetArt()
+    {
+        return this.cardData.GetArt();
     }
 }

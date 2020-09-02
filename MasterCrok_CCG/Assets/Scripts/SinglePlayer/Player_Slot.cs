@@ -72,6 +72,22 @@ public class Player_Slot
 		}
 	}
 
+	public Card BlindDraw()
+	{
+		Card temp = player.GetActiveDeck().DrawCard();
+
+		if(temp != null)
+		{
+			activeCards.Add(temp);
+			return temp;
+		}
+
+		else 
+		{
+			return null;	
+		}
+	}
+
 	//Draw ellentéte, visszarakja a lapot a pakliba a megadott célból.
 	public void PutAway(List<Card> cardList)
 	{
@@ -182,9 +198,9 @@ public class Player_Slot
 		return this.hasLateEffect;
 	}
 
-	public void ShuffleDeck()
+	public void ShuffleDeck(System.Random rng)
 	{
-		this.player.GetActiveDeck().ShuffleDeck();
+		this.player.GetActiveDeck().ShuffleDeck(rng);
 	}
 
 	public int GetPlayerID()
@@ -235,6 +251,11 @@ public class Player_Slot
 		}
 
 		return sum;
+	}
+
+	public int GetWinAmount()
+	{
+		return this.GetWinners().Count;
 	}
 
 }

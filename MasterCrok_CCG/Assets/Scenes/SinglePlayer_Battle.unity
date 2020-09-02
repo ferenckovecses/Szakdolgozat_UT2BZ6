@@ -1382,6 +1382,10 @@ MonoBehaviour:
     type: 3}
   statChoiceBox: {fileID: 2692135012497418843, guid: cb22b8e1379c92c46a07b05706f14336,
     type: 3}
+  prefabMessageText: {fileID: 5859188659069689409, guid: def72973c6e8e99479dab2ce49c0540b,
+    type: 3}
+  deckSize: {fileID: 7559531545815898241, guid: 19b57ad6c5eddd4408bf37e41e312e82,
+    type: 3}
   positions:
   - {fileID: 654931963}
   - {fileID: 1078166084}
@@ -1389,8 +1393,6 @@ MonoBehaviour:
   - {fileID: 1671772980}
   playerFieldCanvas: {fileID: 915578985}
   HUDcanvas: {fileID: 1923195844}
-  deckSize: {fileID: 7559531545815898241, guid: 19b57ad6c5eddd4408bf37e41e312e82,
-    type: 3}
   activeStatText: {fileID: 1953091658}
   activeStatPanel: {fileID: 740999493}
 --- !u!4 &1963019886
