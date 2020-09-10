@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum SkillResponse{Use, Store, Pass};
+
 public static class Bot_Behaviour
 {
+	static int randomMaxTreshold = 1000;
+	static float errorTreshold = 0.8f;
 
 	//A kézben lévő lapok értékei alapján eldönti, hogy melyik típussal játsszunk
 	public static ActiveStat ChooseFightType(List<Card> cardsInHand)
@@ -50,12 +54,13 @@ public static class Bot_Behaviour
 
 	//A megadott típus alapján visszaadja a kézben lévő lapok közül az optimális megoldást
 	//Hogy ne legyen túl tökéletes a játék és "emberi hibát" is mutasson esélyt rá hogy random döntsön
+	//TODO: Képességeket is nézze és vegye számításba
 	public static int ChooseRightCard(List<Card> cardsInHand, ActiveStat type)
 	{
 
-		int choiceValue = UnityEngine.Random.Range(1,100);
+		int choiceValue = UnityEngine.Random.Range(1,randomMaxTreshold);
 
-		if(choiceValue < 40)
+		if(choiceValue < randomMaxTreshold / errorTreshold)
 		{
 			return UnityEngine.Random.Range(0, cardsInHand.Count - 1);
 		}
@@ -88,6 +93,13 @@ public static class Bot_Behaviour
 
 			return index;
 		}
+	}
+
+	//Döntést ad arról, hogy a bot mit kezdjen a képességével.
+	//TODO: Do the AI stuff
+	public static SkillResponse ChooseSkill(List<Card> cardsInHand, List<Card> cardsOnField, List<List<Card>> opponentCards)
+	{
+		return SkillResponse.Pass;
 	}
 	
 }

@@ -4,18 +4,11 @@ using UnityEngine;
 using System.Linq;
 
 
-public enum GameMainPhase {Preparation, SetOrder, DrawPhase, SetRoles, Turn, Compare, Result, BlindMatch};
+public enum GameMainPhase {Preparation, SetOrder, DrawPhase, SetRoles, Turn, Reveal, Skill, Compare, Result, BlindMatch};
 public enum ActiveStat {NotDecided, Power, Intelligence, Reflex};
 
 public class BattleController : MonoBehaviour
 {
-    [Header("Adattárolók")]
-    int numberOfPlayers;
-    GameData_Controller dataController;
-    Dictionary<int, Player_Slot> players;
-    List<int> playerKeys;
-    public float drawTempo = 0.1f;
-
     [Header("Prefabok és referenciák")]
     public BattleUI_Controller UI;
     public CardFactory factory;
@@ -24,25 +17,27 @@ public class BattleController : MonoBehaviour
     public GameMainPhase currentPhase;
     public ActiveStat currentStat;
 
-    [Header("Játék fázis követők")]
-    bool phaseChange;
-    bool turnChange;
-    bool firstRound;
+    //Adattárolók
+    private int numberOfPlayers;
+    private GameData_Controller dataController;
+    private Dictionary<int, Player_Slot> players;
+    private List<int> playerKeys;
+    private float drawTempo = 0.1f;
 
-    //A játékosnak a reakcióit jelzi
-    bool playerReacted;
+    //Játékbeli fázisok követői
+    private bool phaseChange;
+    private bool turnChange;
+    private bool firstRound;
+    private bool playerReacted;
+    private bool isMessageOn;
+    private bool blindMatch;
+    private bool actionFinished;
 
-    //Játékbeli státuszok
-    bool isMessageOn;
-    bool blindMatch;
-    bool actionFinished;
-
-    //Random generátor
-    System.Random rng;
-
+    //RNG generátor
+    private System.Random rng;
 
     // Start is called before the first frame update
-    void Awake()
+    private void Awake()
     {
         dataController = GameObject.Find("GameData_Controller").GetComponent<GameData_Controller>();
         playerKeys = new List<int>();
@@ -60,7 +55,7 @@ public class BattleController : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
         //Játék fő fázisainak változásai
         if(phaseChange)
@@ -73,41 +68,40 @@ public class BattleController : MonoBehaviour
                 case GameMainPhase.DrawPhase: DrawPhase(); break;
                 case GameMainPhase.SetRoles: SetRoles(); break;
                 case GameMainPhase.Turn: StartCoroutine(Turn()); break;
+                case GameMainPhase.Reveal: StartCoroutine(Reveal()); break;
+                case GameMainPhase.Skill: StartCoroutine(Skill()); break;
                 case GameMainPhase.Compare: StartCoroutine(Compare()); break;
                 case GameMainPhase.BlindMatch: StartCoroutine(BlindMatch()); break;
                 case GameMainPhase.Result: Result(); break;
                 default: break;
             }
         }
-
-
     }
 
     #region Main Game Phases
 
-    void Preparation()
+    private void Preparation()
     {
         AddPlayer();
         GenerateOpponents();
         GenerateUI();
 
-        currentPhase = GameMainPhase.SetOrder;
-        phaseChange = true;
+        ChangePhase(GameMainPhase.SetOrder);
     }
 
     //A játékos listában felállít egy sorrendet, amit követve jönnek a következő körben
-    void SetOrder(int winnerKey = -1)
+    private void SetOrder(int winnerKey = -1)
     {
-
-
-
+        //A legelső körnél nincs szükség különleges sorrendre
         if(firstRound)
         {
             CreateRandomOrder();
             firstRound = false;
-            currentPhase = GameMainPhase.DrawPhase;
+
+            ChangePhase(GameMainPhase.DrawPhase);
         }
 
+        //A többi esetben az előző meccs nyertese lesz az új támadó, azaz az első a listában
         else 
         {
             CreateRandomOrder();
@@ -118,14 +112,12 @@ public class BattleController : MonoBehaviour
                 PutWinnerInFirstPlace(winnerKey);
             }
 
-            currentPhase = GameMainPhase.SetRoles;
+            ChangePhase(GameMainPhase.SetRoles);
         }
-
-        phaseChange = true;
     }
 
     //A kezdőkártyák felhúzása a kézbe
-    void DrawPhase()
+    private void DrawPhase()
     {
         //Paklik megkeverése
         foreach (int key in playerKeys) 
@@ -139,7 +131,7 @@ public class BattleController : MonoBehaviour
 
     //Beállítjuk a Támadó-Védő szerepeket
     //Mindig a player lista első eleme a Támadó, a többiek védők
-    void SetRoles()
+    private void SetRoles()
     {
         var i = 0;
         foreach (int key in playerKeys) 
@@ -158,13 +150,12 @@ public class BattleController : MonoBehaviour
             i += 1;
         }
 
-        currentPhase = GameMainPhase.Turn;
-        phaseChange = true;
+        ChangePhase(GameMainPhase.Turn);
     }
 
     //A kör fázis
     //Részei: Húzás, [Harctípus választás], Idézés
-    IEnumerator Turn()
+    private IEnumerator Turn()
     {
         //Minden játékoson végigmegy
         foreach (int key in playerKeys) 
@@ -202,7 +193,7 @@ public class BattleController : MonoBehaviour
                 }
             }
 
-            //Csak akkor kell húzni, ha nincs vakharc
+            //Csak akkor kell kézből idézni, ha nincs vakharc
             if(!this.blindMatch)
             {
                 //Ha a játékos státusza szerint a kártyahúzásra vár
@@ -229,30 +220,105 @@ public class BattleController : MonoBehaviour
                     }
 
                     SetDragStatus(key, false);
-                    players[key].SetStatus(PlayerTurnStatus.ChooseSkill);
-                }   
+                }  
             }
+
+            //Átállítjuk a játékos státuszát: A képesség kiválasztására vár
+            players[key].SetStatus(PlayerTurnStatus.ChooseSkill); 
         }
 
-        //Továbblépés a következő fázisra
-        currentPhase = GameMainPhase.Compare;
-        phaseChange = true;
+        ChangePhase(GameMainPhase.Reveal);
     }
 
-    //Összehasonlítás fázis: Felfedjük a kirakott lapokat és összehasonlítjuk értékeiket
-    IEnumerator Compare()
+    //Pályára rakott kártyák felfedése sorban
+    private IEnumerator Reveal()
     {
-
-        List<int> values = new List<int>();
-        int max = 0;
-        int maxId = -1;
-
-        //Felfedés
         foreach (int key in playerKeys) 
         {
             RevealCards(key);
             yield return new WaitForSeconds(drawTempo * 5);
+        }
 
+        ChangePhase(GameMainPhase.Skill);
+    }
+
+    //Skill fázis: Körbemegyünk és mindenkit megkérdezünk, hogy mit akar a képességével kezdeni
+    private IEnumerator Skill()
+    {
+        //Ciklusváltozó a while-hoz: Akkor lesz true, ha mindenki döntött a képességéről
+        bool everyoneDecided = false;
+
+        //Ha mindenki döntött, akkor break
+        int playerMadeDecision = 0;
+
+        //Addig megyünk, amíg mindenki el nem használja vagy passzolja a képességét
+        while(!everyoneDecided)
+        {
+
+            foreach (int key in playerKeys) 
+            {
+                 //Ha a játékos státusza szerint a skill eldöntésére vár
+                if(players[key].GetStatus() == PlayerTurnStatus.ChooseSkill)
+                {
+
+                    //Ha ember, akkor várunk a döntésre
+                    if(players[key].GetPlayerStatus())
+                    {
+                        //Várunk a visszajelzésére
+                        //yield return WaitForPlayerInput();
+                        Pass(key);
+                        playerMadeDecision++;
+                    }
+
+                    //Ellenkező esetben az AI dönt a képességről
+                    else 
+                    {
+                        //A többi játékos pályán lévő kártyáinak adatait fetcheljük, mivel ezekről tudhat az AI
+                        List<List<Card>> opponentCards = GetOpponentsCard(key);
+
+                        //AI agy segítségét hívjuk a döntésben, átadjuk neki a szükséges infót és választ kapunk cserébe
+                        SkillResponse response = Bot_Behaviour.ChooseSkill(players[key].GetCardsInHand(), players[key].GetCardsOnField(), opponentCards);
+
+
+                        //Kis várakozás, gondolkodási idő imitálás a döntés meghozása előtt, hogy ne történjen minden túl hirtelen
+                        yield return new WaitForSeconds(drawTempo * UnityEngine.Random.Range(10,20));
+
+                        //Az AI döntése alapján itt végzi el a játék a megfelelő akciókat
+                        switch (response) 
+                        {
+                            case SkillResponse.Pass: Pass(key);playerMadeDecision++; break;
+                            case SkillResponse.Store: break;
+                            case SkillResponse.Use: playerMadeDecision++; break;
+                            default: Pass(key); playerMadeDecision++; break;
+                        }
+                    }
+                }
+
+                //Ha egyszerre mindenki volt, vagy már nem talált olyat, akinek a státusza 
+                if(playerMadeDecision == numberOfPlayers)
+                {
+                    everyoneDecided = true;
+                }
+            }
+        }
+
+        ChangePhase(GameMainPhase.Compare);
+    } 
+
+    //Összehasonlítás fázis: Összehasonlítjuk az aktív kártyák értékét
+    private IEnumerator Compare()
+    {
+
+        //Adunk időt az üzeneteknek, illetve a játékosoknak hogy megnézzék a pályát
+        yield return new WaitForSeconds(drawTempo * 10);
+
+        //Kiértékeléshez szükséges változók
+        List<int> values = new List<int>();
+        int max = 0;
+        int maxId = -1;
+
+        foreach (int key in playerKeys) 
+        {
             //Hozzáadjuk minden mező értékét
             values.Add(players[key].GetActiveCardsValue(currentStat));
 
@@ -263,9 +329,9 @@ public class BattleController : MonoBehaviour
                 max = players[key].GetActiveCardsValue(currentStat);
                 maxId = key;
             }
-
         }
 
+        //Ha több ember is rendelkezik a max value-val: Vakharc
         if(values.Count(p => p == max) > 1)
         {
 
@@ -275,6 +341,7 @@ public class BattleController : MonoBehaviour
             phaseChange = true;
         }
 
+        //Ellenkező esetben eldönthető, hogy ki a győztes
         else
         {
             //Győzelmi üzenet megjelenítése
@@ -311,6 +378,8 @@ public class BattleController : MonoBehaviour
                 players[key].PutActiveCardAway();
             }
 
+            yield return new WaitForSeconds(drawTempo * 5f);
+
             //Beállítjuk a győztes kulcsával az új sorrendet
             SetOrder(maxId);
 
@@ -319,7 +388,7 @@ public class BattleController : MonoBehaviour
     }
 
     //Vakharc: Döntetlen esetén mindegyik lap vesztes lesz, majd lefordítva a pakli felső lapját teszik ki a pájára    
-    IEnumerator BlindMatch()
+    private IEnumerator BlindMatch()
     {
 
         foreach (int key in playerKeys) 
@@ -338,11 +407,10 @@ public class BattleController : MonoBehaviour
 
         //Az utolsó védő lesz a következő támadó
         SetOrder(playerKeys[playerKeys.Count - 1]);
-
     }
 
     //Eredmény: Győztes hirdetés.
-    void Result()
+    private void Result()
     {
         List<int> winAmounts = new List<int>();
         int maxWin = 0;
@@ -373,10 +441,16 @@ public class BattleController : MonoBehaviour
     #endregion
 
 
-    #region Interactions
+    #region Commands
+
+    private void ChangePhase(GameMainPhase nextPhase)
+    {
+        currentPhase = nextPhase;
+        phaseChange = true;
+    }
 
     //Felhúz a játékosok kezébe 4 lapot kezdésnél
-    IEnumerator DrawStarterCards()
+    private IEnumerator DrawStarterCards()
     {
         for(var i = 0; i < 4; i++)
         {
@@ -387,12 +461,11 @@ public class BattleController : MonoBehaviour
             }
         }
 
-        currentPhase = GameMainPhase.SetRoles;
-        phaseChange = true;
+        ChangePhase(GameMainPhase.SetRoles);
     }
 
     //Felhúz megadott számú lapot a megadott játékosnak
-    IEnumerator DrawCardsUp(int key, int amount = 1)
+    private IEnumerator DrawCardsUp(int key, int amount = 1)
     {
         for(var i = 0; i < amount; i++)
         {
@@ -403,7 +476,7 @@ public class BattleController : MonoBehaviour
 
 
     //A játékos referenciájának eltárolása
-    void AddPlayer()
+    private void AddPlayer()
     {
         int id = dataController.GetActivePlayer().GetUniqueID();
         players.Add(id, new Player_Slot(dataController.GetActivePlayer(),true));
@@ -411,7 +484,7 @@ public class BattleController : MonoBehaviour
     }
 
     //Generál ellenfeleket
-    void GenerateOpponents()
+    private void GenerateOpponents()
     {
         List<string> names = new List<string> {"Bot Ond", "Andrew Id", "Robot Gida"};
         numberOfPlayers = dataController.GetOpponents();
@@ -427,19 +500,19 @@ public class BattleController : MonoBehaviour
     }
 
     //Legenerálja a UI felületet
-    void GenerateUI()
+    private void GenerateUI()
     {
         UI.CreatePlayerFields(numberOfPlayers, playerKeys, players[playerKeys[0]].GetDeckSize());
     }
 
     //Megkeveri a játékos pakliját
-    void ShuffleDeck(Player_Slot player, System.Random rng)
+    private void ShuffleDeck(Player_Slot player, System.Random rng)
     {
         player.ShuffleDeck(rng);
     }
 
     //Kártya húzás: Modellből adatok lekérése és továbbítása a megfelelő játékos oldalnak.
-    void DrawTheCard(int key)
+    private void DrawTheCard(int key)
     {
         Card cardData = null; 
 
@@ -474,44 +547,32 @@ public class BattleController : MonoBehaviour
         }
     }
 
-    void SetDragStatus(int key, bool status)
+    private void SetDragStatus(int key, bool status)
     {
         UI.SetDragStatus(key, status);
     }
 
     //Kártya idézés: A megfelelő játékospanel felé továbbítjuk a megfelelő kártya kézbeli azonosítóját
-    void SummonCard(int key, int handIndex)
+    private void SummonCard(int key, int handIndex)
     {
         UI.SummonCard(key, handIndex);
     }
 
     //Felfedi a lerakott kártyát
-    void RevealCards(int key)
+    private void RevealCards(int key)
     {
         UI.RevealCards(key);
     }
 
     //Elrakatja a UI-on megjelenített kártyákat a megfelelő helyre
-    IEnumerator PutCardsAway(int key, bool isWinner)
+    private IEnumerator PutCardsAway(int key, bool isWinner)
     {
         yield return new WaitForSeconds(1f);
         UI.PutCardsAway(key, isWinner);
     }
 
-    //Visszapakolja a kártyákat a játékosok paklijába
-    public void ResetDecks()
-    {
-        foreach (int keys in playerKeys) 
-        {
-            if(players[keys].GetPlayerStatus())
-            {
-                players[keys].PutEverythingBack();
-            }
-        }
-    }
-
     //Frissítést küld a játékpanelen az aktuális harctípus szövegére
-    void RefreshStatDisplay()
+    private void RefreshStatDisplay()
     {
         string statText;
 
@@ -527,7 +588,7 @@ public class BattleController : MonoBehaviour
     }
 
     //Megjeleníti a játékos számára a harctípus választó képernyőt
-    IEnumerator DisplayStatBox()
+    private IEnumerator DisplayStatBox()
     {
         while(isMessageOn)
         {
@@ -538,9 +599,16 @@ public class BattleController : MonoBehaviour
     }
 
     //Értesítő üzenetet jelenít meg a UI felületen
-    IEnumerator DisplayNotification(string msg)
+    private IEnumerator DisplayNotification(string msg)
     {
-        //Megjelenítjük
+
+        //Várakozunk a megjelenítéssel, amíg az előző üzenet eltűnik
+        while(isMessageOn)
+        {
+            yield return null;
+        }
+
+        //Megjelenítjük az üzenetet
         UI.DisplayMessage(msg);
         isMessageOn = true;
 
@@ -562,9 +630,29 @@ public class BattleController : MonoBehaviour
         }
     }
 
+    private List<List<Card>> GetOpponentsCard(int currentPlayer)
+    {
+        List<List<Card>> activeCardsOnTheField = new List<List<Card>>();
+        foreach (int key in playerKeys) 
+        {
+            if(key != currentPlayer)
+            {
+                activeCardsOnTheField.Add(players[key].GetCardsOnField());
+            }
+        }
+
+        return activeCardsOnTheField;
+    }
+
+    private void Pass(int key)
+    {
+        StartCoroutine(DisplayNotification(players[key].GetUsername() + " passzolta a képességet!"));
+        players[key].SetStatus(PlayerTurnStatus.Finished);
+    }
+
     #endregion
 
-    #region Report
+    #region Incoming Messages
 
     //A játékos által kiválasztott harctípus beállítása
     public void ReportStatChange(ActiveStat newStat)
@@ -587,12 +675,24 @@ public class BattleController : MonoBehaviour
         players[playerKey].PlayCardFromHand(indexInHand);
     }
 
+    //Visszapakolja a kártyákat a játékosok paklijába
+    public void ResetDecks()
+    {
+        foreach (int keys in playerKeys) 
+        {
+            if(players[keys].GetPlayerStatus())
+            {
+                players[keys].PutEverythingBack();
+            }
+        }
+    }
+
     #endregion
 
     #region Tools
 
     //Megkeveri a kulcsokat tartalmazó listát, ezzel a játékosok kezdő sorrendjét kialakítva
-    void CreateRandomOrder()
+    private void CreateRandomOrder()
     {
         int n = playerKeys.Count;  
         while (n > 1) {  
@@ -605,15 +705,13 @@ public class BattleController : MonoBehaviour
     }
 
     //A sorrend/kulcs lista elejére helyezi a győztest
-    void PutWinnerInFirstPlace(int key)
+    private void PutWinnerInFirstPlace(int key)
     {
         playerKeys.Remove(key);
         playerKeys.Insert(0,key);
     }
-
-
-
     #endregion
 
 
 }
+

@@ -9,17 +9,12 @@ public enum DeckStatus {NotEnoughCard, TooManyCards, Verified};
 [System.Serializable]
 public class Deck
 {
-	public List<Card> cards;
-	DeckStatus deckStatus;
+	private List<Card> cards;
+	private DeckStatus deckStatus;
 
 	public Deck()
 	{
 		this.cards = new List<Card>();
-	}
-
-	public void LoadDeck(string filepath)
-	{
-		//Betölti a játékos pakliját fájlból
 	}
 
 	public void AddCard(Card newCard)
@@ -81,7 +76,7 @@ public class Deck
 	//Visszaadja, hogy hány ilyen kártya található a pakliban
 	public int DuplicateCounter(Card cardToCompare)
 	{
-		return (int)cards.Count(p => p.cardID == cardToCompare.cardID);
+		return (int)cards.Count(p => p.GetCardID() == cardToCompare.GetCardID());
 	}
 
 	public DeckStatus GetDeckStatus()
@@ -111,7 +106,7 @@ public class Deck
 
 	public void SortDeck()
 	{
-		this.cards = cards.OrderBy(o=>o.cardID).ToList();
+		this.cards = cards.OrderBy(o=>o.GetCardID()).ToList();
 	}
 
 	public List<int> GetCardList()

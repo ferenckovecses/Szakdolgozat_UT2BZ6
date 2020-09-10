@@ -15,29 +15,29 @@ public enum PlayerTurnRole{Attacker, Defender};
 public class Player_Slot
 {
 	//A játékos a pozícióban
-	Player player;
+	private Player player;
 
 	//A játékban használt lapok tárolói
-	List<Card> cardsInHand;
-	List<Card> winnerCards;
-	List<Card> lostCards;
+	private List<Card> cardsInHand;
+	private List<Card> winnerCards;
+	private List<Card> lostCards;
 
 	//A kijátszott kártya helye
-	List<Card> activeCards;
+	private List<Card> activeCards;
 
 	//Értékmódosítók
-	List<StatBonus> statBonus;
+	private List<StatBonus> statBonus;
 
 	//Játék közbeni státuszok tárolói
-	PlayerTurnStatus playerStatus;
-	PlayerTurnResult playerResult;
-	PlayerTurnRole playerRole;
+	private PlayerTurnStatus playerStatus;
+	private PlayerTurnResult playerResult;
+	private PlayerTurnRole playerRole;
 	
 	//Kiértékelés utáni/következő körre ható aktivált kártya hatás jelzése
-	bool hasLateEffect;
+	private bool hasLateEffect;
 
 	//A model egy játékoshoz tartozik-e
-	bool isThePlayer;
+	private bool isThePlayer;
 
 	public Player_Slot(Player player, bool playerStatus = false)
 	{
@@ -183,7 +183,7 @@ public class Player_Slot
 		cardsInHand.RemoveAt(cardID);
 	}
 
-	public List<Card> GetPlayedCard()
+	public List<Card> GetCardsOnField()
 	{
 		return this.activeCards;
 	}

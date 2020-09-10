@@ -11,11 +11,11 @@ public class CardDex_Controller : MonoBehaviour
 {
     //A kártyák és UI elemek tárolói
     public CardFactory factory;
-	List<Card> cardList;
-	List<GameObject> cardDisplayList = new List<GameObject>();
+	private List<Card> cardList;
+	private List<GameObject> cardDisplayList = new List<GameObject>();
 
 	//Az enciklopédia státuszát tároló változó
-	DexState currentState;
+	private DexState currentState;
 
 	//Prefabek és referenciák
 	public Button cardDisplayPrefab;
@@ -23,7 +23,7 @@ public class CardDex_Controller : MonoBehaviour
 	public GameObject contentParent;
 	public GameObject UI_canvas;
 
-	GameObject displayedUI;
+	private GameObject displayedUI;
 
 	void Start()
 	{
@@ -35,7 +35,7 @@ public class CardDex_Controller : MonoBehaviour
 		{
 			Button temp = Instantiate(cardDisplayPrefab, new Vector3(0,0,0), Quaternion.identity, contentParent.transform);
 			temp.GetComponent<Image>().sprite = card.GetArt();
-			temp.onClick.AddListener(delegate{CardClicked((card.cardID)-1);});
+			temp.onClick.AddListener(delegate{CardClicked((card.GetCardID())-1);});
 		}
 
 		//Nézet igazítása a lista elejére.
@@ -51,8 +51,8 @@ public class CardDex_Controller : MonoBehaviour
 
     		displayedUI = Instantiate(cardDetailPrefab, new Vector3(640,360,0), Quaternion.identity, UI_canvas.transform);
     		
-    		GameObject.Find("Skill").GetComponent<TMP_Text>().text = cardList[id].skillName + ": \n" + cardList[id].skillDescription;
-    		GameObject.Find("Name").GetComponent<TMP_Text>().text = cardList[id].cardName;
+    		GameObject.Find("Skill").GetComponent<TMP_Text>().text = cardList[id].GetSkillName() + ": \n" + cardList[id].GetCardSkill();
+    		GameObject.Find("Name").GetComponent<TMP_Text>().text = cardList[id].GetCardName();
     		GameObject.Find("Art").GetComponent<Image>().sprite = cardList[id].GetArt();
     		GameObject.Find("Power").GetComponent<TMP_Text>().text = "Erő: " + cardList[id].GetPower().ToString();
     		GameObject.Find("Intelligence").GetComponent<TMP_Text>().text = "Intelligencia: " + cardList[id].GetIntelligence().ToString();

@@ -34,22 +34,20 @@ public class PlayerUIelements : MonoBehaviour
     public GameObject cardPrefab;
     public List<GameObject> cardsInHand;
     public List<GameObject> cardsInField;
-    public bool openHand;
-    bool draggableCards;
-    int cardCount;
-    int cardsInDeck;
 
-    [Header("Kártya a kézben hatás")]
-    float turningPerCard = 5f;
-    float cardDistance = 25f;
-    float cardHeightDiff = 5f;
+    //Kártya a kézben hatás
+    private float turningPerCard = 5f;
+    private float cardDistance = 25f;
+    private float cardHeightDiff = 5f;
 
-    [Header("UI Pozícionálás")]
-    int positionID;
-    float rotation;
-
-    [Header("Azonosítás")]
-    int uniqueID;
+    //Adattárolók
+    private int positionID;
+    private float rotation;
+    private int uniqueID;
+    private bool openHand;
+    private bool draggableCards;
+    private int cardCount;
+    private int cardsInDeck;
 
     void Awake()
     {
@@ -234,6 +232,9 @@ public class PlayerUIelements : MonoBehaviour
 
             this.GetACard(i).transform.rotation = Quaternion.Euler(0f,0f,cardTurning + rotation);
 
+            //Helyrerakjuk a hierarchiában
+            this.GetACard(i).transform.SetSiblingIndex(i);
+
         }
     }
 
@@ -284,6 +285,7 @@ public class PlayerUIelements : MonoBehaviour
             foreach (GameObject card in cardsInField) 
             {
                 winnerCardImage.sprite = card.GetComponent<CardBehaviour>().GetArt();
+                card.GetComponent<CardBehaviour>().TerminateCard();
                 Destroy(card);
             }
 
@@ -298,6 +300,7 @@ public class PlayerUIelements : MonoBehaviour
             foreach (GameObject card in cardsInField) 
             {
                 lostCardImage.sprite = card.GetComponent<CardBehaviour>().GetArt();
+                card.GetComponent<CardBehaviour>().TerminateCard();
                 Destroy(card);
             }
 

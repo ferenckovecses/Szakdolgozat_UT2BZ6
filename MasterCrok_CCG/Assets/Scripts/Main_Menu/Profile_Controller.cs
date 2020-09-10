@@ -17,13 +17,13 @@ public class Profile_Controller : MonoBehaviour
 	public TMP_InputField nameField;
 	public TMP_Text statusText;
 	public GameObject profileAddObject;
-	Main_Menu_Controller mainMenuController;
+	private Main_Menu_Controller mainMenuController;
 
 	[Header("Adattárolók")]
 	public List<Player> playerProfiles;
 	public List<GameObject> playerUIelements;
 	public GameObject notificationPrefab;
-	bool needsUpdate;
+	private bool needsUpdate;
 
 	[Header("Prefab Elemek")]
 	public CardFactory factory;

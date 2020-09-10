@@ -12,23 +12,44 @@ public class Card : ScriptableObject
 		Sportoló, Villám, Mókás, Vadnyugat, Rendfenntartás};
 
 	[Header("Alap Információk")]
-	public int cardID;
-	public string cardName;
-	public CardType type;
+
+	[SerializeField]
+	int cardID = 0;
+
+	[SerializeField]
+	string cardName = null;
+
+	[SerializeField]
+	CardType type = default(CardType);
 
 	[Header("Képesség")]
-	public string skillName;
+
+	[SerializeField]
+	string skillName = null;
+
 	[TextArea(10,10)]
-	public string skillDescription;
-	public bool IsAQuickSkill = false;
+	[SerializeField]
+	string skillDescription = null;
+
+	[SerializeField]
+	bool IsAQuickSkill = false;
+
+	[SerializeField]
+	bool isAHandSkill = false;
 
 	[Header("Pontok")]
-	public int power;
-	public int intelligence;
-	public int reflex;
+	[SerializeField]
+	int power = 0;
+
+	[SerializeField]
+	int intelligence = 0;
+
+	[SerializeField]
+	int reflex = 0;
 
 	[Header("Vizuális elemek")]
-	public Sprite cardImage;
+	[SerializeField]
+	Sprite cardImage = null;
 
 	public Sprite GetArt()
 	{
@@ -78,6 +99,16 @@ public class Card : ScriptableObject
 	public string GetCardSkill()
 	{
 		return this.skillDescription;
+	}
+
+	public bool HasHandSkill()
+	{
+		return this.isAHandSkill;
+	}
+
+	public bool HasQuickSkill()
+	{
+		return this.IsAQuickSkill;
 	}
 
 

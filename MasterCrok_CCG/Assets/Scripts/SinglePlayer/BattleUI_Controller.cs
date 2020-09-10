@@ -20,14 +20,6 @@ public class BattleUI_Controller : MonoBehaviour
     public GameObject prefabMessageText;
     public TMP_Text deckSize;
 
-    [Header("Adattárolók")]
-    public Dictionary <int, GameObject> playerFields;
-    bool isMessageOnScreen;
-    GameObject cardDetailWindow;
-    GameObject statPanel;
-    GameObject messageText;
-
-
     [Header("Referenciák")]
     public List<GameObject> positions;
     public GameObject playerFieldCanvas;
@@ -35,10 +27,12 @@ public class BattleUI_Controller : MonoBehaviour
     public TMP_Text activeStatText;
     public GameObject activeStatPanel;
 
-
-
-
-
+    //Adattárolók
+    private Dictionary <int, GameObject> playerFields;
+    private bool isMessageOnScreen;
+    private GameObject cardDetailWindow;
+    private GameObject statPanel;
+    private GameObject messageText;
 
     // Start is called before the first frame update
     void Awake()

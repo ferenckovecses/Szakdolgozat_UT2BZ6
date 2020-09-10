@@ -8,31 +8,36 @@ Feladata: A kártya mozgásait és kártyákra tipikus felhasználói interakci�
 [Card] ----> PlayerUI Elements ----> UI Controller ----> Battle Controller
 */
 
+public enum SkillState{NotDecided,Store,Use,Pass};
+
 public class CardBehaviour : MonoBehaviour
 {
-	[Header("Státusz változók")]
-	bool isDragged;
-	bool isAboveActiveField;
-	bool activated;
-	bool detailedView;
+	//Státusz változók
+	private bool isDragged;
+	private bool isAboveActiveField;
+	private bool activated;
+	private bool detailedView;
+    private SkillState skill;
 
-	[Header("Pozíciónáló elemek")]
-	Vector2 startingPosition;
-	GameObject activeField;
-	GameObject startParent;
-	GameObject mainCanvas;
-	GameObject playerField;
-    int siblingIndex;
+	//Pozíciónáló elemek
+	private Vector2 startingPosition;
+	private GameObject activeField;
+	private GameObject startParent;
+	private GameObject mainCanvas;
+	private GameObject playerField;
 
-    [Header("Adatok")]
-    Card cardData;
-    bool visible;
+    //Adattárolók
+    private Card cardData;
+    private bool visible;
+    private bool isPressed;
+    private int siblingIndex;
 
 	private void Awake()
     {
         mainCanvas = GameObject.Find("GameField_Canvas");
         playerField = GameObject.Find("Player");
         this.siblingIndex = gameObject.transform.GetSiblingIndex();
+        skill = SkillState.NotDecided;
     }
 
     // Update is called once per frame
@@ -73,22 +78,41 @@ public class CardBehaviour : MonoBehaviour
 
     public void PressCard()
     {
+        //Csak olyan kártya jeleníthető meg nagyban, ami amúgy is látható
         if(visible)
         {
             detailedView = true;
             GiveDetails();
         }
+
+        //Ha aktivált kártyára nyomunk presst
+        if(activated)
+        {
+            isPressed = true;
+            StartCoroutine(TimeCount());
+        }
+    }
+
+    IEnumerator TimeCount()
+    {
+        for(int i = 0; i < 5; i++)
+        {
+            yield return new WaitForSeconds(1f);
+            if(!isPressed) break;
+        }
+
     }
 
     public void ReleaseCard()
     {
         detailedView = false;
         HideDetails();
+        isPressed = false;
     }
 
     public void StartDrag()
     {
-    	//Megnézzük hogy a kártya a miénk-e, illetve nem aktivált-e már
+    	//Megnézzük hogy a kártya a miénk-e, illetve nem aktivált-e már, és mozgatható-e
     	if(playerField == GetFieldOfCard() && !activated
             && playerField.GetComponent<PlayerUIelements>().GetDraggableStatus() )
     	{
@@ -163,11 +187,29 @@ public class CardBehaviour : MonoBehaviour
         {
             Reveal();
         }
-
     }
 
     public Sprite GetArt()
     {
         return this.cardData.GetArt();
+    }
+
+    public SkillState GetState()
+    {
+        return this.skill;
+    }
+
+    public void SetState(SkillState newState)
+    {
+        this.skill = newState;
+    }
+
+    public void TerminateCard()
+    {
+        if(detailedView)
+        {
+            HideDetails();
+        }
+        isPressed = false;
     }
 }
