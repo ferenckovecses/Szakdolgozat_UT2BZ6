@@ -15,8 +15,9 @@ public class CardBehaviour : MonoBehaviour
 	//Státusz változók
 	private bool isDragged;
 	private bool isAboveActiveField;
-	private bool activated;
-	private bool detailedView;
+	private bool isSummoned;
+    private bool isCardVisible;
+    private bool isSkillDecidedInThisTurn;
     private SkillState skill;
 
 	//Pozíciónáló elemek
@@ -28,8 +29,6 @@ public class CardBehaviour : MonoBehaviour
 
     //Adattárolók
     private Card cardData;
-    private bool visible;
-    private bool isPressed;
     private int siblingIndex;
 
 	private void Awake()
@@ -38,6 +37,7 @@ public class CardBehaviour : MonoBehaviour
         playerField = GameObject.Find("Player");
         this.siblingIndex = gameObject.transform.GetSiblingIndex();
         skill = SkillState.NotDecided;
+        isSkillDecidedInThisTurn = false;
     }
 
     // Update is called once per frame
@@ -45,9 +45,9 @@ public class CardBehaviour : MonoBehaviour
     {
         if (isDragged)
         {
-            if(detailedView)
+            if(GetParentField().GetDetailsStatus())
             {
-                detailedView = false;
+                GetParentField().SetDetailsStatus(false);
                 HideDetails();
             }
 
@@ -79,42 +79,32 @@ public class CardBehaviour : MonoBehaviour
     public void PressCard()
     {
         //Csak olyan kártya jeleníthető meg nagyban, ami amúgy is látható
-        if(visible)
+        if(isCardVisible)
         {
-            detailedView = true;
-            GiveDetails();
-        }
+            bool skillButtonsRequired = false;
+            GetParentField().SetDetailsStatus(true);
 
-        //Ha aktivált kártyára nyomunk presst
-        if(activated)
-        {
-            isPressed = true;
-            StartCoroutine(TimeCount());
-        }
-    }
+            //Döntéshozó gombok megjelenítése a fix részletes nézet mellé
+            if(isSummoned && GetParentField().GetSkillStatus() && !isSkillDecidedInThisTurn)
+            {
+                skillButtonsRequired = true;
+            }
 
-    IEnumerator TimeCount()
-    {
-        for(int i = 0; i < 5; i++)
-        {
-            yield return new WaitForSeconds(1f);
-            if(!isPressed) break;
+            GiveDetails(skillButtonsRequired);
         }
-
     }
 
     public void ReleaseCard()
     {
-        detailedView = false;
+        GetParentField().SetDetailsStatus(false);
         HideDetails();
-        isPressed = false;
     }
 
     public void StartDrag()
     {
     	//Megnézzük hogy a kártya a miénk-e, illetve nem aktivált-e már, és mozgatható-e
-    	if(playerField == GetFieldOfCard() && !activated
-            && playerField.GetComponent<PlayerUIelements>().GetDraggableStatus() )
+    	if(playerField == GetFieldOfCard() && !isSummoned
+            && GetParentField().GetDraggableStatus() )
     	{
 	    	this.transform.rotation = Quaternion.identity;
 	        startParent = gameObject.transform.parent.gameObject;
@@ -128,7 +118,7 @@ public class CardBehaviour : MonoBehaviour
     	if(isDragged)
     	{
 	        isDragged = false;
-	        detailedView = false;
+	        GetParentField().SetDetailsStatus(false);
 	        if (isAboveActiveField)
 	        {
 	            gameObject.transform.SetParent(activeField.transform);
@@ -141,15 +131,15 @@ public class CardBehaviour : MonoBehaviour
                 
                 //Kézbe visszahelyezéskor eredeti pozícióját foglalja el és rendezzük a kezet
                 gameObject.transform.SetSiblingIndex(siblingIndex);
-                playerField.GetComponent<PlayerUIelements>().SortHand();
+                GetParentField().SortHand();
 	        }
     	}
     }
 
     public void ActivateCard()
     {
-    	playerField.GetComponent<PlayerUIelements>().PutCardOnField(gameObject);
-    	activated = true;
+    	GetParentField().PutCardOnField(gameObject);
+    	isSummoned = true;
 
         this.siblingIndex = gameObject.transform.GetSiblingIndex();
     }
@@ -159,31 +149,31 @@ public class CardBehaviour : MonoBehaviour
         this.cardData = data;
     }
 
-    void Reveal()
+    private void Reveal()
     {
         gameObject.GetComponent<Image>().sprite = cardData.GetArt();
     }
 
-    GameObject GetFieldOfCard()
+    private GameObject GetFieldOfCard()
     {
     	return this.transform.parent.parent.gameObject;
     }
 
-    void GiveDetails()
+    private void GiveDetails(bool skillButtonsRequired)
     {
-        playerField.GetComponent<PlayerUIelements>().DisplayDetails(cardData);
+        GetParentField().DisplayDetails(cardData, siblingIndex, skillButtonsRequired);
     }
 
-    void HideDetails()
+    private void HideDetails()
     {
-        playerField.GetComponent<PlayerUIelements>().HideDetails();
+        GetParentField().HideDetails();
     }
 
     public void SetVisibility(bool status)
     {
-        this.visible = status;
+        this.isCardVisible = status;
 
-        if(this.visible)
+        if(this.isCardVisible)
         {
             Reveal();
         }
@@ -199,17 +189,36 @@ public class CardBehaviour : MonoBehaviour
         return this.skill;
     }
 
-    public void SetState(SkillState newState)
+    public void SetSkillState(SkillState newState)
     {
         this.skill = newState;
+        isSkillDecidedInThisTurn = true;
+    }
+
+    public SkillState GetSkillState()
+    {
+        return this.skill;
     }
 
     public void TerminateCard()
     {
-        if(detailedView)
+        if(GetParentField().GetDetailsStatus())
         {
             HideDetails();
         }
-        isPressed = false;
+    }
+
+    private PlayerUIelements GetParentField()
+    {
+        return playerField.GetComponent<PlayerUIelements>();
+    }
+
+    //Ha tartalékoltuk a képességet, akkor az új ciklusban megint lehet dönteni a sorsáról 
+    public void NewSkillCycle()
+    {
+        if(skill == SkillState.Store)
+        {
+            isSkillDecidedInThisTurn = false;
+        }
     }
 }

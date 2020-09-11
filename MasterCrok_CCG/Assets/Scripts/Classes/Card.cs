@@ -14,42 +14,36 @@ public class Card : ScriptableObject
 	[Header("Alap Információk")]
 
 	[SerializeField]
-	int cardID = 0;
+	private int cardID = 0;
 
 	[SerializeField]
-	string cardName = null;
+	private string cardName = null;
 
 	[SerializeField]
-	CardType type = default(CardType);
+	private CardType type = default(CardType);
 
 	[Header("Képesség")]
 
 	[SerializeField]
-	string skillName = null;
+	private string skillName = null;
 
 	[TextArea(10,10)]
 	[SerializeField]
-	string skillDescription = null;
-
-	[SerializeField]
-	bool IsAQuickSkill = false;
-
-	[SerializeField]
-	bool isAHandSkill = false;
+	private string skillDescription = null;
 
 	[Header("Pontok")]
 	[SerializeField]
-	int power = 0;
+	private int power = 0;
 
 	[SerializeField]
-	int intelligence = 0;
+	private int intelligence = 0;
 
 	[SerializeField]
-	int reflex = 0;
+	private int reflex = 0;
 
 	[Header("Vizuális elemek")]
 	[SerializeField]
-	Sprite cardImage = null;
+	private Sprite cardImage = null;
 
 	public Sprite GetArt()
 	{
@@ -100,16 +94,5 @@ public class Card : ScriptableObject
 	{
 		return this.skillDescription;
 	}
-
-	public bool HasHandSkill()
-	{
-		return this.isAHandSkill;
-	}
-
-	public bool HasQuickSkill()
-	{
-		return this.IsAQuickSkill;
-	}
-
 
 }

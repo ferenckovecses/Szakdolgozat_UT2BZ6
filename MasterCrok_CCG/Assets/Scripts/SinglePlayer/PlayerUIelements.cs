@@ -18,7 +18,7 @@ public class PlayerUIelements : MonoBehaviour
 {
 
     [Header("UI Vezérlő")]
-    BattleUI_Controller controller;
+    private BattleUI_Controller controller = default(BattleUI_Controller);
 
     [Header("Játékos mező referenciák")]
     public GameObject handField;
@@ -32,8 +32,8 @@ public class PlayerUIelements : MonoBehaviour
 
     [Header("Kártyákkal kapcsolatos változók")]
     public GameObject cardPrefab;
-    public List<GameObject> cardsInHand;
-    public List<GameObject> cardsInField;
+    private List<GameObject> cardsInHand;
+    private List<GameObject> cardsInField;
 
     //Kártya a kézben hatás
     private float turningPerCard = 5f;
@@ -46,6 +46,7 @@ public class PlayerUIelements : MonoBehaviour
     private int uniqueID;
     private bool openHand;
     private bool draggableCards;
+    private bool skillDecision;
     private int cardCount;
     private int cardsInDeck;
 
@@ -57,6 +58,7 @@ public class PlayerUIelements : MonoBehaviour
         this.cardCount = cardsInHand.Count;
         deckSize = null;
         draggableCards = false;
+        skillDecision = false;
     }
 
     public void AddCardToHand(GameObject card)
@@ -331,14 +333,18 @@ public class PlayerUIelements : MonoBehaviour
         this.deckSize.text = cardsInDeck.ToString();
     }
 
-    public void DisplayDetails(Card data)
+    public void DisplayDetails(Card data, int activeID, bool skillButtonsRequired)
     {
-        this.controller.DisplayCardDetail(data);
+        this.controller.DisplayCardDetail(data, activeID, skillButtonsRequired, this.positionID);
     }
 
     public void HideDetails()
     {
-        this.controller.HideCardDetail();
+        //Ha nincs fix megjelenítés mód, akkor küldünk eltüntetés kérést
+        if(!(this.controller.GetFixedDetailsStatus()))
+        {
+            this.controller.HideCardDetail();
+        }
     }
 
     public void SetUniqueID(int newID)
@@ -366,6 +372,51 @@ public class PlayerUIelements : MonoBehaviour
         else 
         {
             PutCardIntoLosers();
+        }
+    }
+
+    //Visszaadja, hogy dönthetünk-e a skillek helyzetéről
+    public bool GetSkillStatus()
+    {
+        return this.skillDecision;
+    }
+
+    //Megváltoztatja a skillek döntéséről szóló helyzetet
+    public void SetSkillStatus(bool newStatus)
+    {
+        this.skillDecision = newStatus;
+    }
+
+    public bool GetDetailsStatus()
+    {
+        return this.controller.GetDetailsStatus();
+    }
+
+    public void SetDetailsStatus(bool status)
+    {
+        this.controller.SetDetailsStatus(status);
+    }
+
+    public bool SwitchCardSkillStatus(SkillState state, int cardPosition)
+    {
+        cardsInField[cardPosition].GetComponent<CardBehaviour>().SetSkillState(state);
+
+        foreach (GameObject card in cardsInField) 
+        {
+            //Ha találunk a lerakott kártyák között olyat, akinek a képessége még nem eldöntött
+            if(card.GetComponent<CardBehaviour>().GetSkillState() == SkillState.NotDecided)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void NewSkillCycle()
+    {
+        foreach (GameObject card in cardsInField) 
+        {
+            card.GetComponent<CardBehaviour>().NewSkillCycle();
         }
     }
 

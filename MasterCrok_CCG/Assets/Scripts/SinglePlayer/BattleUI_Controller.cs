@@ -9,7 +9,8 @@ using TMPro;
 public class BattleUI_Controller : MonoBehaviour
 {
     [Header("Játékvezérlő")]
-    public BattleController controller;
+    [SerializeField]
+    private BattleController controller;
 
     [Header("UI prefabok")]
     public GameObject prefabPlayerUI;
@@ -30,6 +31,8 @@ public class BattleUI_Controller : MonoBehaviour
     //Adattárolók
     private Dictionary <int, GameObject> playerFields;
     private bool isMessageOnScreen;
+    private bool isDetailsShowed;
+    private bool isDetailsFixed;
     private GameObject cardDetailWindow;
     private GameObject statPanel;
     private GameObject messageText;
@@ -39,6 +42,8 @@ public class BattleUI_Controller : MonoBehaviour
     {
         playerFields = new Dictionary<int, GameObject>();
         isMessageOnScreen = false;
+        isDetailsShowed = false;
+        isDetailsFixed = false;
     }
 
     //Elhelyezi a megadott számú játékosnak megfelelő pályaelemet a megadott pozíciókba
@@ -58,17 +63,17 @@ public class BattleUI_Controller : MonoBehaviour
             {
                 temp.name = "Player";
                 GameObject.Find("ActiveCardField").gameObject.tag = "PlayerField";
-                GetScript(keys[i]).ChangeOpenHand(true);
+                GetFieldFromKey(keys[i]).ChangeOpenHand(true);
             }
             //Az ellenfelek
             else 
             {
                 temp.name = "Opponent " + i.ToString();
-                GetScript(keys[i]).ChangeOpenHand(false);  
+                GetFieldFromKey(keys[i]).ChangeOpenHand(false);  
             }
 
             //Eltároljuk, hogy melyik pozícióban van a játékos mező
-            GetScript(keys[i]).SetPosition(i);
+            GetFieldFromKey(keys[i]).SetPosition(i);
         }
 
         //A mi oldalunk legyen az utolsó a hierarchiában
@@ -78,13 +83,13 @@ public class BattleUI_Controller : MonoBehaviour
         GameObject deck = GameObject.Find("Field1/Player/Deck");
         TMP_Text deckNumber = Instantiate(deckSize,deck.transform.position, Quaternion.identity, deck.transform);
         deckNumber.name = "DeckCounter";
-        GetScript(keys[0]).AddDeckSize(deckNumber, playerDeckSize);
+        GetFieldFromKey(keys[0]).AddDeckSize(deckNumber, playerDeckSize);
         
     }
 
 
     //Shortcut: Visszaadja a listában szereplő gameObjecten lévő scriptet, hogy közvetlenül referálhassuk 
-    PlayerUIelements GetScript(int key)
+    PlayerUIelements GetFieldFromKey(int key)
     {
         return this.playerFields[key].GetComponent<PlayerUIelements>();
     }
@@ -129,36 +134,50 @@ public class BattleUI_Controller : MonoBehaviour
         //Ha nem vakon húztuk
         if(!blindDraw)
         {
-            GameObject temp = GetScript(key).CreateCard(data, visible);
+            GameObject temp = GetFieldFromKey(key).CreateCard(data, visible);
 
             //Kártya objektum hozzáadása a kéz mezőhöz
-            GetScript(key).AddCardToHand(temp);
+            GetFieldFromKey(key).AddCardToHand(temp);
         }
 
         else 
         {
-            GameObject temp = GetScript(key).CreateCard(data, false);
-            GetScript(key).BlindSummon(temp);
+            GameObject temp = GetFieldFromKey(key).CreateCard(data, false);
+            GetFieldFromKey(key).BlindSummon(temp);
         }
     }
 
     //Frissíti a játékos paklijának méretét a modell szerinti aktuális értékre
     public void RefreshDeckSize(int key, int newDeckSize)
     {   
-        GetScript(key).UpdateDeckCounter(newDeckSize);
+        GetFieldFromKey(key).UpdateDeckCounter(newDeckSize);
     }
 
     //Megjeleníti a kijelölt kártya részletes nézetét
-    public void DisplayCardDetail(Card data)
+    public void DisplayCardDetail(Card data, int displayedCardId, bool skillDecision, int position)
     {
         cardDetailWindow = Instantiate(cardWithDetails, HUDcanvas.transform.position, Quaternion.identity, HUDcanvas.transform);
-        cardDetailWindow.GetComponent<CardDisplay_Controller>().SetupDisplay(data);
+        cardDetailWindow.GetComponent<CardDisplay_Controller>().SetupDisplay(data, skillDecision);
+        //Ha a gombok is megjelennek, akkor be kell konfigurálni is őket
+        if(skillDecision)
+        {
+            SetFixedDetails(true);
+            //Eltároljuk, hogy melyik kulccsal rendelkező pozícióról jött a kérés
+            int tempKey = playerFields.Keys.ElementAt(position);
+            cardDetailWindow.GetComponent<CardDisplay_Controller>().SetupButtons(data, this, displayedCardId, tempKey);
+        }
     }
 
     //Eltünteti a kártya részletes nézetet
     public void HideCardDetail()
     {
         Destroy(cardDetailWindow);
+
+        //Ha fix megjelenítés volt akkor kapcsoljuk ki
+        if(GetFixedDetailsStatus())
+        {
+            SetFixedDetails(false);
+        }
     }
 
     //Megváltoztatja a harctípus szöveget az épp aktuális, játékvezérlő szerinti értékre
@@ -193,19 +212,19 @@ public class BattleUI_Controller : MonoBehaviour
     //A megadott oldalú játékosnak engedélyezi/tiltja a kártya mozgatás/húzás/lerakás interakciókat
     public void SetDragStatus(int key, bool status)
     {
-        GetScript(key).SetDraggableStatus(status);
+        GetFieldFromKey(key).SetDraggableStatus(status);
     }
 
     //Botok UI-jának küld egy parancsot egy megadott indexű kártya lerakására/aktiválására
     public void SummonCard(int key, int index)
     {
-        GetScript(key).SummonCard(index);
+        GetFieldFromKey(key).SummonCard(index);
     }
 
     //Felfedi a megadott oldalú játékos lerakott kártyáit
     public void RevealCards(int key)
     {
-        GetScript(key).RevealCards();
+        GetFieldFromKey(key).RevealCards();
     }
 
     //A játékmezőn megjelenít üzeneteket a játékosok számára (pl kinek a köre van, kör eredménye)
@@ -245,7 +264,44 @@ public class BattleUI_Controller : MonoBehaviour
     //Kör végén a kör eredményével parancsot küld a megfelelő játékos UI-nak, hogy rakja el a lerakott lapokat
     public void PutCardsAway(int key, bool isWinner)
     {
-        GetScript(key).PutCardsAway(isWinner);
+        GetFieldFromKey(key).PutCardsAway(isWinner);
+    }
+
+    public void SetSkillStatus(int key, bool status)
+    {
+        GetFieldFromKey(key).SetSkillStatus(status);
+    }
+
+    public void SetFixedDetails(bool status)
+    {
+        this.isDetailsFixed = status;
+    }
+
+    public bool GetFixedDetailsStatus()
+    {
+        return this.isDetailsFixed;
+    }
+
+    public void SetDetailsStatus(bool status)
+    {
+        this.isDetailsShowed = status;
+    }
+
+    public bool GetDetailsStatus()
+    {
+        return this.isDetailsShowed;
+    }
+
+    public void SkillAction(SkillState state, int key, int cardFieldPosition, int cardTypeID)
+    {
+        HideCardDetail();
+        bool isItTheLast = GetFieldFromKey(key).SwitchCardSkillStatus(state, cardFieldPosition);
+        controller.ReportSkillStatusChange(state,key,cardTypeID, isItTheLast);
+    }
+
+    public void NewSkillCycle(int key)
+    {
+        GetFieldFromKey(key).NewSkillCycle();
     }
 
 }

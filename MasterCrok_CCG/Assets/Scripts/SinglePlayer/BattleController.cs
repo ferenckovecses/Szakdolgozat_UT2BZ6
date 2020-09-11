@@ -4,7 +4,7 @@ using UnityEngine;
 using System.Linq;
 
 
-public enum GameMainPhase {Preparation, SetOrder, DrawPhase, SetRoles, Turn, Reveal, Skill, Compare, Result, BlindMatch};
+public enum GameMainPhase {Preparation, SetOrder, DrawPhase, SetRoles, Summon, Reveal, Skill, Compare, Result, BlindMatch};
 public enum ActiveStat {NotDecided, Power, Intelligence, Reflex};
 
 public class BattleController : MonoBehaviour
@@ -29,9 +29,11 @@ public class BattleController : MonoBehaviour
     private bool turnChange;
     private bool firstRound;
     private bool playerReacted;
+    private bool playerHasNoSkillLeft;
     private bool isMessageOn;
     private bool blindMatch;
     private bool actionFinished;
+    private int storeCount;
 
     //RNG generátor
     private System.Random rng;
@@ -67,7 +69,7 @@ public class BattleController : MonoBehaviour
                 case GameMainPhase.SetOrder: SetOrder(); break;
                 case GameMainPhase.DrawPhase: DrawPhase(); break;
                 case GameMainPhase.SetRoles: SetRoles(); break;
-                case GameMainPhase.Turn: StartCoroutine(Turn()); break;
+                case GameMainPhase.Summon: StartCoroutine(Summon()); break;
                 case GameMainPhase.Reveal: StartCoroutine(Reveal()); break;
                 case GameMainPhase.Skill: StartCoroutine(Skill()); break;
                 case GameMainPhase.Compare: StartCoroutine(Compare()); break;
@@ -150,12 +152,12 @@ public class BattleController : MonoBehaviour
             i += 1;
         }
 
-        ChangePhase(GameMainPhase.Turn);
+        ChangePhase(GameMainPhase.Summon);
     }
 
     //A kör fázis
     //Részei: Húzás, [Harctípus választás], Idézés
-    private IEnumerator Turn()
+    private IEnumerator Summon()
     {
         //Minden játékoson végigmegy
         foreach (int key in playerKeys) 
@@ -249,14 +251,15 @@ public class BattleController : MonoBehaviour
         bool everyoneDecided = false;
 
         //Ha mindenki döntött, akkor break
-        int playerMadeDecision = 0;
+        int playerMadeDecision;
 
         //Addig megyünk, amíg mindenki el nem használja vagy passzolja a képességét
         while(!everyoneDecided)
         {
-
+            playerMadeDecision = 0;
             foreach (int key in playerKeys) 
             {
+                NewSkillCycle(key);
                  //Ha a játékos státusza szerint a skill eldöntésére vár
                 if(players[key].GetStatus() == PlayerTurnStatus.ChooseSkill)
                 {
@@ -264,10 +267,17 @@ public class BattleController : MonoBehaviour
                     //Ha ember, akkor várunk a döntésre
                     if(players[key].GetPlayerStatus())
                     {
+                        //Jelezzük a játékosnak, hogy itt az idő dönteni a képességről
+                        StartCoroutine(DisplayNotification("Dönts a képességekről!"));
+
+                        //Megadjuk a lehetőséget a játékosnak, hogy döntsön a képességekről most
+                        SetSkillStatus(key, true);
+
                         //Várunk a visszajelzésére
-                        //yield return WaitForPlayerInput();
-                        Pass(key);
-                        playerMadeDecision++;
+                        yield return WaitForPlayerInput();
+
+                        //Ha döntött, akkor elvesszük tőle a lehetőséget, hogy módosítson rajta
+                        SetSkillStatus(key, false);
                     }
 
                     //Ellenkező esetben az AI dönt a képességről
@@ -281,24 +291,34 @@ public class BattleController : MonoBehaviour
 
 
                         //Kis várakozás, gondolkodási idő imitálás a döntés meghozása előtt, hogy ne történjen minden túl hirtelen
-                        yield return new WaitForSeconds(drawTempo * UnityEngine.Random.Range(10,20));
+                        yield return new WaitForSeconds(drawTempo * UnityEngine.Random.Range(5,15));
 
                         //Az AI döntése alapján itt végzi el a játék a megfelelő akciókat
                         switch (response) 
                         {
-                            case SkillResponse.Pass: Pass(key);playerMadeDecision++; break;
+                            case SkillResponse.Pass: Pass(key); break;
                             case SkillResponse.Store: break;
-                            case SkillResponse.Use: playerMadeDecision++; break;
-                            default: Pass(key); playerMadeDecision++; break;
+                            case SkillResponse.Use: break;
+                            default: Pass(key); break;
                         }
+                        
+                        //TODO: A fenti döntés kártyánként szülessen meg
+
+                        //Az AI végzett a körével a döntés után
+                        players[key].SetStatus(PlayerTurnStatus.Finished); 
                     }
                 }
 
-                //Ha egyszerre mindenki volt, vagy már nem talált olyat, akinek a státusza 
-                if(playerMadeDecision == numberOfPlayers)
-                {
-                    everyoneDecided = true;
+                //Ha az aktuális játékos végzett, növeljük a countert
+                if(players[key].GetStatus() == PlayerTurnStatus.Finished) {
+                    playerMadeDecision++;
                 }
+
+            }
+            //Ha mindenki végzett, akkor loop vége
+            if(playerMadeDecision == numberOfPlayers + 1)
+            {
+                everyoneDecided = true;
             }
         }
 
@@ -552,6 +572,11 @@ public class BattleController : MonoBehaviour
         UI.SetDragStatus(key, status);
     }
 
+    private void SetSkillStatus(int key, bool status)
+    {
+        UI.SetSkillStatus(key, status);
+    }
+
     //Kártya idézés: A megfelelő játékospanel felé továbbítjuk a megfelelő kártya kézbeli azonosítóját
     private void SummonCard(int key, int handIndex)
     {
@@ -613,7 +638,7 @@ public class BattleController : MonoBehaviour
         isMessageOn = true;
 
         //Adunk időt a játékosoknak, hogy elolvassák
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(1.2f);
 
         //Eltüntetjük az üzenetet
         UI.HideMessage();
@@ -650,6 +675,12 @@ public class BattleController : MonoBehaviour
         players[key].SetStatus(PlayerTurnStatus.Finished);
     }
 
+    private void NewSkillCycle(int key)
+    {
+        storeCount = 0;
+        UI.NewSkillCycle(key);
+    }
+
     #endregion
 
     #region Incoming Messages
@@ -673,6 +704,29 @@ public class BattleController : MonoBehaviour
     {
         playerReacted = true;
         players[playerKey].PlayCardFromHand(indexInHand);
+    }
+
+    public void ReportSkillStatusChange(SkillState state, int playerKey, int cardTypeID, bool haveFinished)
+    {
+        switch (state) 
+        {
+            case SkillState.Pass: Pass(playerKey); break;
+            case SkillState.Use: break;
+            case SkillState.Store: storeCount++; break;
+            default: Pass(playerKey); break;
+        }
+
+
+        //Ha az összes pályán lévő kártya skilljéről nyilatkozott a játékos
+        if(haveFinished)
+        {
+            //Ha van köztük stored érték, akkor még nem végeztünk
+            if(storeCount == 0)
+            {
+                players[playerKey].SetStatus(PlayerTurnStatus.Finished); 
+            }
+            playerReacted = true;   
+        }
     }
 
     //Visszapakolja a kártyákat a játékosok paklijába

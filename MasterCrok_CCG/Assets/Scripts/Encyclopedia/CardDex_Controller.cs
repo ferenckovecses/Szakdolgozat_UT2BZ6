@@ -9,33 +9,32 @@ public enum DexState {List, Detail};
 
 public class CardDex_Controller : MonoBehaviour
 {
-    //A kártyák és UI elemek tárolói
-    public CardFactory factory;
-	private List<Card> cardList;
+    //Adattárolók
+	private List<Sprite> cardList;
 	private List<GameObject> cardDisplayList = new List<GameObject>();
-
-	//Az enciklopédia státuszát tároló változó
 	private DexState currentState;
+    private GameObject displayedUI;
+    private Button backButton;
 
 	//Prefabek és referenciák
+    public Button BackButton;
 	public Button cardDisplayPrefab;
 	public GameObject cardDetailPrefab;
 	public GameObject contentParent;
 	public GameObject UI_canvas;
-
-	private GameObject displayedUI;
+    public CardFactory factory;
+	
 
 	void Start()
 	{
-        cardList = factory.GetAllCard();
+        cardList = factory.GetAllArt();
 		currentState = DexState.List;
-
 		//Kártyák megjelenítése egymás után
-		foreach (Card card in cardList) 
+		foreach (Sprite card in cardList) 
 		{
-			Button temp = Instantiate(cardDisplayPrefab, new Vector3(0,0,0), Quaternion.identity, contentParent.transform);
-			temp.GetComponent<Image>().sprite = card.GetArt();
-			temp.onClick.AddListener(delegate{CardClicked((card.GetCardID())-1);});
+			Button temp = Instantiate(cardDisplayPrefab,contentParent.transform.position, Quaternion.identity, contentParent.transform);
+			temp.GetComponent<Image>().sprite = card;
+			temp.onClick.AddListener(delegate{CardClicked(cardList.IndexOf(card));});
 		}
 
 		//Nézet igazítása a lista elejére.
@@ -45,19 +44,15 @@ public class CardDex_Controller : MonoBehaviour
 	//Kártyákra kattintás esetén behozza a részletes nézetet.
 	public void CardClicked(int id)
     {
+        Card data = factory.GetCardByID(id);
     	if(currentState == DexState.List)
     	{
     		currentState = DexState.Detail;
+    		displayedUI = Instantiate(cardDetailPrefab, UI_canvas.transform.position, Quaternion.identity, UI_canvas.transform);
+    		displayedUI.GetComponent<CardDisplay_Controller>().SetupDisplay(data, false);
 
-    		displayedUI = Instantiate(cardDetailPrefab, new Vector3(640,360,0), Quaternion.identity, UI_canvas.transform);
-    		
-    		GameObject.Find("Skill").GetComponent<TMP_Text>().text = cardList[id].GetSkillName() + ": \n" + cardList[id].GetCardSkill();
-    		GameObject.Find("Name").GetComponent<TMP_Text>().text = cardList[id].GetCardName();
-    		GameObject.Find("Art").GetComponent<Image>().sprite = cardList[id].GetArt();
-    		GameObject.Find("Power").GetComponent<TMP_Text>().text = "Erő: " + cardList[id].GetPower().ToString();
-    		GameObject.Find("Intelligence").GetComponent<TMP_Text>().text = "Intelligencia: " + cardList[id].GetIntelligence().ToString();
-    		GameObject.Find("Reflex").GetComponent<TMP_Text>().text = "Reflex: " + cardList[id].GetReflex().ToString();
-    		GameObject.Find("Back").GetComponent<Button>().onClick.AddListener(delegate{BackToList();});
+            backButton = Instantiate(BackButton, UI_canvas.transform.position, Quaternion.identity, UI_canvas.transform);
+            backButton.onClick.AddListener(delegate{BackToList();});
     	}
         
     }
@@ -67,6 +62,7 @@ public class CardDex_Controller : MonoBehaviour
     {
     	if(currentState == DexState.Detail)
     	{
+            Destroy(backButton.gameObject);
     		Destroy(displayedUI);
     		currentState = DexState.List;
     	}

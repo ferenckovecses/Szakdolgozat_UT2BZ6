@@ -1119,10 +1119,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 577db5b9ddffc454a993fb59016b628b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  factory: {fileID: 208055871752038114, guid: c3b5d690ca628d7448ef1c5ec45d9635, type: 3}
+  BackButton: {fileID: 6647916227710504802, guid: 714588fcc4ffe0b499105b73590ac6b4,
+    type: 3}
   cardDisplayPrefab: {fileID: 6256369577726905880, guid: a4e031c519a44d64b91238a0d57a88a9,
     type: 3}
   cardDetailPrefab: {fileID: 8287288376751720470, guid: 29fa4b5a27c54f0488be8695c52e9a44,
     type: 3}
   contentParent: {fileID: 1836103173}
   UI_canvas: {fileID: 136994367}
+  factory: {fileID: 208055871752038114, guid: c3b5d690ca628d7448ef1c5ec45d9635, type: 3}

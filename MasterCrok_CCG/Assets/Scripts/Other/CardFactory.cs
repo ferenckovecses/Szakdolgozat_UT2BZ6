@@ -59,5 +59,15 @@ public class CardFactory : MonoBehaviour
 		return this.cardList;
 	}
 
+	public List<Sprite> GetAllArt()
+	{
+		List<Sprite> imageList = new List<Sprite>();
+		foreach (Card card in cardList) 
+		{
+			imageList.Add(card.GetArt());
+		}
+		return imageList;
+	}
+
 
 }

@@ -10,10 +10,21 @@ public class CardDisplay_Controller : MonoBehaviour
 	public TMP_Text power;
 	public TMP_Text intelligence;
 	public TMP_Text reflex;
+	public GameObject Buttons;
+	public Button Use;
+	public Button Store;
+	public Button Pass;
+	public Button Exit;
 	public Image art;
 
-	public void SetupDisplay(Card data)
+	private void Awake()
 	{
+		Buttons.SetActive(false);
+	}
+
+	public void SetupDisplay(Card data, bool skillDecision)
+	{
+		this.Buttons.SetActive(skillDecision);
 		this.cardName.text = data.GetCardName();
 		this.skillName.text = data.GetSkillName() + ":";
 		this.skillDetail.text = data.GetCardSkill();
@@ -21,5 +32,13 @@ public class CardDisplay_Controller : MonoBehaviour
 		this.intelligence.text = "Intelligencia: " + data.GetIntelligence().ToString();
 		this.reflex.text = "Reflex: " + data.GetReflex().ToString();
 		this.art.sprite = data.GetArt();
+	}
+
+	public void SetupButtons(Card data, BattleUI_Controller controller, int displayedCardID, int fieldKey)
+	{
+		Use.onClick.AddListener(delegate{controller.SkillAction(SkillState.Use, fieldKey, displayedCardID, data.GetCardID());});
+		Store.onClick.AddListener(delegate{controller.SkillAction(SkillState.Store, fieldKey, displayedCardID, data.GetCardID());});
+		Pass.onClick.AddListener(delegate{controller.SkillAction(SkillState.Pass, fieldKey, displayedCardID, data.GetCardID());});
+		Exit.onClick.AddListener(delegate{controller.HideCardDetail();});
 	}
 }
