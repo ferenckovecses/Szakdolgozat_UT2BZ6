@@ -1,0 +1,2 @@
+D:\Programing\Unity\Projects\Szakdolgozat_UT2BZ6\MasterCrok_CCG\obj\Debug\Assembly-CSharp.csprojAssemblyReference.cache
+D:\Programing\Unity\Projects\Szakdolgozat_UT2BZ6\MasterCrok_CCG\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache

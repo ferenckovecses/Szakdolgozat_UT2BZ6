@@ -2,11 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-/*
-Feladata: A kártya mozgásait és kártyákra tipikus felhasználói interakciókat, UI effekteket kezelő script.
-
-[Card] ----> PlayerUI Elements ----> UI Controller ----> Battle Controller
-*/
 
 public enum SkillState{NotDecided,Store,Use,Pass};
 
@@ -33,8 +28,8 @@ public class CardBehaviour : MonoBehaviour
 
 	private void Awake()
     {
-        mainCanvas = GameObject.Find("GameField_Canvas");
-        playerField = GameObject.Find("Player");
+        mainCanvas = GameObject.Find("Base_Canvas");
+        playerField = gameObject.transform.parent.parent.gameObject;
         this.siblingIndex = gameObject.transform.GetSiblingIndex();
         skill = SkillState.NotDecided;
         isSkillDecidedInThisTurn = false;
@@ -122,7 +117,7 @@ public class CardBehaviour : MonoBehaviour
 	        if (isAboveActiveField)
 	        {
 	            gameObject.transform.SetParent(activeField.transform);
-	            ActivateCard();
+	            ActivateCard(false);
 	        }
 	        else
 	        {
@@ -136,11 +131,14 @@ public class CardBehaviour : MonoBehaviour
     	}
     }
 
-    public void ActivateCard()
+    public void ActivateCard(bool blindSummon = false)
     {
-    	GetParentField().PutCardOnField(gameObject);
-    	isSummoned = true;
+        if(!blindSummon)
+        {
+            GetParentField().PutCardOnField(gameObject);
+        }
 
+    	isSummoned = true;
         this.siblingIndex = gameObject.transform.GetSiblingIndex();
     }
 
@@ -161,12 +159,14 @@ public class CardBehaviour : MonoBehaviour
 
     private void GiveDetails(bool skillButtonsRequired)
     {
-        GetParentField().DisplayDetails(cardData, siblingIndex, skillButtonsRequired);
+        this.siblingIndex = gameObject.transform.GetSiblingIndex();
+
+        GetParentField().DisplayCardDetails(cardData, siblingIndex, skillButtonsRequired);
     }
 
     private void HideDetails()
     {
-        GetParentField().HideDetails();
+        GetParentField().HideCardDetails();
     }
 
     public void SetVisibility(bool status)
@@ -208,9 +208,9 @@ public class CardBehaviour : MonoBehaviour
         }
     }
 
-    private PlayerUIelements GetParentField()
+    private Player_UI GetParentField()
     {
-        return playerField.GetComponent<PlayerUIelements>();
+        return playerField.GetComponent<Player_UI>();
     }
 
     //Ha tartalékoltuk a képességet, akkor az új ciklusban megint lehet dönteni a sorsáról 
@@ -220,5 +220,11 @@ public class CardBehaviour : MonoBehaviour
         {
             isSkillDecidedInThisTurn = false;
         }
+    }
+
+    public void ResetSkill()
+    {
+        this.skill = SkillState.NotDecided;
+        isSkillDecidedInThisTurn = false;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using UnityEngine.UI;
 using UnityEngine;
 using TMPro;
+using Assets.Scripts.Interface;
 
 public class CardDisplay_Controller : MonoBehaviour
 {
@@ -34,11 +35,11 @@ public class CardDisplay_Controller : MonoBehaviour
 		this.art.sprite = data.GetArt();
 	}
 
-	public void SetupButtons(Card data, BattleUI_Controller controller, int displayedCardID, int fieldKey)
+	public void SetupButtons(Card data, IClient client, int displayedCardID, int fieldKey)
 	{
-		Use.onClick.AddListener(delegate{controller.SkillAction(SkillState.Use, fieldKey, displayedCardID, data.GetCardID());});
-		Store.onClick.AddListener(delegate{controller.SkillAction(SkillState.Store, fieldKey, displayedCardID, data.GetCardID());});
-		Pass.onClick.AddListener(delegate{controller.SkillAction(SkillState.Pass, fieldKey, displayedCardID, data.GetCardID());});
-		Exit.onClick.AddListener(delegate{controller.HideCardDetail();});
+		Use.onClick.AddListener(delegate{client.ReportSkillDecision(SkillState.Use, fieldKey, displayedCardID, data.GetCardID());});
+		Store.onClick.AddListener(delegate{client.ReportSkillDecision(SkillState.Store, fieldKey, displayedCardID, data.GetCardID());});
+		Pass.onClick.AddListener(delegate{client.ReportSkillDecision(SkillState.Pass, fieldKey, displayedCardID, data.GetCardID());});
+		Exit.onClick.AddListener(delegate{client.HideCardDetailsWindow();});
 	}
 }
