@@ -95,6 +95,11 @@ public class SinglePlayer_Data
         }
     }
 
+    public void SacrificeWinnerCard(int cardID, int playerKey)
+    {
+        playerDictionary[playerKey].SacrificeAWinner(cardID);
+    }
+
     #endregion
 
 
@@ -155,6 +160,36 @@ public class SinglePlayer_Data
         }
 
         return activeCardsOnTheField;
+    }
+
+    public List<Card> GetWinnerList(int playerKey)
+    {
+        return this.playerDictionary[playerKey].GetWinners();
+    }
+
+    public List<Card> GetLostList(int playerKey)
+    {
+        return this.playerDictionary[playerKey].GetLosers();
+    }
+
+    public Sprite GetLastWinnerImage(int playerKey)
+    {
+        return this.playerDictionary[playerKey].GetLastWinnerImage();
+    }
+
+    public Sprite GetLastLostImage(int playerKey)
+    {
+        return this.playerDictionary[playerKey].GetLastLostImage();
+    }
+
+    public int GetWinnerAmount(int playerKey)
+    {
+        return GetWinnerList(playerKey).Count;
+    }
+
+    public int GetLostAmount(int playerKey)
+    {
+        return GetLostList(playerKey).Count;
     }
 
     #endregion

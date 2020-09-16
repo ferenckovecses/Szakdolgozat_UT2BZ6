@@ -22,6 +22,7 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
     public GameObject statChoiceBox;
     public GameObject prefabMessageText;
     public TMP_Text deckSize;
+    public GameObject cardListPrefab;
 
     [Header("Referenciák")]
     public List<GameObject> positions;
@@ -42,6 +43,7 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
     private GameObject cardDetailWindow;
     private GameObject statPanel;
     private GameObject messageText;
+    private GameObject cardList;
 
     //Létrehozáskor fut le
     private void Awake()
@@ -57,15 +59,14 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
     //A veezérlőnek ad jelentést játékos általi kártya idézésről
     public void ReportSummon(int handIndex, int position)
     {
-        int playerKey = playerFields.Keys.ElementAt(position);
-        reportModule.ReportSummon(handIndex, playerKey);
+        reportModule.ReportSummon(handIndex);
     }
     //Jelez a vezérlőnek a felhasználó döntéséről a megadott kártyát illetően, Gombok használják
     public void ReportSkillDecision(SkillState state, int key, int cardFieldPosition, int cardTypeID)
     {
         HideCardDetailsWindow();
         bool isItTheLast = GetFieldFromKey(key).SwitchCardSkillStatus(state, cardFieldPosition);
-        reportModule.ReportSkillStatusChange(state, key, isItTheLast, cardFieldPosition);
+        reportModule.ReportSkillStatusChange(state, isItTheLast, cardFieldPosition);
     }
     //A vezérlőnek jelzünk a kilépésről, ő pedig ellátja a szükséges feladatokat
     public void ReportPlayerExit()
@@ -73,10 +74,15 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
         reportModule.ReportExit();
     }
 
+    public void ReportCardSelection(int id)
+    {
+        Destroy(cardList);
+        reportModule.ReportCardSelection(id);
+    }
+
     #endregion
 
     #region Common Instruction
-
 
     //Elhelyezi a megadott számú játékosnak megfelelő pályaelemet a megadott pozíciókba
     public void CreatePlayerFields(int playerAmount, List<int> playerKeys, int displayedDeckSize)
@@ -120,23 +126,6 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
         GetFieldFromKey(playerKeys[0]).AddDeckSize(deckNumber, displayedDeckSize);
 
     }
-    //Kilépés
-    public void Exit()
-    {
-        //A vezérlőnek jelzünk a kilépésről
-        ReportPlayerExit();
-
-        //Visszatérés a menübe
-        SceneManager.LoadScene("Main_Menu");
-    }
-
-    //Játék folytatása
-    public void ContinueBattle(GameObject exitPanel)
-    {
-        Destroy(exitPanel);
-        isExitPanelExist = false;
-    }
-
     //Továbbítja a kapott új kártya adatokat a megfelelő játékos oldalra, hogy vizuálisan megjelenítse azokat
     public void DisplayNewCard(Card data, int playerKey, bool visibleForThePlayer, bool isABlindDraw)
     {
@@ -155,38 +144,25 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
             GetFieldFromKey(playerKey).BlindSummon(temp);
         }
     }
-    //A megadott oldalú játékosnak engedélyezi/tiltja a kártya mozgatás/húzás/lerakás interakciókat
-    public void SetDragStatus(int playerKey, bool newStatus)
-    {
-        GetFieldFromKey(playerKey).SetDraggableStatus(newStatus);
-    }
-    //Felfedi a megadott oldalú játékos lerakott kártyáit
-    public void RevealCards(int playerKey)
-    {
-        GetFieldFromKey(playerKey).RevealCardsOnField();
-    }
-    //A megadott játékosnál lévő és megadott pozícióban található kártya képességét reseteli
-    public void ResetCardSkill(int playerKey, int cardPosition)
-    {
-        GetFieldFromKey(playerKey).ResetCardSkill(cardPosition);
-    }
-    //Új Skill ciklus: A tartalékolt képességekről újra lehet dönteni
-    public void NewSkillCycle(int playerKey)
-    {
-        GetFieldFromKey(playerKey).NewSkillCycle();
-    }
-    //Beállítjuk, hogy a megadott játékos rendelkezhet-e képességeiről
-    public void SetSkillStatus(int playerKey, bool newStatus)
-    {
-        GetFieldFromKey(playerKey).SetSkillStatus(newStatus);
-    }
-    //Kör végén a kör eredményével parancsot küld a megfelelő játékos UI-nak, hogy rakja el a lerakott lapokat
-    public void PutCardsAway(int playerKey, bool isWinner)
-    {
-        GetFieldFromKey(playerKey).PutCardsAway(isWinner);
-    }
 
     #endregion
+
+    //Kilépés
+    public void Exit()
+    {
+        //A vezérlőnek jelzünk a kilépésről
+        ReportPlayerExit();
+
+        //Visszatérés a menübe
+        SceneManager.LoadScene("Main_Menu");
+    }
+
+    //Játék folytatása
+    public void ContinueBattle(GameObject exitPanel)
+    {
+        Destroy(exitPanel);
+        isExitPanelExist = false;
+    }
 
     #region Player Specific Methods
     //A Harctípus választó ablak gombjainak függvénye
@@ -211,11 +187,6 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
             Button noBtn = GameObject.Find("NoButton").GetComponent<Button>();
             noBtn.onClick.AddListener(delegate { ContinueBattle(exitPanel); });
         }
-    }
-    //Frissíti a játékos paklijának méretét a modell szerinti aktuális értékre
-    public void RefreshDeckSize(int key, int newDeckSize)
-    {
-        GetFieldFromKey(key).UpdateDeckCounter(newDeckSize);
     }
 
     //Megjeleníti a kijelölt kártya részletes nézetét
@@ -259,7 +230,6 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
             messageText.GetComponent<TMP_Text>().text = msg;
             isMessageOnScreen = true;
             return true;
-
         }
 
         //Ha van már épp megjelenített üzenet, akkor nem jeleníti meg rajta 
@@ -284,15 +254,12 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
         statPanel = Instantiate(statChoiceBox, ingamePanelCanvas.transform.position, Quaternion.identity, ingamePanelCanvas.transform);
         statPanel.GetComponent<StatChoice_Controller>().SetupPanel(this);
     }
-    #endregion
 
-    #region Bot Specific Methods
-    //Botok UI-jának küld egy parancsot egy megadott indexű kártya lerakására/aktiválására
-    public void SummonCard(int playerKey, int cardHandIndex)
+    public void DisplayListOfCards(List<Card> cards)
     {
-        GetFieldFromKey(playerKey).SummonCard(cardHandIndex);
+        cardList = Instantiate(cardListPrefab, ingamePanelCanvas.transform.position, Quaternion.identity, ingamePanelCanvas.transform);
+        cardList.GetComponent<CardList_Controller>().SetupList(this, cards);
     }
-
     #endregion
 
     #region Getter
@@ -307,7 +274,7 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
         return this.isDetailsFixed;
     }
     //Shortcut: Visszaadja a listában szereplő gameObjecten lévő scriptet, hogy közvetlenül referálhassuk 
-    private Player_UI GetFieldFromKey(int key)
+    public Player_UI GetFieldFromKey(int key)
     {
         return this.playerFields[key].GetComponent<Player_UI>();
     }

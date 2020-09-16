@@ -20,19 +20,24 @@ namespace Assets.Scripts.SinglePlayer
             controller.HandleStatChange(newStat);
         }
 
-        public void ReportSkillStatusChange(SkillState state, int playerKey, bool haveFinished, int cardPosition)
+        public void ReportSkillStatusChange(SkillState state, bool haveFinished, int cardPosition)
         {
-            controller.HandleSkillStatusChange(state, playerKey, haveFinished, cardPosition);
+            controller.HandleSkillStatusChange(state, haveFinished, cardPosition);
         }
 
-        public void ReportSummon(int indexInHand, int playerKey)
+        public void ReportSummon(int indexInHand)
         {
-            controller.HandleSummon(indexInHand, playerKey);
+            controller.HandleSummon(indexInHand);
         }
 
         public void ReportExit()
         {
             controller.HandleExit();
+        }
+
+        public void ReportCardSelection(int id)
+        {
+            controller.HandleCardSelection(id);
         }
     }
 }

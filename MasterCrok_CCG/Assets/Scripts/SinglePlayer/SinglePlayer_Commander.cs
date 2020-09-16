@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Assets.Scripts.SinglePlayer
 {
@@ -25,33 +26,40 @@ namespace Assets.Scripts.SinglePlayer
             client.CreatePlayerFields(numberOfPlayers, playerKeys, playerDeckSize);
         }
         //Beállíthatjuk, hogy az adott játékos rakhat-e kártyát most, vagy sem
-        public void SetDragStatus(int playerKey, bool status)
+        public void SetDragStatus(int playerKey, bool newStatus)
         {
-            client.SetDragStatus(playerKey, status);
+            client.GetFieldFromKey(playerKey).SetDraggableStatus(newStatus);
         }
 
-        //Beállítjuk, hogy az adott játékos dönthet-e a képességeiről most, vagy sem
-        public void SetSkillStatus(int playerKey, bool status)
+        //Beállítjuk, hogy a megadott játékos rendelkezhet-e képességeiről
+        public void SetSkillStatus(int playerKey, bool newStatus)
         {
-            client.SetSkillStatus(playerKey, status);
+            client.GetFieldFromKey(playerKey).SetSkillStatus(newStatus);
         }
-        //Kártya idézés: A megfelelő játékospanel felé továbbítjuk a megfelelő kártya kézbeli azonosítóját
-        public void SummonCard(int playerKey, int handIndex)
+
+        //Botok UI-jának küld egy parancsot egy megadott indexű kártya lerakására/aktiválására
+        public void SummonCard(int playerKey, int cardHandIndex)
         {
-            client.SummonCard(playerKey, handIndex);
+            client.GetFieldFromKey(playerKey).SummonCard(cardHandIndex);
+        }
+
+        //Frissíti a játékos paklijának méretét a modell szerinti aktuális értékre
+        public void RefreshDeckSize(int playerKey, int newDeckSize)
+        {
+            client.GetFieldFromKey(playerKey).UpdateDeckCounter(newDeckSize);
         }
 
         //Felfedi a lerakott kártyát
-        public void RevealCards(int key)
+        public void RevealCards(int playerKey)
         {
-            client.RevealCards(key);
+            client.GetFieldFromKey(playerKey).RevealCardsOnField();
         }
 
         //Elrakatja a UI-on megjelenített kártyákat a megfelelő helyre
-        public IEnumerator PutCardsAway(int key, bool isWinner)
+        public IEnumerator PutCardsAway(int playerKey, bool isWinner)
         {
             yield return new WaitForSeconds(1f);
-            client.PutCardsAway(key, isWinner);
+            client.GetFieldFromKey(playerKey).PutCardsAway(isWinner);
         }
 
         //Frissítést küld a játékpanelen az aktuális harctípus szövegére
@@ -101,6 +109,29 @@ namespace Assets.Scripts.SinglePlayer
             //Eltüntetjük az üzenetet
             client.HideMessage();
             controller.SetMessageStatus(false);
+        }
+
+        public void DisplayWinnerCards(List<Card> cardData)
+        {
+            client.DisplayListOfCards(cardData);
+        }
+
+        //Frissíti a győztes és vesztes halmok képét és darabszámát
+        public void ChangePileText(int winSize, int lostSize, int playerKey, Sprite win, Sprite lost)
+        {
+            client.GetFieldFromKey(playerKey).ChangePileText(winSize, lostSize, win, lost);
+        }
+
+        //Új Skill ciklus: A tartalékolt képességekről újra lehet dönteni
+        public void NewSkillCycle(int playerKey)
+        {
+            client.GetFieldFromKey(playerKey).NewSkillCycle();
+        }
+
+        //A megadott játékosnál lévő és megadott pozícióban található kártya képességét reseteli
+        public void ResetCardSkill(int playerKey, int cardPosition)
+        {
+            client.GetFieldFromKey(playerKey).ResetCardSkill(cardPosition);
         }
 
     }

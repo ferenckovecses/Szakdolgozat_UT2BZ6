@@ -13,35 +13,25 @@ namespace Assets.Scripts.Interface
         void ContinueBattle(GameObject exitPanel);
         void CreatePlayerFields(int playerNumber, List<int> keys, int playerDeckSize);
         void DisplayNewCard(Card data, int playerKey, bool visibleForPlayer, bool isABlindDraw);
-        void SetDragStatus(int playerKey, bool newStatus);
-        void RevealCards(int playerKey);
-        void ResetCardSkill(int playerKey, int cardPosition);
-        void NewSkillCycle(int playerKey);
-        void SetSkillStatus(int playerKey, bool newStatus);
-        void PutCardsAway(int playerKey, bool isWinner);
-
         #endregion
 
         #region Player Specific Instructions
- void ChooseStatButton(ActiveStat stat);
- void ExitBattleButton();
- void RefreshDeckSize(int key, int newDeckSize);
- void DisplayCardDetaislWindow(Card data, int displayedCardId, bool skillDecision, int position);
- void HideCardDetailsWindow();
- void ChangeStatText(string newType);
- bool DisplayMessage(string msg);
- void HideMessage();
- void DisplayStatBox();
-        #endregion
-
-        #region Bot Specific Instructions
-        void SummonCard(int playerKey, int cardHandIndex);
+        void ChooseStatButton(ActiveStat stat);
+        void ExitBattleButton();
+        void DisplayCardDetaislWindow(Card data, int displayedCardId, bool skillDecision, int position);
+        void HideCardDetailsWindow();
+        void ChangeStatText(string newType);
+        bool DisplayMessage(string msg);
+        void HideMessage();
+        void DisplayStatBox();
+        void DisplayListOfCards(List<Card> cards);
         #endregion
 
         #region Report
         void ReportSkillDecision(SkillState state, int key, int cardFieldPosition, int cardTypeID);
         void ReportSummon(int handIndex, int position);
         void ReportPlayerExit();
+        void ReportCardSelection(int cardID);
         #endregion
 
         #region Getter

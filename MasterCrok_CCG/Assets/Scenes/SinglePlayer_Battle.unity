@@ -1579,6 +1579,8 @@ MonoBehaviour:
     type: 3}
   deckSize: {fileID: 7559531545815898241, guid: 19b57ad6c5eddd4408bf37e41e312e82,
     type: 3}
+  cardListPrefab: {fileID: 9113368736867361055, guid: 2bf417716b944534096fba7189c09517,
+    type: 3}
   positions:
   - {fileID: 654931963}
   - {fileID: 1078166084}
