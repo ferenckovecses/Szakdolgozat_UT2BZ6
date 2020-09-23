@@ -457,4 +457,13 @@ public class Player_UI : MonoBehaviour
         RefreshPileSize();
     }
 
+    public void SwitchHandFromField(Card fieldData, int fieldId, Card handData, int handId)
+    {
+        cardsOnField[fieldId].GetComponent<CardBehaviour>().SetupCard(handData);
+        cardsOnField[fieldId].GetComponent<CardBehaviour>().SetVisibility(true);
+
+        cardsInHand[handId].GetComponent<CardBehaviour>().SetupCard(fieldData);
+        cardsInHand[handId].GetComponent<CardBehaviour>().SetVisibility(true);
+    }
+
 }

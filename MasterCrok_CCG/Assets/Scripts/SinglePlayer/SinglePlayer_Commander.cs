@@ -111,7 +111,8 @@ namespace Assets.Scripts.SinglePlayer
             controller.SetMessageStatus(false);
         }
 
-        public void DisplayWinnerCards(List<Card> cardData)
+        //Megjeleníttet az UI felülettel egy listányi kártyát, amiből választani kell
+        public void CardChoice(List<Card> cardData)
         {
             client.DisplayListOfCards(cardData);
         }
@@ -132,6 +133,11 @@ namespace Assets.Scripts.SinglePlayer
         public void ResetCardSkill(int playerKey, int cardPosition)
         {
             client.GetFieldFromKey(playerKey).ResetCardSkill(cardPosition);
+        }
+
+        public void SwitchHandFromField(int playerKey, Card fieldData, int fieldId, Card handData, int handId)
+        {
+            client.GetFieldFromKey(playerKey).SwitchHandFromField(fieldData, fieldId, handData, handId);
         }
 
     }

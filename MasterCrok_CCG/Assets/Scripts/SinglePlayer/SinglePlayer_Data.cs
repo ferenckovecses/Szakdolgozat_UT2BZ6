@@ -100,6 +100,11 @@ public class SinglePlayer_Data
         playerDictionary[playerKey].SacrificeAWinner(cardID);
     }
 
+    public void SwitchFromHand(int playerKey, int fieldId, int handId)
+    {
+        playerDictionary[playerKey].SwitchFromHand(fieldId, handId);
+    }
+
     #endregion
 
 
@@ -190,6 +195,26 @@ public class SinglePlayer_Data
     public int GetLostAmount(int playerKey)
     {
         return GetLostList(playerKey).Count;
+    }
+
+    public Card GetCardFromHand(int playerKey, int handId)
+    {
+        return this.playerDictionary[playerKey].GetCardFromHand(handId);
+    }
+
+    public Card GetCardFromField(int playerKey, int fieldId)
+    {
+        return this.playerDictionary[playerKey].GetCardFromField(fieldId);
+    }
+
+    public List<Card> GetCardsFromHand(int playerKey)
+    {
+        return this.playerDictionary[playerKey].GetCardsInHand();
+    }
+
+    public List<Card> GetCardsFromField(int playerKey)
+    {
+        return this.playerDictionary[playerKey].GetCardsOnField();
     }
 
     #endregion

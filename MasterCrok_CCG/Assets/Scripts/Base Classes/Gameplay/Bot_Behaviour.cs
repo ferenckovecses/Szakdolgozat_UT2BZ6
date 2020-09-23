@@ -21,17 +21,17 @@ public static class Bot_Behaviour
 		{
 			if(card.GetPower() > power)
 			{
-				power = card.GetPower();
+				power += card.GetPower();
 			}
 
 			if(card.GetIntelligence() > intelligence)
 			{
-				intelligence = card.GetIntelligence();
+				intelligence += card.GetIntelligence();
 			}
 
 			if(card.GetReflex() > reflex)
 			{
-				reflex = card.GetReflex();
+				reflex += card.GetReflex();
 			}
 		}
 
@@ -97,9 +97,52 @@ public static class Bot_Behaviour
 
 	//Döntést ad arról, hogy a bot mit kezdjen a képességével.
 	//TODO: Do the AI stuff
-	public static SkillResponse ChooseSkill(List<Card> cardsInHand, List<Card> cardsOnField, List<List<Card>> opponentCards)
+	//Check for hand skills, switch, opponent skills and stats, own stats and skill
+	public static SkillResponse ChooseSkill(int activeCardID, List<Card> cardsInHand, List<Card> cardsOnField, List<List<Card>> opponentCards)
 	{
-		return SkillResponse.Pass;
+		int choiceValue = UnityEngine.Random.Range(1,randomMaxTreshold);
+
+		if(choiceValue < randomMaxTreshold / errorTreshold)
+		{
+			return SkillResponse.Pass;
+		}
+
+		else 
+		{
+			return SkillResponse.Use;	
+		}
+
 	}
-	
+
+	//Megadja, hogy váltson-e ki a gép, vagy tartsa benn a kártyáját
+	//TODO: AI stuff
+	public static int HandSwitch(List<Card> cardsInHand, List<Card> activeCards, List<List<Card>> opponentCards, ActiveStat stat)
+	{
+		int choiceValue = UnityEngine.Random.Range(1,randomMaxTreshold);
+
+		if(choiceValue < randomMaxTreshold / errorTreshold)
+		{
+			return UnityEngine.Random.Range(0,cardsInHand.Count-1);
+		}
+
+		else 
+		{
+			return -1;
+		}
+	}
+
+	//Az új információk birtokában megváltoztatja vagy sem a harc típusát
+	public static ActiveStat ChangeFightType(List<Card> activeCards, List<List<Card>> opponentCards, ActiveStat currentStat)
+	{
+		int result = UnityEngine.Random.Range(0,2);
+
+		switch (result) 
+		{
+			case 0: return ActiveStat.Power;
+			case 1: return ActiveStat.Intelligence;
+			case 2: return ActiveStat.Reflex;
+			default: return currentStat;
+		}
+	}
+
 }

@@ -109,6 +109,11 @@ public class Deck
 		this.cards = cards.OrderBy(o=>o.GetCardID()).ToList();
 	}
 
+	public List<Card> GetDeck()
+	{
+		return this.cards;
+	}
+
 	public List<int> GetCardList()
 	{
 		List<int> cardID = new List<int>();

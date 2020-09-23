@@ -225,9 +225,33 @@ public class Player_Model
 		return isThePlayer;
 	}
 
-	public List<Card> GetCardsInHand()
+	public List<Card> GetCardsInHand(CardListFilter filter = CardListFilter.None)
 	{
-		return this.cardsInHand;
+
+		//Ha nem jeleníthetünk meg Master Crockot
+		if(filter == CardListFilter.NoMasterCrok)
+		{
+			List<Card> temp = new List<Card>();
+			foreach (Card card in cardsInHand) 
+			{
+				if(card.GetCardType() != CardType.Master_Crok)
+				{
+					temp.Add(card);
+				}
+			}
+			return temp;
+		}
+
+		//Ha nincs különösebb kitétel arra, hogy milyen lapokat adjunk vissza
+		else if(filter == CardListFilter.None)
+		{
+			return this.cardsInHand;
+		}
+
+		else 
+		{
+			return null;
+		}
 	}
 
 	public int GetHandCount()
@@ -301,6 +325,49 @@ public class Player_Model
 		{
 			return null;	
 		}
+	}
+
+	public List<Card> GetDeck(int limit)
+	{
+		//Ha nincs limit az egész paklit visszaadjuk
+		if(limit == 0)
+		{
+			return player.GetActiveDeck().GetDeck();
+		}
+
+		//Limit esetén csak az első X = limit lapot adjuk meg
+		else 
+		{
+			List<Card> temp = new List<Card>();
+			for(var i = 0; i < limit; i++)
+			{
+				temp.Add(player.GetActiveDeck().GetDeck()[i]);
+			}
+			return temp;	
+		}
+	}
+
+	public Card GetCardFromHand(int positionID)
+	{
+		return cardsInHand[positionID];
+	}
+
+	public Card GetCardFromField(int positionID)
+	{
+		return cardsOnField[positionID];
+	}
+
+	public void SwitchFromHand(int fieldPosition, int handPosition)
+	{
+		Card fieldTemp = cardsOnField[fieldPosition];
+		Card handTemp = cardsInHand[handPosition];
+
+		cardsOnField.RemoveAt(fieldPosition);
+		cardsOnField.Insert(fieldPosition, handTemp);
+
+		cardsInHand.RemoveAt(handPosition);
+		cardsInHand.Insert(handPosition, fieldTemp);
+
 	}
 
 }

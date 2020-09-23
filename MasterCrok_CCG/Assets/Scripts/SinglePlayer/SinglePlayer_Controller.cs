@@ -4,11 +4,11 @@ using UnityEngine;
 using System.Linq;
 using Assets.Scripts.SinglePlayer;
 
+//Alap játékhoz
 public enum GameMainPhase {Preparation, SetOrder, DrawPhase, SetRoles, Summon, 
     Reveal, Skill, Compare, Result, BlindMatch, Awards};
-
 public enum ActiveStat {NotDecided, Power, Intelligence, Reflex};
-
+public enum CardSelectionAction{None, Store, Switch};
 
 public class SinglePlayer_Controller : MonoBehaviour
 {
@@ -34,9 +34,12 @@ public class SinglePlayer_Controller : MonoBehaviour
     private int storeCount;
     private bool finishedWithTurn;
     private int currentKey;
+    private int currentActiveCard;
 
     private GameMainPhase currentPhase;
     private ActiveStat currentStat;
+    private CardSelectionAction currentAction;
+    private CardListType currentSelectionType;
 
     //Játék győzelmi paraméterei
     public static int winsNeeded = 5;
@@ -44,6 +47,8 @@ public class SinglePlayer_Controller : MonoBehaviour
 
     //RNG generátor
     private System.Random rng;
+
+    #region MonoBehaviour
 
     // Start is called before the first frame update
     private void Awake()
@@ -55,6 +60,9 @@ public class SinglePlayer_Controller : MonoBehaviour
 
         currentPhase = GameMainPhase.Preparation;
         currentStat = ActiveStat.NotDecided;
+        currentAction = CardSelectionAction.None;
+        currentSelectionType = CardListType.None;
+        currentActiveCard = -1;
 
         rng = new System.Random();
 
@@ -88,6 +96,8 @@ public class SinglePlayer_Controller : MonoBehaviour
             }
         }
     }
+
+    #endregion
 
     #region Main Game Phases
 
@@ -194,10 +204,7 @@ public class SinglePlayer_Controller : MonoBehaviour
                 //Ha ember, akkor dobjuk fel neki az értékválasztó képernyőt
                 if(dataModule.GetPlayerWithKey(playerKey).GetPlayerStatus())
                 {
-                    StartCoroutine(commandModule.DisplayStatBox());
-
-                    //Várunk a visszajelzésére
-                    yield return WaitForPlayerInput();
+                    StartCoroutine(ShowStatBox());
                 }
 
                 //Ellenkező esetben az AI dönt
@@ -301,24 +308,28 @@ public class SinglePlayer_Controller : MonoBehaviour
                     {
                         //A többi játékos pályán lévő kártyáinak adatait fetcheljük, mivel ezekről tudhat az AI
                         List<List<Card>> opponentCards = dataModule.GetOpponentsCard(playerKey);
+                        int id = 0;
 
-                        //AI agy segítségét hívjuk a döntésben, átadjuk neki a szükséges infót és választ kapunk cserébe
-                        SkillResponse response = Bot_Behaviour.ChooseSkill(dataModule.GetPlayerWithKey(playerKey).GetCardsInHand(), dataModule.GetPlayerWithKey(playerKey).GetCardsOnField(), opponentCards);
-
-
-                        //Kis várakozás, gondolkodási idő imitálás a döntés meghozása előtt, hogy ne történjen minden túl hirtelen
-                        yield return new WaitForSeconds(drawTempo * UnityEngine.Random.Range(5,15));
-
-                        //Az AI döntése alapján itt végzi el a játék a megfelelő akciókat
-                        switch (response) 
+                        foreach (Card card in dataModule.GetPlayerWithKey(playerKey).GetCardsOnField()) 
                         {
-                            case SkillResponse.Pass: Pass(); break;
-                            case SkillResponse.Store: break;
-                            case SkillResponse.Use: break;
-                            default: Pass(); break;
+                            //AI agy segítségét hívjuk a döntésben, átadjuk neki a szükséges infót és választ kapunk cserébe
+                            SkillResponse response = Bot_Behaviour.ChooseSkill(id, dataModule.GetPlayerWithKey(playerKey).GetCardsInHand(), 
+                                dataModule.GetPlayerWithKey(playerKey).GetCardsOnField(), opponentCards);
+
+                            //Kis várakozás, gondolkodási idő imitálás a döntés meghozása előtt, hogy ne történjen minden túl hirtelen
+                            yield return new WaitForSeconds(drawTempo * UnityEngine.Random.Range(5,15));
+
+                            //Az AI döntése alapján itt végzi el a játék a megfelelő akciókat
+                            switch (response) 
+                            {
+                                case SkillResponse.Pass: Pass(); break;
+                                case SkillResponse.Store: break;
+                                case SkillResponse.Use: Use(id); break;
+                                default: Pass(); break;
+                            }
+
+                            id++;
                         }
-                        
-                        //TODO: A fenti döntés kártyánként szülessen meg
 
                         //Az AI végzett a körével a döntés után
                         dataModule.GetPlayerWithKey(playerKey).SetStatus(PlayerTurnStatus.Finished); 
@@ -502,6 +513,102 @@ public class SinglePlayer_Controller : MonoBehaviour
     }
     #endregion
 
+    #region Skill Decisions
+
+    //Képesség passzolása
+    public void Pass()
+    {
+        StartCoroutine(commandModule.DisplayNotification(dataModule.GetPlayerWithKey(currentKey).GetUsername() + " passzolta a képességet!"));
+        dataModule.GetPlayerWithKey(currentKey).SetStatus(PlayerTurnStatus.Finished);
+        playerReacted = true;
+    }
+    //Képesség tartalékolása
+    private IEnumerator Store(int cardPosition)
+    {
+        //Először megnézzük, hogy tud-e áldozni
+        if(dataModule.GetPlayerWithKey(currentKey).GetWinAmount() > 0)
+        {
+            storeCount++;
+
+            currentAction = CardSelectionAction.Store;
+
+            //Ha ember döntött úgy, hogy store-olja a képességet
+            if(dataModule.GetPlayerWithKey(currentKey).GetPlayerStatus())
+            {
+                commandModule.CardChoice(dataModule.GetWinnerList(currentKey));
+
+                //Várunk a visszajelzésére
+                yield return WaitForPlayerInput();
+            }
+            playerReacted = true;
+        }
+
+        //Ha nem, akkor figyelmeztetjük és reseteljük a kártyát
+        else
+        {
+            StartCoroutine(commandModule.DisplayNotification(dataModule.GetPlayerWithKey(currentKey).GetUsername() + ", ehhez nincs elég győztes lapod!"));
+            commandModule.ResetCardSkill(currentKey, cardPosition);
+            finishedWithTurn = false;
+        }
+    }
+    //Képesség használata
+    private void Use(int cardPosition)
+    {
+        this.skills.UseSkill(dataModule.GetPlayerWithKey(currentKey).GetCardsOnField()[cardPosition].GetCardID());
+    }
+    #endregion
+
+    #region Skill Actions
+
+    //A megadott paraméterekkel megjelenít egy kártya listát, amiből választhat a játékos
+    public void ChooseCard(CardListFilter filter = CardListFilter.None, int limit = 0)
+    {
+        StartCoroutine(DisplayCardList(filter, limit ));
+    }
+
+    //Megváltoztatja a harc típusát
+    public void SetActiveStat(ActiveStat newStat)
+    {
+        this.currentStat = newStat;
+        commandModule.RefreshStatDisplay();
+    }
+
+    public void SwitchCard(int cardOnField, int cardToSwitch)
+    {
+        //Ha kézben kell keresni a választott lapot
+        if(currentSelectionType == CardListType.Hand)
+        {
+            //Adatok kinyerése
+            Card handData = dataModule.GetCardFromHand(currentKey, cardToSwitch);
+            Card fieldData = dataModule.GetCardFromField(currentKey, cardOnField);
+
+            //Model frissítése
+            dataModule.SwitchFromHand(currentKey, cardOnField, cardToSwitch);
+
+            //UI frissítése
+            commandModule.SwitchHandFromField(currentKey, fieldData, cardOnField, handData, cardToSwitch);
+        }
+    }
+
+    public void ChangeActiveStat()
+    {
+        if(IsTheActivePlayerHuman())
+        {
+            StartCoroutine(ShowStatBox());
+        }
+
+        else 
+        {
+            //AI agy segítségét hívjuk a döntésben
+            currentStat = Bot_Behaviour.ChangeFightType(dataModule.GetCardsFromField(currentKey),
+                dataModule.GetOpponentsCard(currentKey), currentStat);
+
+            //Jelenítsük meg a változást
+            commandModule.RefreshStatDisplay();
+        }
+    }
+    #endregion
+
 
     #region Commands
 
@@ -571,52 +678,39 @@ public class SinglePlayer_Controller : MonoBehaviour
         //Amúgy addig megy a játék, amíg a kézből is elfogynak a lapok
     }
 
-
-
-    private void Pass()
+    //Bizonyos kártya listát jelenít meg az aktív játékos számára, amiből választhat ezután
+    private IEnumerator DisplayCardList(CardListFilter filter = CardListFilter.None, int limit = 0)
     {
-        StartCoroutine(commandModule.DisplayNotification(dataModule.GetPlayerWithKey(currentKey).GetUsername() + " passzolta a képességet!"));
-        dataModule.GetPlayerWithKey(currentKey).SetStatus(PlayerTurnStatus.Finished);
-        playerReacted = true;
-    }
 
-    private IEnumerator Store(int cardPosition)
-    {
-        //Először megnézzük, hogy tud-e áldozni
-        if(dataModule.GetPlayerWithKey(currentKey).GetWinAmount() > 0)
+        List<Card> cardList = new List<Card>(); 
+
+        switch (currentSelectionType)
         {
-            storeCount++;
-
-            //Ha ember döntött úgy, hogy store-olja a képességet
-            if(dataModule.GetPlayerWithKey(currentKey).GetPlayerStatus())
-            {
-                commandModule.DisplayWinnerCards(dataModule.GetWinnerList(currentKey));
-
-                //Várunk a visszajelzésére
-                yield return WaitForPlayerInput();
-            }
-            playerReacted = true;
+            case CardListType.Hand:cardList = dataModule.GetPlayerWithKey(currentKey).GetCardsInHand(filter); break;
+            case CardListType.Winners:cardList = dataModule.GetPlayerWithKey(currentKey).GetWinners(); break;
+            case CardListType.Losers:cardList = dataModule.GetPlayerWithKey(currentKey).GetLosers(); break;
+            case CardListType.Deck:cardList = dataModule.GetPlayerWithKey(currentKey).GetDeck(limit); break;
+            default: break;
         }
 
-        //Ha nem, akkor figyelmeztetjük és reseteljük a kártyát
-        else
-        {
-            StartCoroutine(commandModule.DisplayNotification(dataModule.GetPlayerWithKey(currentKey).GetUsername() + ", ehhez nincs elég győztes lapod!"));
-            commandModule.ResetCardSkill(currentKey, cardPosition);
-            finishedWithTurn = false;
-        }
-    }
+        commandModule.CardChoice(cardList);
 
-    private void Use(int cardPosition)
-    {
-        this.skills.UseSkill(dataModule.GetPlayerWithKey(currentKey).GetCardsOnField()[cardPosition].GetCardID());
-        playerReacted = true;
+        //Várunk a visszajelzésére
+        yield return WaitForPlayerInput();
     }
 
     private void NewSkillCycle(int key)
     {
         storeCount = 0;
         commandModule.NewSkillCycle(key);
+    }
+
+    private IEnumerator ShowStatBox()
+    {
+        StartCoroutine(commandModule.DisplayStatBox());
+
+        //Várunk a visszajelzésére
+        yield return WaitForPlayerInput();
     }
 
     #endregion
@@ -644,6 +738,7 @@ public class SinglePlayer_Controller : MonoBehaviour
         dataModule.GetPlayerWithKey(currentKey).PlayCardFromHand(indexInHand);
     }
 
+    //Játékos kártyájának skill helyzetében történt válotoztatás kezelése
     public void HandleSkillStatusChange(SkillState state, bool haveFinished, int cardPosition)
     {
         finishedWithTurn = haveFinished;
@@ -651,11 +746,10 @@ public class SinglePlayer_Controller : MonoBehaviour
         switch (state) 
         {
             case SkillState.Pass: Pass(); break;
-            case SkillState.Use: Use(cardPosition); break;
+            case SkillState.Use: currentActiveCard = cardPosition; Use(currentActiveCard); break;
             case SkillState.Store: StartCoroutine(Store(cardPosition)); break;
             default: Pass(); break;
         }
-
 
         //Ha az összes pályán lévő kártya skilljéről nyilatkozott a játékos
         if(finishedWithTurn)
@@ -668,23 +762,71 @@ public class SinglePlayer_Controller : MonoBehaviour
         }
     }
 
+    //Kezeljük, ha a játékos kilép a játékból
     public void HandleExit()
     {
         dataModule.ResetDecks();
     }
 
+    //Kezeljük a játékos kiválasztott kártyáját
     public void HandleCardSelection(int cardID)
     {
+
+        //Ha az akció tartalékolás volt
+        if(currentAction == CardSelectionAction.Store)
+        {
+            //A modelben frissítjük a helyzetet
+            dataModule.SacrificeWinnerCard(cardID, currentKey);
+            //UI oldalon is frissítjük a helyzetet, hogy aktuális állapotot tükrözzön
+            int winSize = dataModule.GetWinnerAmount(currentKey);
+            int lostSize = dataModule.GetLostAmount(currentKey);
+            Sprite win = dataModule.GetLastWinnerImage(currentKey);
+            Sprite lost = dataModule.GetLastLostImage(currentKey);
+            commandModule.ChangePileText(winSize, lostSize, currentKey, win, lost);
+        }
+
+        //Ha az akció a csere volt
+        else if(currentAction == CardSelectionAction.Switch)
+        {
+            SwitchCard(currentActiveCard, cardID);
+        }
+
         playerReacted = true;
-        dataModule.SacrificeWinnerCard(cardID, currentKey);
-        int winSize = dataModule.GetWinnerAmount(currentKey);
-        int lostSize = dataModule.GetLostAmount(currentKey);
-        Sprite win = dataModule.GetLastWinnerImage(currentKey);
-        Sprite lost = dataModule.GetLastLostImage(currentKey);
-        commandModule.ChangePileText(winSize, lostSize, currentKey, win, lost);
+        currentAction = CardSelectionAction.None;
     }
 
     #endregion
+
+    #region Bot Actions
+
+    public void AskBotToSwitch()
+    {
+        int result = -1;
+
+        //Ha a kezet kell nézni
+        if(currentSelectionType == CardListType.Hand)
+        {
+            result = Bot_Behaviour.HandSwitch(dataModule.GetCardsFromHand(currentKey),
+                dataModule.GetCardsFromField(currentKey),dataModule.GetOpponentsCard(currentKey), currentStat);
+        }
+
+        //Ha nem akar cserélni
+        if(result == -1)
+        {
+            playerReacted = true;
+        }
+
+        //Ha akar cserélni
+        else 
+        {
+            
+        }
+
+
+    }
+
+    #endregion
+
 
     #region Tools
 
@@ -698,15 +840,24 @@ public class SinglePlayer_Controller : MonoBehaviour
         }
     }
 
+    public void SetPlayerReaction(bool newStatus)
+    {
+        this.playerReacted = newStatus;
+    }
+
+    public void SetSelectionAction(CardSelectionAction action)
+    {
+        currentAction = action;
+    }
+
+    public void SetSwitchType(CardListType type)
+    {
+        currentSelectionType = type;
+    }
+
     public ActiveStat GetActiveStat()
     {
         return this.currentStat;
-    }
-
-    public void SetActiveStat(ActiveStat newStat)
-    {
-        this.currentStat = newStat;
-        commandModule.RefreshStatDisplay();
     }
 
     public void SetMessageStatus(bool newStatus)
@@ -717,6 +868,11 @@ public class SinglePlayer_Controller : MonoBehaviour
     public bool IsMessageOnScreen()
     {
         return this.displayedMessageStatus;
+    }
+
+    public bool IsTheActivePlayerHuman()
+    {
+        return dataModule.GetPlayerWithKey(currentKey).GetPlayerStatus();
     }
 
     private void ChangePhase(GameMainPhase nextPhase)
