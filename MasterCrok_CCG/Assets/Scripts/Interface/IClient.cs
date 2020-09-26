@@ -12,7 +12,7 @@ namespace Assets.Scripts.Interface
         void Exit();
         void ContinueBattle(GameObject exitPanel);
         void CreatePlayerFields(int playerNumber, List<int> keys, int playerDeckSize);
-        void DisplayNewCard(Card data, int playerKey, bool visibleForPlayer, bool isABlindDraw);
+        void DisplayNewCard(Card data, int playerKey, bool visibleForPlayer, bool isABlindDraw, DrawTarget target);
         #endregion
 
         #region Player Specific Instructions
@@ -24,7 +24,8 @@ namespace Assets.Scripts.Interface
         bool DisplayMessage(string msg);
         void HideMessage();
         void DisplayStatBox();
-        void DisplayListOfCards(List<Card> cards);
+        void DisplayListOfCards(List<Card> cards, CardSelectionAction action);
+        void CloseCardList();
         #endregion
 
         #region Report
@@ -32,11 +33,14 @@ namespace Assets.Scripts.Interface
         void ReportSummon(int handIndex, int position);
         void ReportPlayerExit();
         void ReportCardSelection(int cardID);
+        void ReportSelectionCancel();
+        void ReportDisplayRequest(CardListType listType, int positionId);
         #endregion
 
         #region Getter
         bool GetCardDetailWindowStatus();
         bool GetFixedDetailsStatus();
+        bool GetCardListStatus();
         #endregion
 
         #region Setter

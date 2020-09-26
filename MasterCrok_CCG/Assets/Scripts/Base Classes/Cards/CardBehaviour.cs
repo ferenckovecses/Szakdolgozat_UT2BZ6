@@ -184,11 +184,6 @@ public class CardBehaviour : MonoBehaviour
         return this.cardData.GetArt();
     }
 
-    public SkillState GetState()
-    {
-        return this.skill;
-    }
-
     public void SetSkillState(SkillState newState)
     {
         this.skill = newState;

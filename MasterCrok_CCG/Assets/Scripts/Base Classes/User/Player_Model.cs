@@ -301,6 +301,13 @@ public class Player_Model
 		this.lostCards.Add(temp);
 	}
 
+	public void ReviveLostCard(int id)
+	{
+		Card temp = this.lostCards[id];
+		this.lostCards.RemoveAt(id);
+		this.cardsInHand.Add(temp);
+	}
+
 	public Sprite GetLastWinnerImage()
 	{
 		if(GetWinAmount() > 0)
@@ -355,6 +362,11 @@ public class Player_Model
 	public Card GetCardFromField(int positionID)
 	{
 		return cardsOnField[positionID];
+	}
+
+	public Card GetCardFromLosers(int positionID)
+	{
+		return lostCards[positionID];
 	}
 
 	public void SwitchFromHand(int fieldPosition, int handPosition)

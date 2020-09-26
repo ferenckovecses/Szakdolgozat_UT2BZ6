@@ -20,9 +20,9 @@ namespace Assets.Scripts.SinglePlayer
             controller.HandleStatChange(newStat);
         }
 
-        public void ReportSkillStatusChange(SkillState state, bool haveFinished, int cardPosition)
+        public void ReportSkillStatusChange(SkillState state, int cardPosition)
         {
-            controller.HandleSkillStatusChange(state, haveFinished, cardPosition);
+            controller.HandleSkillStatusChange(state, cardPosition);
         }
 
         public void ReportSummon(int indexInHand)
@@ -37,7 +37,17 @@ namespace Assets.Scripts.SinglePlayer
 
         public void ReportCardSelection(int id)
         {
-            controller.HandleCardSelection(id);
+            controller.StartCoroutine(controller.HandleCardSelection(id));
+        }
+
+        public void ReportSelectionCancel()
+        {
+            controller.HandleSelectionCancel();
+        }
+
+        public void ReportDisplayRequest(CardListType listType, int key)
+        {
+            controller.HandleDisplayRequest(listType, key);
         }
     }
 }

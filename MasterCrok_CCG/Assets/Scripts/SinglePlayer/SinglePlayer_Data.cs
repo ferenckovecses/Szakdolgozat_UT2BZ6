@@ -105,6 +105,11 @@ public class SinglePlayer_Data
         playerDictionary[playerKey].SwitchFromHand(fieldId, handId);
     }
 
+    public void ReviveLostCard(int playerKey, int cardID)
+    {
+        playerDictionary[playerKey].ReviveLostCard(cardID);
+    }
+
     #endregion
 
 
@@ -207,6 +212,11 @@ public class SinglePlayer_Data
         return this.playerDictionary[playerKey].GetCardFromField(fieldId);
     }
 
+    public Card GetCardFromLosers(int playerKey, int cardID)
+    {
+        return this.playerDictionary[playerKey].GetCardFromLosers(cardID);
+    }
+
     public List<Card> GetCardsFromHand(int playerKey)
     {
         return this.playerDictionary[playerKey].GetCardsInHand();
@@ -215,6 +225,25 @@ public class SinglePlayer_Data
     public List<Card> GetCardsFromField(int playerKey)
     {
         return this.playerDictionary[playerKey].GetCardsOnField();
+    }
+
+    //Visszaadja a nem aktív játékosok vesztes kártyáit
+    public List<Card> GetOtherLosers(int playerKey)
+    {
+        List<Card> temp = new List<Card>();
+        foreach (int key in GetKeyList()) 
+        {
+            if(key != playerKey)
+            {
+                foreach (Card card in GetLostList(key)) 
+                {
+                    temp.Add(card);
+                }
+            }
+            
+        }
+
+        return temp;
     }
 
     #endregion

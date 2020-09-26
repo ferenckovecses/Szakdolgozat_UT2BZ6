@@ -112,9 +112,9 @@ namespace Assets.Scripts.SinglePlayer
         }
 
         //Megjeleníttet az UI felülettel egy listányi kártyát, amiből választani kell
-        public void CardChoice(List<Card> cardData)
+        public void CardChoice(List<Card> cardData, CardSelectionAction action)
         {
-            client.DisplayListOfCards(cardData);
+            client.DisplayListOfCards(cardData, action);
         }
 
         //Frissíti a győztes és vesztes halmok képét és darabszámát
@@ -135,9 +135,29 @@ namespace Assets.Scripts.SinglePlayer
             client.GetFieldFromKey(playerKey).ResetCardSkill(cardPosition);
         }
 
-        public void SwitchHandFromField(int playerKey, Card fieldData, int fieldId, Card handData, int handId)
+        public void SwitchHandFromField(int playerKey, Card fieldData, int fieldId, Card handData, int handId, bool visibility)
         {
-            client.GetFieldFromKey(playerKey).SwitchHandFromField(fieldData, fieldId, handData, handId);
+            client.GetFieldFromKey(playerKey).SwitchHandFromField(fieldData, fieldId, handData, handId, visibility);
+        }
+
+        public bool AskSkillStatus(int playerKey)
+        {
+            return client.GetFieldFromKey(playerKey).GetCardSkillStatusFromField();
+        }
+
+        public SkillState AskCardSkillStatus(int playerKey, int cardID)
+        {
+            return client.GetFieldFromKey(playerKey).GetSpecificCardSkillStatus(cardID);
+        }
+
+        public void SetSkillState(int playerKey, int cardID, SkillState newSkillState)
+        {
+            client.GetFieldFromKey(playerKey).SetSpecificCardSkillStatus(cardID, newSkillState);
+        }
+
+        public void DrawNewCard(Card data, int playerKey, bool visibleForPlayer, DrawTarget target = DrawTarget.Hand)
+        {
+            client.DisplayNewCard(data, playerKey, visibleForPlayer, false, target);
         }
 
     }

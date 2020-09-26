@@ -7,7 +7,7 @@ public enum SkillResponse{Use, Store, Pass};
 public static class Bot_Behaviour
 {
 	static int randomMaxTreshold = 1000;
-	static float errorTreshold = 0.8f;
+	static float errorTreshold = 0.5f;
 
 	//A kézben lévő lapok értékei alapján eldönti, hogy melyik típussal játsszunk
 	public static ActiveStat ChooseFightType(List<Card> cardsInHand)
@@ -60,11 +60,13 @@ public static class Bot_Behaviour
 
 		int choiceValue = UnityEngine.Random.Range(1,randomMaxTreshold);
 
-		if(choiceValue < randomMaxTreshold / errorTreshold)
+		//Véletlen döntés
+		if(choiceValue < randomMaxTreshold * errorTreshold)
 		{
 			return UnityEngine.Random.Range(0, cardsInHand.Count - 1);
 		}
 
+		//"Okos" döntés
 		else
 		{
 			int index = 0;
@@ -95,16 +97,29 @@ public static class Bot_Behaviour
 		}
 	}
 
+	//Eldönti, hogy a megadott kártyalistából melyik lapot áldozza be
+	//TODO: Do the AI stuff
+	public static int WhichCardToSacrifice(List<Card> winners)
+	{
+		int choiceID = UnityEngine.Random.Range(0,(winners.Count)-1);
+		return choiceID;
+	}
+
 	//Döntést ad arról, hogy a bot mit kezdjen a képességével.
 	//TODO: Do the AI stuff
-	//Check for hand skills, switch, opponent skills and stats, own stats and skill
-	public static SkillResponse ChooseSkill(int activeCardID, List<Card> cardsInHand, List<Card> cardsOnField, List<List<Card>> opponentCards)
+	public static SkillResponse ChooseSkill(int activeCardID, List<Card> cardsInHand, List<Card> cardsOnField, List<List<Card>> opponentCards, int numberOfWinners)
 	{
 		int choiceValue = UnityEngine.Random.Range(1,randomMaxTreshold);
 
-		if(choiceValue < randomMaxTreshold / errorTreshold)
+		if(choiceValue < (randomMaxTreshold * (errorTreshold / 2)))
 		{
 			return SkillResponse.Pass;
+		}
+
+		else if(choiceValue >= (randomMaxTreshold * (errorTreshold / 2)) && choiceValue < (randomMaxTreshold * errorTreshold )
+			&& numberOfWinners > 0f)
+		{
+			return SkillResponse.Store;	
 		}
 
 		else 
@@ -118,20 +133,11 @@ public static class Bot_Behaviour
 	//TODO: AI stuff
 	public static int HandSwitch(List<Card> cardsInHand, List<Card> activeCards, List<List<Card>> opponentCards, ActiveStat stat)
 	{
-		int choiceValue = UnityEngine.Random.Range(1,randomMaxTreshold);
-
-		if(choiceValue < randomMaxTreshold / errorTreshold)
-		{
-			return UnityEngine.Random.Range(0,cardsInHand.Count-1);
-		}
-
-		else 
-		{
-			return -1;
-		}
+		return UnityEngine.Random.Range(0,cardsInHand.Count-1);
 	}
 
 	//Az új információk birtokában megváltoztatja vagy sem a harc típusát
+	//TODO: AI stuff
 	public static ActiveStat ChangeFightType(List<Card> activeCards, List<List<Card>> opponentCards, ActiveStat currentStat)
 	{
 		int result = UnityEngine.Random.Range(0,2);
@@ -143,6 +149,18 @@ public static class Bot_Behaviour
 			case 2: return ActiveStat.Reflex;
 			default: return currentStat;
 		}
+	}
+
+	public static int WhichSkillToUse(List<Card> cardList)
+	{
+		int choice = UnityEngine.Random.Range(0,cardList.Count-1);
+		return cardList[choice].GetCardID();
+	}
+
+	public static int WhomToRevive(List<Card> cardList)
+	{
+		int choice = UnityEngine.Random.Range(0,cardList.Count-1);
+		return choice;
 	}
 
 }

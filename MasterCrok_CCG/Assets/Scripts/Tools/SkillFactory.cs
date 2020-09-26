@@ -5,6 +5,7 @@ using UnityEngine;
 //Skillekhez kapcsolatos fázis változók
 public enum CardListType{None, Deck, Hand, Winners, Losers, Field};
 public enum CardListFilter{None, NoMasterCrok};
+public enum CardSelectionAction{None, Store, Switch, Organise, SkillUse, Revive};
 
 
 public class SkillFactory
@@ -22,10 +23,13 @@ public class SkillFactory
 		{
 			case 1: UnexpectedAttack(); break;
 			case 2: PlotTwist(); break;
+			case 3: SoulStealing(); break;
+			case 5: Revive(); break;
+			case 6: GreatFight(); break;
 			case 16: ShieldFight(); break;
 
 			//Bármilyen hiba esetén passzolunk, hogy ne akadjon meg a játék
-			default: this.gameController.Pass(); Debug.Log("Skill Error!"); break;
+			default: this.gameController.Pass();  break;
 		}
 	}
 
@@ -37,40 +41,64 @@ public class SkillFactory
 		gameController.SetSelectionAction(CardSelectionAction.Switch);
 		gameController.SetSwitchType(CardListType.Hand);
 
-		//Ha ember
-		if(gameController.IsTheActivePlayerHuman())
-		{
-			//Megjelenítjük a kézben lévő lapokat, hogy a játékos választhasson közülük
-			gameController.ChooseCard(CardListFilter.NoMasterCrok);
-		}
-
-		//Ha bot
-		else
-		{
-			gameController.AskBotToSwitch();
-		}
+		//Megjelenítjük a kézben lévő lapokat, hogy a játékos választhasson közülük
+		gameController.ChooseCard(CardListFilter.NoMasterCrok);
 	}
 
+	//Megváltoztathatjuk a harc típusát
 	private void PlotTwist()
 	{
-		//Ha ember
-		if(gameController.IsTheActivePlayerHuman())
+		gameController.StartCoroutine(gameController.TriggerStatChange());
+	}
+
+	//Használhatod egy másik játékos vesztes krokjának képességét
+	private void SoulStealing()
+	{
+		if(gameController.IsThereOtherLostCards())
 		{
-			//Megjelenítjük a kézben lévő lapokat, hogy a játékos választhasson közülük
-			gameController.ChangeActiveStat();
+			gameController.SetSelectionAction(CardSelectionAction.SkillUse);
+			gameController.SetSwitchType(CardListType.Hand);
+
+			//Ha bot, akkor kell egy kis rásegítés neki
+			if(!gameController.IsTheActivePlayerHuman())
+			{
+				gameController.ChooseCard();
+			}
 		}
 
 		else 
 		{
-			
+			gameController.Pass();
 		}
+	}
+
+	private void Revive()
+	{
+		if(gameController.DoWeHaveLosers())
+		{
+			//Jelezzük a vezérlőnek, hogy cserére készülünk
+			gameController.SetSelectionAction(CardSelectionAction.Revive);
+			gameController.SetSwitchType(CardListType.Losers);
+
+			//Megjelenítjük a kézben lévő lapokat, hogy a játékos választhasson közülük
+			gameController.ChooseCard();
+		}
+
+		else 
+		{
+			gameController.Pass();	
+		}
+	}
+
+	private void GreatFight()
+	{
+		gameController.GreatFight();
 	}
 
 	//Erőre változtatja a harc típusát
 	private void ShieldFight()
 	{
 		this.gameController.SetActiveStat(ActiveStat.Power);
-
 		Response();
 	}
 

@@ -413,10 +413,15 @@ public class Player_UI : MonoBehaviour
         this.client.SetDetailsStatus(status);
     }
 
-    public bool SwitchCardSkillStatus(SkillState state, int cardPosition)
+    //Beállítja egy megadott kártya skill státuszát döntés után
+    public void SwitchCardSkillStatus(SkillState state, int cardPosition)
     {
         cardsOnField[cardPosition].GetComponent<CardBehaviour>().SetSkillState(state);
+    }
 
+    //Visszaadja, hogy van-e még eldöntetlen skill helyzetű kártya a mezőn
+    public bool GetCardSkillStatusFromField()
+    {
         foreach (GameObject card in cardsOnField) 
         {
             //Ha találunk a lerakott kártyák között olyat, akinek a képessége még nem eldöntött
@@ -426,6 +431,16 @@ public class Player_UI : MonoBehaviour
             }
         }
         return true;
+    }
+
+    public SkillState GetSpecificCardSkillStatus(int cardID)
+    {
+        return cardsOnField[cardID].GetComponent<CardBehaviour>().GetSkillState();
+    }
+
+    public void SetSpecificCardSkillStatus(int cardID, SkillState newState)
+    {
+        cardsOnField[cardID].GetComponent<CardBehaviour>().SetSkillState(newState);
     }
 
     public void ResetCardSkill(int cardPosition)
@@ -457,13 +472,38 @@ public class Player_UI : MonoBehaviour
         RefreshPileSize();
     }
 
-    public void SwitchHandFromField(Card fieldData, int fieldId, Card handData, int handId)
+    public void SwitchHandFromField(Card fieldData, int fieldId, Card handData, int handId, bool visibility)
     {
         cardsOnField[fieldId].GetComponent<CardBehaviour>().SetupCard(handData);
         cardsOnField[fieldId].GetComponent<CardBehaviour>().SetVisibility(true);
+        cardsOnField[fieldId].GetComponent<CardBehaviour>().SetSkillState(SkillState.Pass);
+
 
         cardsInHand[handId].GetComponent<CardBehaviour>().SetupCard(fieldData);
-        cardsInHand[handId].GetComponent<CardBehaviour>().SetVisibility(true);
+        cardsInHand[handId].GetComponent<CardBehaviour>().SetVisibility(visibility);
+    }
+
+    public void DisplayCards(int type)
+    {
+        //Csak egyszerre egyszer lehessen megjeleníteni
+        if(!client.GetCardListStatus())
+        {
+            CardListType listType = CardListType.None;
+
+            switch (type) 
+            {
+                case 0: listType = CardListType.Losers; break;
+                case 1: listType = CardListType.Winners; break;
+                default: break;
+            } 
+
+            //Csak akkor jelenítsük meg, ha van mit megjeleníteni.
+            if((listType == CardListType.Winners && winAmount > 0) || (listType == CardListType.Losers && lostAmount > 0))
+            {
+                client.ReportDisplayRequest(listType, positionID);
+            }
+        }
+        
     }
 
 }

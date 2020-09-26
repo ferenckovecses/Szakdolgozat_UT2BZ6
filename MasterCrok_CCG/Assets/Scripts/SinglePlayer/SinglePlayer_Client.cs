@@ -40,6 +40,7 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
     private bool isDetailsShowed;
     private bool isDetailsFixed;
     private bool isExitPanelExist;
+    private bool isCardListActive;
     private GameObject cardDetailWindow;
     private GameObject statPanel;
     private GameObject messageText;
@@ -53,6 +54,7 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
         isDetailsShowed = false;
         isDetailsFixed = false;
         isExitPanelExist = false;
+        isCardListActive = false;
     }
 
     #region Report
@@ -65,8 +67,9 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
     public void ReportSkillDecision(SkillState state, int key, int cardFieldPosition, int cardTypeID)
     {
         HideCardDetailsWindow();
-        bool isItTheLast = GetFieldFromKey(key).SwitchCardSkillStatus(state, cardFieldPosition);
-        reportModule.ReportSkillStatusChange(state, isItTheLast, cardFieldPosition);
+        GetFieldFromKey(key).SwitchCardSkillStatus(state, cardFieldPosition);
+
+        reportModule.ReportSkillStatusChange(state, cardFieldPosition);
     }
     //A vezérlőnek jelzünk a kilépésről, ő pedig ellátja a szükséges feladatokat
     public void ReportPlayerExit()
@@ -77,7 +80,20 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
     public void ReportCardSelection(int id)
     {
         Destroy(cardList);
+        isCardListActive = false;
         reportModule.ReportCardSelection(id);
+    }
+
+    public void ReportSelectionCancel()
+    {
+        Destroy(cardList);
+        isCardListActive = false;
+        reportModule.ReportSelectionCancel();
+    }
+
+    public void ReportDisplayRequest(CardListType listType, int positionID)
+    {
+        reportModule.ReportDisplayRequest(listType, playerFields.Keys.ElementAt(positionID));
     }
 
     #endregion
@@ -127,15 +143,24 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
 
     }
     //Továbbítja a kapott új kártya adatokat a megfelelő játékos oldalra, hogy vizuálisan megjelenítse azokat
-    public void DisplayNewCard(Card data, int playerKey, bool visibleForThePlayer, bool isABlindDraw)
+    public void DisplayNewCard(Card data, int playerKey, bool visibleForThePlayer, bool isABlindDraw, DrawTarget target)
     {
         //Ha nem vakon húztuk
         if (!isABlindDraw)
         {
             GameObject temp = GetFieldFromKey(playerKey).CreateCard(data, visibleForThePlayer);
 
-            //Kártya objektum hozzáadása a kéz mezőhöz
-            GetFieldFromKey(playerKey).AddCardToHand(temp);
+            if(target == DrawTarget.Hand)
+            {
+                //Kártya objektum hozzáadása a kéz mezőhöz
+                GetFieldFromKey(playerKey).AddCardToHand(temp);
+            }
+
+            else 
+            {
+                GetFieldFromKey(playerKey).BlindSummon(temp);
+                GetFieldFromKey(playerKey).RevealCardsOnField();
+            }
         }
 
         else
@@ -255,10 +280,17 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
         statPanel.GetComponent<StatChoice_Controller>().SetupPanel(this);
     }
 
-    public void DisplayListOfCards(List<Card> cards)
+    public void DisplayListOfCards(List<Card> cards, CardSelectionAction action)
     {
         cardList = Instantiate(cardListPrefab, ingamePanelCanvas.transform.position, Quaternion.identity, ingamePanelCanvas.transform);
-        cardList.GetComponent<CardList_Controller>().SetupList(this, cards);
+        cardList.GetComponent<CardList_Controller>().SetupList(this, cards, action);
+        isCardListActive = true;
+    }
+
+    public void CloseCardList()
+    {
+        Destroy(cardList);
+        isCardListActive = false;
     }
     #endregion
 
@@ -295,6 +327,11 @@ public class SinglePlayer_Client : MonoBehaviour, IClient
     public void SetReportAgent(SinglePlayer_Report rep)
     {
         this.reportModule = rep;
+    }
+
+    public bool GetCardListStatus()
+    {
+        return this.isCardListActive;
     }
 
     #endregion
