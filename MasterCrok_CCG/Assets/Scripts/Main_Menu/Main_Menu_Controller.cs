@@ -6,8 +6,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 
-public enum MenuState {MainMenu, Settings, GameTypeSelect, PlayerNumberSelect, MultiplayerSettings, Login, Register};
-
 public class Main_Menu_Controller : MonoBehaviour
 {
 
@@ -25,14 +23,14 @@ public class Main_Menu_Controller : MonoBehaviour
 
     [Header("Adattárolók")]
     public List<Button> menuButtons;
-    GameData_Controller dataController;
+    GameSettings_Controller dataController;
     MenuState currentState;
     bool needsUpdate;
     bool isLoggedIn = false;
 
     void Start()
     {
-        dataController = GameObject.Find("GameData_Controller").GetComponent<GameData_Controller>();
+        dataController = GameObject.Find("GameData_Controller").GetComponent<GameSettings_Controller>();
         menuButtons = new List<Button>();
         currentState = MenuState.MainMenu;
         CheckIfAlreadyLoggedIn();

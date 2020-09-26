@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using GameControll;
 
 public class Profile_Controller : MonoBehaviour
 {
@@ -151,7 +152,7 @@ public class Profile_Controller : MonoBehaviour
 	public void ChooseProfile(Player player)
 	{
 		//Eltároljuk a választott profil adatait a játék számára
-		GameData_Controller dataController = GameObject.Find("GameData_Controller").GetComponent<GameData_Controller>();
+		GameSettings_Controller dataController = GameObject.Find("GameData_Controller").GetComponent<GameSettings_Controller>();
 		dataController.SetActivePlayer(player);
 
 		//A változásról jelentést adunk a főmenünek is, hogy frissüljön
@@ -163,7 +164,7 @@ public class Profile_Controller : MonoBehaviour
 
 	public void RemoveProfile(GameObject profile)
 	{
-		GameData_Controller dataController = GameObject.Find("GameData_Controller").GetComponent<GameData_Controller>();
+		GameSettings_Controller dataController = GameObject.Find("GameData_Controller").GetComponent<GameSettings_Controller>();
 		int id = playerUIelements.IndexOf(profile);
 
 		//Ha az aktív profilt töröljük

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum SkillResponse{Use, Store, Pass};
+
 
 public static class Bot_Behaviour
 {
@@ -10,7 +10,7 @@ public static class Bot_Behaviour
 	static float errorTreshold = 0.5f;
 
 	//A kézben lévő lapok értékei alapján eldönti, hogy melyik típussal játsszunk
-	public static ActiveStat ChooseFightType(List<Card> cardsInHand)
+	public static CardStatType ChooseFightType(List<Card> cardsInHand)
 	{
 		//Értékek
 		int power = 0;
@@ -38,24 +38,24 @@ public static class Bot_Behaviour
 		//Visszaadja a legmagasabb stat értékkel rendelkező értéket
 		if(power > intelligence && power > reflex)
 		{
-			return ActiveStat.Power;
+			return CardStatType.Power;
 		}
 
 		else if (intelligence > reflex) 
 		{
-			return ActiveStat.Intelligence;
+			return CardStatType.Intelligence;
 		}
 
 		else 
 		{
-			return ActiveStat.Reflex;	
+			return CardStatType.Reflex;	
 		}
 	}
 
 	//A megadott típus alapján visszaadja a kézben lévő lapok közül az optimális megoldást
 	//Hogy ne legyen túl tökéletes a játék és "emberi hibát" is mutasson esélyt rá hogy random döntsön
 	//TODO: Képességeket is nézze és vegye számításba
-	public static int ChooseRightCard(List<Card> cardsInHand, ActiveStat type)
+	public static int ChooseRightCard(List<Card> cardsInHand, CardStatType type)
 	{
 
 		int choiceValue = UnityEngine.Random.Range(1,randomMaxTreshold);
@@ -74,19 +74,19 @@ public static class Bot_Behaviour
 
 			foreach (Card card in  cardsInHand) 
 			{
-				if(type == ActiveStat.Power && card.GetPower() > cardValue)
+				if(type == CardStatType.Power && card.GetPower() > cardValue)
 				{
 					cardValue = card.GetPower();
 					index = cardsInHand.IndexOf(card);
 				}
 
-				else if(type == ActiveStat.Intelligence && card.GetIntelligence() > cardValue)
+				else if(type == CardStatType.Intelligence && card.GetIntelligence() > cardValue)
 				{
 					cardValue = card.GetIntelligence();
 					index = cardsInHand.IndexOf(card);
 				}
 
-				else if (type == ActiveStat.Reflex && card.GetReflex() > cardValue) 
+				else if (type == CardStatType.Reflex && card.GetReflex() > cardValue) 
 				{
 					cardValue = card.GetReflex();
 					index = cardsInHand.IndexOf(card);
@@ -107,46 +107,46 @@ public static class Bot_Behaviour
 
 	//Döntést ad arról, hogy a bot mit kezdjen a képességével.
 	//TODO: Do the AI stuff
-	public static SkillResponse ChooseSkill(int activeCardID, List<Card> cardsInHand, List<Card> cardsOnField, List<List<Card>> opponentCards, int numberOfWinners)
+	public static SkillChoises ChooseSkill(int activeCardID, List<Card> cardsInHand, List<Card> cardsOnField, List<List<Card>> opponentCards, int numberOfWinners)
 	{
 		int choiceValue = UnityEngine.Random.Range(1,randomMaxTreshold);
 
 		if(choiceValue < (randomMaxTreshold * (errorTreshold / 2)))
 		{
-			return SkillResponse.Pass;
+			return SkillChoises.Pass;
 		}
 
 		else if(choiceValue >= (randomMaxTreshold * (errorTreshold / 2)) && choiceValue < (randomMaxTreshold * errorTreshold )
 			&& numberOfWinners > 0f)
 		{
-			return SkillResponse.Store;	
+			return SkillChoises.Store;	
 		}
 
 		else 
 		{
-			return SkillResponse.Use;	
+			return SkillChoises.Use;	
 		}
 
 	}
 
 	//Megadja, hogy váltson-e ki a gép, vagy tartsa benn a kártyáját
 	//TODO: AI stuff
-	public static int HandSwitch(List<Card> cardsInHand, List<Card> activeCards, List<List<Card>> opponentCards, ActiveStat stat)
+	public static int HandSwitch(List<Card> cardsInHand, List<Card> activeCards, List<List<Card>> opponentCards, CardStatType stat)
 	{
 		return UnityEngine.Random.Range(0,cardsInHand.Count-1);
 	}
 
 	//Az új információk birtokában megváltoztatja vagy sem a harc típusát
 	//TODO: AI stuff
-	public static ActiveStat ChangeFightType(List<Card> activeCards, List<List<Card>> opponentCards, ActiveStat currentStat)
+	public static CardStatType ChangeFightType(List<Card> activeCards, List<List<Card>> opponentCards, CardStatType currentStat)
 	{
 		int result = UnityEngine.Random.Range(0,2);
 
 		switch (result) 
 		{
-			case 0: return ActiveStat.Power;
-			case 1: return ActiveStat.Intelligence;
-			case 2: return ActiveStat.Reflex;
+			case 0: return CardStatType.Power;
+			case 1: return CardStatType.Intelligence;
+			case 2: return CardStatType.Reflex;
 			default: return currentStat;
 		}
 	}

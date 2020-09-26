@@ -259,23 +259,23 @@ public class Player_Model
 		return this.cardsInHand.Count;
 	}
 
-	public int GetActiveCardsValue(ActiveStat type)
+	public int GetActiveCardsValue(CardStatType type)
 	{
 		int sum = 0;
 
 		foreach (Card card in cardsOnField) 
 		{
-			if(type == ActiveStat.Power)
+			if(type == CardStatType.Power)
 			{
 				sum += card.GetPower();
 			}
 
-			else if(type == ActiveStat.Intelligence)
+			else if(type == CardStatType.Intelligence)
 			{
 				sum += card.GetIntelligence();
 			}
 
-			else if(type == ActiveStat.Reflex)
+			else if(type == CardStatType.Reflex)
 			{
 				sum += card.GetReflex();
 			}

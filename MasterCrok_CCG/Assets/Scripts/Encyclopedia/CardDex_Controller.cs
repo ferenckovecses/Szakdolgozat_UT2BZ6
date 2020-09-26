@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
-
-public enum DexState {List, Detail};
+using GameControll;
+using ClientControll;
 
 public class CardDex_Controller : MonoBehaviour
 {
@@ -49,7 +49,7 @@ public class CardDex_Controller : MonoBehaviour
     	{
     		currentState = DexState.Detail;
     		displayedUI = Instantiate(cardDetailPrefab, UI_canvas.transform.position, Quaternion.identity, UI_canvas.transform);
-    		displayedUI.GetComponent<CardDisplay_Controller>().SetupDisplay(data, false);
+    		displayedUI.GetComponent<DetailedCardDisplay>().SetupDisplay(data, false);
 
             backButton = Instantiate(BackButton, UI_canvas.transform.position, Quaternion.identity, UI_canvas.transform);
             backButton.onClick.AddListener(delegate{BackToList();});
