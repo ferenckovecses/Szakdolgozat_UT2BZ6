@@ -17,6 +17,12 @@ MonoBehaviour:
   type: 1
   skillName: "Els\u0151 v\xE1g\xE1s"
   skillDescription: "Azonnal hat\xE1stalan\xEDtja az ellenfelek k\xE9pess\xE9geit."
+  skillProperties:
+  - activationTime: 0
+    skillRequirement: 0
+    skillTarget: 2
+    effectAction: 8
+  multipleSkillRule: 0
   power: 6
   intelligence: 4
   reflex: 8

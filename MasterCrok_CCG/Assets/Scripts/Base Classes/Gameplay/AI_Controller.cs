@@ -9,13 +9,13 @@ namespace GameControll
         private GameState_Controller gameState;
 
         //AI Context
-        List<Card> cardsOnField;
-        List<List<Card>> opponentCards;
-        List<Card> cardsInHand;
-        int winAmount;
-        int currentKey;
-        int cardCount;
-        CardStatType currentStat;
+        private List<Card> cardsOnField;
+        private List<List<Card>> opponentCards;
+        private List<Card> cardsInHand;
+        private int winAmount;
+        private int currentKey;
+        private int cardCount;
+        private CardStatType currentStat;
 
 
         public AI_Controller(GameState_Controller cont)
@@ -27,72 +27,31 @@ namespace GameControll
         }
 
         //Dönt a képességeiről
-        public IEnumerator DecideSkill()
+        public IEnumerator DecideSkill(int key = -1)
         {
-            int id = 0;
-            GetCurrentContext();
+            GetCurrentContext(key);
 
-            //Addig megy a ciklus újra és újra, amíg minden lapjáról nem döntött az AI
-            while (true)
+            for(var id = 0; id < cardCount; id++)
             {
-
-                //Ha a field szerint nincs több inaktív lap, akkor végeztünk
-                if (gameState.GetClientModule().AskSkillStatus(currentKey))
+                if(gameState.GetClientModule().AskCardSkillStatus(currentKey, id) == SkillState.NotDecided)
                 {
-                    break;
-                }
 
-                //Ha a vizsgált kártya skill státusza Not Decided
-                if (gameState.GetClientModule().AskCardSkillStatus(currentKey, id) == SkillState.NotDecided)
-                {
-                    gameState.SetActiveCardID(id);
-                    //AI agy segítségét hívjuk a döntésben, átadjuk neki a szükséges infót és választ kapunk cserébe
-                    SkillChoises response = Bot_Behaviour.ChooseSkill(id, cardsInHand, cardsOnField, opponentCards, winAmount);
-
-                    //Kis várakozás, gondolkodási idő imitálás a döntés meghozása előtt, hogy ne történjen minden túl hirtelen
-                    yield return new WaitForSeconds(GameSettings_Controller.drawTempo * UnityEngine.Random.Range(5, 15));
-
-                    //Az AI döntése alapján itt végzi el a játék a megfelelő akciókat
-                    switch (response)
-                    {
-                        case SkillChoises.Pass: 
-                            gameState.Use(id);
-                            gameState.GetClientModule().SetSkillState(currentKey, id, SkillState.Pass); 
-                            break;
-                        case SkillChoises.Store: 
-                            gameState.Use(id);
-                            gameState.GetClientModule().SetSkillState(currentKey, id, SkillState.Store); 
-                            break;
-                        case SkillChoises.Use: 
-                            gameState.Use(id);
-                            gameState.GetClientModule().SetSkillState(currentKey, id, SkillState.Use); 
-                            break;
-                        default: gameState.Pass(); break;
-                    }
-
-                    //Újrakezdjük a ciklust
-                    id = 0;
-                }
-
-                //Ellenkező esetben ha megtehetjük, léptetjük a ciklust
-                else
-                {
-                    if (id + 1 < cardCount)
-                    {
-                        id++;
-                    }
+                    gameState.GetInputModule().ReportSkillStatusChange(SkillState.Use, id);
+                    yield return gameState.WaitForEndOfSkill();
+                    gameState.GetClientModule().SetSkillState(currentKey, id, SkillState.Use);
+                    
                 }
             }
 
             //Az AI végzett a körével a döntések után
             gameState.GetDataModule().GetPlayerWithKey(currentKey).SetStatus(PlayerTurnStatus.Finished);
-            gameState.ActionFinished();
+            gameState.TurnFinished();
         }
 
         //Dönt az új statról
-        public void DecideNewStat()
+        public void DecideNewStat(int key = -1)
         {
-            GetCurrentContext();
+            GetCurrentContext(key);
 
             //AI agy segítségét hívjuk a döntésben
             CardStatType newStat = Bot_Behaviour.ChangeFightType(cardsOnField,
@@ -105,9 +64,9 @@ namespace GameControll
         }
 
         //Kártyacsere vagy választás
-        public void CardSelectionEffect(CardListFilter filter, int limit)
+        public IEnumerator CardSelectionEffect(CardListFilter filter, int limit, int key = -1)
         {
-            GetCurrentContext();
+            GetCurrentContext(key);
             Data_Controller dataModule = gameState.GetDataModule();
 
             //Ha cseréről van szó
@@ -131,6 +90,7 @@ namespace GameControll
                 List<Card> cards = dataModule.GetOtherLosers(currentKey);
                 int cardID = Bot_Behaviour.WhichSkillToUse(cards);
                 gameState.GetSkillModule().UseSkill(cardID);
+                yield return null;
             }
 
             //Ha felélesztésről van szó
@@ -141,14 +101,56 @@ namespace GameControll
                 gameState.GetSkillModule().ReviveCard(cardID);
             }
 
-            gameState.SetCurrentAction(SkillEffectAction.None);
+            else if(gameState.GetCurrentAction() == SkillEffectAction.Execute)
+             {
+
+                List<int> temp = dataModule.GetOtherKeyList(currentKey);
+                foreach (int keypiece in temp) 
+                {
+                    Debug.Log(keypiece);
+                }
+                int choosenKey = Bot_Behaviour.WhichPlayerToExecute(temp);
+
+                gameState.GetInputModule().ReportNameBoxTapping(choosenKey);
+                yield return gameState.WaitForEndOfAction();
+             }
+
+            //Ha kézből eldobásról van szó
+            else if (gameState.GetCurrentAction() == SkillEffectAction.TossCard)
+            {
+                //Csak akkor dobunk el lapot, ha van a kezünkben
+                if(cardsInHand.Count > 0)
+                {
+                    int cardID = Bot_Behaviour.WhomToToss(cardsInHand);
+                    gameState.GetInputModule().HandleCardSelection(cardID, currentKey);
+                }
+
+                else 
+                {
+                    Debug.Log("Nincs mit eldobni");
+                    gameState.ActionFinished();
+                }
+            }
+
+            gameState.StartCoroutine(gameState.SkillFinished());
         }
 
         //Lekéri az aktuális számára is elérhető adatokat
-        private void GetCurrentContext()
+        private void GetCurrentContext(int key)
         {
-            //Aktuális adatok lekérése
-            this.currentKey = gameState.GetCurrentKey();
+            //Default eset: Aktuális játékos lekérdezése
+            if(key == -1)
+            {
+                //Aktuális adatok lekérése
+                this.currentKey = gameState.GetCurrentKey();
+            }
+
+            //Megadott kulcsú játékos lekérdezése
+            else 
+            {
+                this.currentKey = key;
+            }
+
             this.cardsOnField = gameState.GetDataModule().GetPlayerWithKey(currentKey).GetCardsOnField();
             this.cardCount = cardsOnField.Count;
             this.opponentCards = gameState.GetDataModule().GetOpponentsCard(currentKey);

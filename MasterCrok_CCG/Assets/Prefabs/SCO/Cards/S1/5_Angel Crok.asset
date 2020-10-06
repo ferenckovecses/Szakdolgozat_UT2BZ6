@@ -17,6 +17,12 @@ MonoBehaviour:
   type: 2
   skillName: "Felt\xE1maszt\xE1s"
   skillDescription: Visszaveheted a kezedbe egy vesztes Crokodat.
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 0
+    skillTarget: 0
+    effectAction: 5
+  multipleSkillRule: 0
   power: 3
   intelligence: 4
   reflex: 7

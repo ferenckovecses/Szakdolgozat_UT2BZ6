@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: "Tr\xFCkk\xF6s fordulat"
   skillDescription: "Megv\xE1ltoztathatod a harc t\xEDpus\xE1t: Er\u0151, Intelligencia,
     vagy Reflex."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 0
+    skillTarget: 3
+    effectAction: 7
+  multipleSkillRule: 0
   power: 5
   intelligence: 6
   reflex: 7

@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: "Felder\xEDt\xE9s"
   skillDescription: "\xC1tn\xE9zheted a paklid fels\u0151 6 Crokj\xE1t \xE9s megv\xE1ltoztathatod
     a sorrendj\xFCket."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 0
+    skillTarget: 0
+    effectAction: 3
+  multipleSkillRule: 0
   power: 3
   intelligence: 5
   reflex: 3

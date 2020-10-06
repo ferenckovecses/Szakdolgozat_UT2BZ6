@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: "D\xFCh\xF6ng\xE9s"
   skillDescription: "Annyival megn\u0151nek az \xE9rt\xE9kei, amennyivel kevesebb
     a nyertes lapod, mint a kiv\xE1lasztott ellenfelednek."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 9
+    skillTarget: 0
+    effectAction: 11
+  multipleSkillRule: 0
   power: 7
   intelligence: 1
   reflex: 3

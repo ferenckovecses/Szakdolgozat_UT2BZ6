@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: "Tan\xEDt\xE1s ereje"
   skillDescription: "A k\xF6vetkez\u0151 harcban a Crokjaid minden \xE9rt\xE9ke eggyel
     megn\u0151."
+  skillProperties:
+  - activationTime: 2
+    skillRequirement: 0
+    skillTarget: 0
+    effectAction: 11
+  multipleSkillRule: 0
   power: 2
   intelligence: 9
   reflex: 3

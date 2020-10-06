@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: "T\xF6megvereked\xE9s"
   skillDescription: "Ha vesz\xEDt, akkor a k\xF6vetkez\u0151 harc vakharccal indul,
     te v\xE1lasztod meg a t\xEDpus\xE1t."
+  skillProperties:
+  - activationTime: 2
+    skillRequirement: 2
+    skillTarget: 3
+    effectAction: 12
+  multipleSkillRule: 0
   power: 9
   intelligence: 2
   reflex: 3

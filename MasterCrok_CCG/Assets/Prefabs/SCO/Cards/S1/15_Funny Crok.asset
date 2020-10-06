@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: "Van m\xE1sik!"
   skillDescription: "Egy m\xE1sik j\xE1t\xE9kos Crokj\xE1t kicser\xE9lheted paklij\xE1nak
     legals\xF3 lapj\xE1ra."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 0
+    skillTarget: 1
+    effectAction: 2
+  multipleSkillRule: 0
   power: 1
   intelligence: 6
   reflex: 4

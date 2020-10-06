@@ -20,8 +20,10 @@ namespace GameControll
 				case 1: UnexpectedAttack(); break;
 				case 2: PlotTwist(); break;
 				case 3: SoulStealing(); break;
+				case 4: FirstCut(); break;
 				case 5: Revive(); break;
 				case 6: GreatFight(); break;
+				case 7: NoMercy(); break;
 				case 8: JungleFight(); break;
 				case 16: ShieldFight(); break;
 
@@ -51,6 +53,7 @@ namespace GameControll
 		//Használhatod egy másik játékos vesztes krokjának képességét
 		private void SoulStealing()
 		{
+			//Vannak-e ellenséges vesztes kártyák, amik közül választhatunk
 			if (gameState.IsThereOtherLostCards())
 			{
 				gameState.SetSelectionAction(SkillEffectAction.SkillUse);
@@ -69,8 +72,26 @@ namespace GameControll
 			}
 		}
 
+		//Mindenki képességét hatástalanítja/passzoltatja
+		private void FirstCut()
+		{
+			foreach (int key in gameState.GetDataModule().GetKeyList())
+            {
+                int position = 0;
+                foreach (Card card in gameState.GetDataModule().GetCardsFromField(key)) 
+                {
+                	gameState.GetClientModule().SetSkillState(key, position, SkillState.Pass);
+                    position++;
+                }
+                gameState.GetDataModule().GetPlayerWithKey(key).SetStatus(PlayerTurnStatus.Finished);
+            }
+
+            gameState.StartCoroutine(gameState.SkillFinished());
+		}
+
 		private void Revive()
 		{
+			//Van-e feltámasztható vesztes
 			if (gameState.DoWeHaveLosers())
 			{
 				//Jelezzük a vezérlőnek, hogy kártya felvételre készülünk
@@ -86,12 +107,31 @@ namespace GameControll
 				gameState.Pass();
 			}
 		}
-
+		//Ütközet indítása: Felhúz mindenkie +1 lapot a pakli tetejéről
 		private void GreatFight()
 		{
+
 			foreach (int key in gameState.GetDataModule().GetKeyList())
 			{
-				gameState.DrawTheCard(key, DrawTarget.Field);
+				if(gameState.GetDataModule().GetPlayerWithKey(key).GetCardsOnField().Count < 4)
+				{
+					gameState.DrawTheCard(key, DrawTarget.Field, DrawType.Normal, SkillState.Pass);
+				}
+			}
+
+			gameState.StartCoroutine(gameState.SkillFinished());
+		}
+
+		//Egy kiválasztott játékosnak le kell dobnia a kezéből egy lapot.
+		private void NoMercy()
+		{
+			gameState.SetSelectionAction(SkillEffectAction.Execute);
+			gameState.SetSwitchType(CardListTarget.Hand);
+
+			//Ha botról van szó
+			if(!gameState.IsTheActivePlayerHuman())
+			{
+				gameState.StartCoroutine(gameState.GetAImodule().CardSelectionEffect(CardListFilter.None, 0));
 			}
 		}
 
@@ -101,14 +141,13 @@ namespace GameControll
 			gameState.SetSelectionAction(SkillEffectAction.BlindSwitch);
 			gameState.SetSwitchType(CardListTarget.Deck);
 
-			BlindSwitch();
+			SwitchCard(gameState.GetActiveCardID(), 0);
 		}
 
 		//Erőre változtatja a harc típusát
 		private void ShieldFight()
 		{
 			SetActiveStat(CardStatType.Power);
-			Response();
 		}
 
         #region Skill Actions
@@ -132,7 +171,7 @@ namespace GameControll
 			//Ha bot
 			else
 			{
-				gameState.GetAImodule().CardSelectionEffect(filter, limit);
+				gameState.StartCoroutine(gameState.GetAImodule().CardSelectionEffect(filter, limit));
 			}
 		}
 
@@ -155,6 +194,12 @@ namespace GameControll
 				gameState.GetClientModule().SwitchHandFromField(currentKey, fieldData, cardOnField, handData, 
 					cardToSwitch, gameState.IsTheActivePlayerHuman());
 			}
+
+			else if(gameState.GetCurrentListType() == CardListTarget.Deck)
+			{
+				Card fieldData = gameState.GetDataModule().GetCardFromField(currentKey, cardOnField);
+				Card deckData = gameState.GetDataModule().GetCardFromDeck(currentKey, cardToSwitch);
+			}
 		}
 
 		public void ReviveCard(int cardID)
@@ -171,7 +216,7 @@ namespace GameControll
 				gameState.GetDataModule().ReviveLostCard(currentKey, cardID);
 
 				//UI frissítése
-				gameState.GetClientModule().DrawNewCard(cardData, currentKey, gameState.IsTheActivePlayerHuman());
+				gameState.GetClientModule().DrawNewCard(cardData, currentKey, gameState.IsTheActivePlayerHuman(), DrawType.Normal, DrawTarget.Hand, SkillState.NotDecided);
 
 				int winSize = gameState.GetDataModule().GetWinnerAmount(currentKey);
 				int lostSize = gameState.GetDataModule().GetLostAmount(currentKey);
@@ -180,11 +225,6 @@ namespace GameControll
 
 				gameState.GetClientModule().ChangePileText(winSize, lostSize, currentKey, win, lost);
 			}
-		}
-
-		public void BlindSwitch()
-		{
-
 		}
 
 		//Megváltoztatásra kerül az aktív harctípus
@@ -199,6 +239,7 @@ namespace GameControll
 			else
 			{
 				gameState.GetAImodule().DecideNewStat();
+				gameState.StartCoroutine(gameState.SkillFinished());
 			}
 		}
 

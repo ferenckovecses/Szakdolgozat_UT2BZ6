@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: "Letart\xF3ztat\xE1s"
   skillDescription: "Nyer, ha a vesztesek k\xF6z\xE9 dobod a kezedb\u0151l b\xE1rmelyik
     m\xE1sik j\xE1t\xE9kos Crokj\xE1nak a m\xE1s\xE1t."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 6
+    skillTarget: 0
+    effectAction: 14
+  multipleSkillRule: 0
   power: 4
   intelligence: 3
   reflex: 4

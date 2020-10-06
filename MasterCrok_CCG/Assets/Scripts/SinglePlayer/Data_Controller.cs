@@ -113,6 +113,11 @@ namespace GameControll
             playerDictionary[playerKey].ReviveLostCard(cardID);
         }
 
+        public void TossCardFromHand(int playerKey, int cardID)
+        {
+            playerDictionary[playerKey].TossCard(cardID);
+        }
+
         #endregion
 
 
@@ -121,6 +126,19 @@ namespace GameControll
         public List<int> GetKeyList()
         {
             return this.playerKeyList;
+        }
+
+        public List<int> GetOtherKeyList(int currentPlayerKey)
+        {
+            List<int> temp = new List<int>();
+            foreach (int key in GetKeyList()) 
+            {
+                if(key != currentPlayerKey)
+                {
+                    temp.Add(key);
+                }
+            }
+            return temp;
         }
 
         public Dictionary<int, Player_Model> GetPlayers()
@@ -149,6 +167,11 @@ namespace GameControll
         public PlayerTurnStatus GetPlayerStatus(int key)
         {
             return this.playerDictionary[key].GetStatus();
+        }
+
+        public string GetPlayerName(int key)
+        {
+            return GetPlayerWithKey(key).GetUsername();
         }
 
         public int GetNumberOfOpponents()
@@ -220,6 +243,11 @@ namespace GameControll
             return this.playerDictionary[playerKey].GetCardFromLosers(cardID);
         }
 
+        public Card GetCardFromDeck(int playerKey, int cardID)
+        {
+            return this.playerDictionary[playerKey].GetCardFromDeck(cardID);
+        }
+
         public List<Card> GetCardsFromHand(int playerKey)
         {
             return this.playerDictionary[playerKey].GetCardsInHand();
@@ -247,6 +275,17 @@ namespace GameControll
             }
 
             return temp;
+        }
+
+        public List<string> GetNameList()
+        {
+            List<string> names = new List<string>();
+            foreach (int key in GetKeyList()) 
+            {
+                names.Add(playerDictionary[key].GetUsername());
+            }
+
+            return names;
         }
 
         #endregion

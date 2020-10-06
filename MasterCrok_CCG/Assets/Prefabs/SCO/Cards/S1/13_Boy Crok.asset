@@ -18,6 +18,16 @@ MonoBehaviour:
   skillName: "Pimasz cs\xEDnytev\xE9s"
   skillDescription: "A k\xF6vetkez\u0151 k\xF6rben te t\xE1madsz. V\xE9dekez\xE9skor
     +2 reflex."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 0
+    skillTarget: 0
+    effectAction: 13
+  - activationTime: 1
+    skillRequirement: 4
+    skillTarget: 0
+    effectAction: 11
+  multipleSkillRule: 1
   power: 1
   intelligence: 4
   reflex: 6

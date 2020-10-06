@@ -30,6 +30,14 @@ public class Card : ScriptableObject
 	[SerializeField]
 	private string skillDescription = null;
 
+	[SerializeField]
+	private List<SkillProperty> skillProperties = new List<SkillProperty>();
+
+	[SerializeField]
+	private MultipleSkillRule multipleSkillRule = MultipleSkillRule.None;
+
+
+
 	[Header("Pontok")]
 	[SerializeField]
 	private int power = 0;
@@ -92,6 +100,25 @@ public class Card : ScriptableObject
 	public string GetCardSkill()
 	{
 		return this.skillDescription;
+	}
+
+	//Visszaadja, hogy rendelkezik-e a kártya Gyors képességgel
+	public bool HasAQuickSkill()
+	{
+		foreach (SkillProperty property in skillProperties) 
+		{
+			if(property.activationTime == SkillActivationTime.Quick)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public MultipleSkillRule GetSkillRule()
+	{
+		return this.multipleSkillRule;
 	}
 
 }

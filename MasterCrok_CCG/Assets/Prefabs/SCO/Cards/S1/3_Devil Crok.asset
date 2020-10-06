@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: "L\xE9lekrabl\xE1s"
   skillDescription: "Haszn\xE1lhatja egy m\xE1sik j\xE1t\xE9kos egyik vesztes Crokj\xE1nak
     k\xE9pess\xE9g\xE9t."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 0
+    skillTarget: 0
+    effectAction: 4
+  multipleSkillRule: 0
   power: 6
   intelligence: 6
   reflex: 6

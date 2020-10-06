@@ -16,6 +16,8 @@ public class GameSettings_Controller : MonoBehaviour
         if(instance == null)
         {
             instance = this;
+            //Képernyőarányok fixálása
+            Screen.SetResolution(1280,720,true);
         }
 
         else

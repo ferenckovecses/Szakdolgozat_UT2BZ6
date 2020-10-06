@@ -17,6 +17,12 @@ MonoBehaviour:
   type: 6
   skillName: "Lehengerl\xE9s"
   skillDescription: "Kett\u0151vel n\u0151 az ereje, ha intelligensebb mint az ellenfelei."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 1
+    skillTarget: 0
+    effectAction: 11
+  multipleSkillRule: 0
   power: 8
   intelligence: 5
   reflex: 1

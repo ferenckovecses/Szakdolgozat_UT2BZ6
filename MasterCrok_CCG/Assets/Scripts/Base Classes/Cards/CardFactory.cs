@@ -37,7 +37,7 @@ namespace GameControll
 
 			for (var i = 0; i < 21; i++)
 			{
-				newDeck.AddCard(cardList[i]);
+				newDeck.AddCard(cardList[6]);
 			}
 
 			return newDeck;

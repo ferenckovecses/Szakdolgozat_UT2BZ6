@@ -21,9 +21,9 @@ namespace GameControll
         }
 
         //Legenerálja a UI felületet
-        public void GenerateUI(int numberOfPlayers, List<int> playerKeys, int playerDeckSize)
+        public void GenerateUI(int numberOfPlayers, List<int> playerKeys, List<string> playerNames, int playerDeckSize)
         {
-            client.CreatePlayerFields(numberOfPlayers, playerKeys, playerDeckSize);
+            client.CreatePlayerFields(numberOfPlayers, playerKeys, playerNames, playerDeckSize);
         }
         //Beállíthatjuk, hogy az adott játékos rakhat-e kártyát most, vagy sem
         public void SetDragStatus(int playerKey, bool newStatus)
@@ -38,9 +38,12 @@ namespace GameControll
         }
 
         //Botok UI-jának küld egy parancsot egy megadott indexű kártya lerakására/aktiválására
-        public void SummonCard(int playerKey, int cardHandIndex)
+        public IEnumerator SummonCard(int playerKey, int cardHandIndex)
         {
+            yield return new WaitForSeconds(GameSettings_Controller.drawTempo * UnityEngine.Random.Range(15, 30));
             client.GetFieldFromKey(playerKey).SummonCard(cardHandIndex);
+            client.GetFieldFromKey(playerKey).SetDraggableStatus(false);
+            gameState.TurnFinished();
         }
 
         //Frissíti a játékos paklijának méretét a modell szerinti aktuális értékre
@@ -92,13 +95,6 @@ namespace GameControll
         //Értesítő üzenetet jelenít meg a UI felületen
         public IEnumerator DisplayNotification(string msg)
         {
-
-            //Várakozunk a megjelenítéssel, amíg az előző üzenet eltűnik
-            while (gameState.IsMessageOnScreen())
-            {
-                yield return null;
-            }
-
             //Megjelenítjük az üzenetet
             client.DisplayMessage(msg);
             gameState.SetMessageStatus(true);
@@ -112,9 +108,9 @@ namespace GameControll
         }
 
         //Megjeleníttet az UI felülettel egy listányi kártyát, amiből választani kell
-        public void CardChoice(List<Card> cardData, SkillEffectAction action)
+        public void CardChoice(List<Card> cardData, SkillEffectAction action, int key)
         {
-            client.DisplayListOfCards(cardData, action);
+            client.DisplayListOfCards(cardData, action, key);
         }
 
         //Frissíti a győztes és vesztes halmok képét és darabszámát
@@ -155,19 +151,27 @@ namespace GameControll
             client.GetFieldFromKey(playerKey).SetSpecificCardSkillStatus(cardID, newSkillState);
         }
 
-        public void DrawNewCard(Card data, int playerKey, bool visibleForPlayer, DrawTarget target = DrawTarget.Hand)
+        public void DrawNewCard(Card data, int playerKey, bool visibleForPlayer, DrawType drawType, DrawTarget target, SkillState newState)
         {
-            client.DisplayNewCard(data, playerKey, visibleForPlayer, false, target);
+            client.DisplayNewCard(data, playerKey, visibleForPlayer, drawType, target, newState);
         }
 
         //Bizonyos kártya listát jelenít meg az aktív játékos számára, amiből választhat ezután
-        public IEnumerator DisplayCardList(CardListFilter filter = CardListFilter.None, int limit = 0)
+        public IEnumerator DisplayCardList(CardListFilter filter = CardListFilter.None, int limit = 0, int key = -1)
         {
 
             List<Card> cardList = new List<Card>();
             Data_Controller dataModule = gameState.GetDataModule();
-            int currentKey = gameState.GetCurrentKey();
+            int currentKey;
+            //Default eset: Az aktuális játékos kártyáit jelenítjük meg
+            if(key == -1)
+            {
+                currentKey = gameState.GetCurrentKey();
+            }
 
+            else {
+                currentKey = key;
+            }
             switch (gameState.GetCurrentListType())
             {
                 case CardListTarget.Hand: cardList = dataModule.GetPlayerWithKey(currentKey).GetCardsInHand(filter); break;
@@ -177,11 +181,37 @@ namespace GameControll
                 default: break;
             }
 
-            CardChoice(cardList, gameState.GetCurrentAction());
+            //Ha van miből választani, akkor megjelenítjük a listát
+            if(cardList.Count > 0)
+            {
+                CardChoice(cardList, gameState.GetCurrentAction(), currentKey);
 
-            //Várunk a visszajelzésére
-            yield return gameState.WaitForEndOfAction();
+                //Várunk a visszajelzésére
+                yield return gameState.WaitForEndOfAction();
+            }
 
+            else 
+            {
+                Debug.Log("Üres lista");
+                gameState.StartCoroutine(gameState.SkillFinished());
+            }
+
+        }
+
+        public void SetEndTurnButton(bool newStatus)
+        {
+            client.SetTurnButtonStatus(newStatus);
+        }
+
+        public void HandleRemainingCards(int playerKey)
+        {
+            client.GetFieldFromKey(playerKey).HandleRemainingCards();
+            gameState.GetInputModule().CheckIfFinished();
+        }
+
+        public void TossCard(int playerKey, int cardID)
+        {
+            client.GetFieldFromKey(playerKey).Toss(cardID);
         }
 
     }

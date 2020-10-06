@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: "V\xE1ratlan csap\xE1s"
   skillDescription: "Kicser\xE9lheted egy m\xE1sik, a kezedben l\xE9v\u0151 Crokra,
     ha az nem Master Crok."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 0
+    skillTarget: 0
+    effectAction: 2
+  multipleSkillRule: 0
   power: 8
   intelligence: 7
   reflex: 9

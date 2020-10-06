@@ -19,6 +19,12 @@ MonoBehaviour:
   skillDescription: "\xDCtk\xF6zetet ind\xEDthatsz: mindenki kiteszi a paklij\xE1nak
     legfels\u0151 Crokj\xE1t, aki csatlakozik a harcol\xF3khoz. Az \xE9rt\xE9kek
     \xF6sszege sz\xE1m\xEDt."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 0
+    skillTarget: 2
+    effectAction: 9
+  multipleSkillRule: 0
   power: 5
   intelligence: 6
   reflex: 3

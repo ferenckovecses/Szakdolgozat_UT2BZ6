@@ -17,6 +17,12 @@ MonoBehaviour:
   type: 4
   skillName: Pajzsharc
   skillDescription: "A harc t\xEDpus\xE1t er\u0151re v\xE1ltoztathatod."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 0
+    skillTarget: 3
+    effectAction: 7
+  multipleSkillRule: 0
   power: 5
   intelligence: 1
   reflex: 5

@@ -28,6 +28,7 @@ namespace ClientControll
         public GameObject ingamePanelCanvas;
         public TMP_Text activeStatText;
         public GameObject activeStatPanel;
+        public Button endTurnButton;
 
         //Adattárolók
         private Dictionary<int, GameObject> playerFields;
@@ -45,6 +46,7 @@ namespace ClientControll
         //Létrehozáskor fut le
         private void Awake()
         {
+            endTurnButton.gameObject.SetActive(false);
             playerFields = new Dictionary<int, GameObject>();
             isMessageOnScreen = false;
             isDetailsShowed = false;
@@ -73,11 +75,11 @@ namespace ClientControll
             inputModule.ReportExit();
         }
 
-        public void ReportCardSelection(int id)
+        public void ReportCardSelection(int id, int key)
         {
             Destroy(cardList);
             isCardListActive = false;
-            inputModule.ReportCardSelection(id);
+            inputModule.HandleCardSelection(id, key);
         }
 
         public void ReportSelectionCancel()
@@ -92,12 +94,23 @@ namespace ClientControll
             inputModule.ReportDisplayRequest(listType, playerFields.Keys.ElementAt(positionID));
         }
 
+        public void ReportNameBoxTapping(int positionID)
+        {
+            inputModule.ReportNameBoxTapping(playerFields.Keys.ElementAt(positionID));
+        }
+
+        public void ReportEndOfTurn()
+        {
+            inputModule.ReportTurnEnd();
+            SetTurnButtonStatus(false);
+        }
+
         #endregion
 
         #region Common Instruction
 
         //Elhelyezi a megadott számú játékosnak megfelelő pályaelemet a megadott pozíciókba
-        public void CreatePlayerFields(int playerAmount, List<int> playerKeys, int displayedDeckSize)
+        public void CreatePlayerFields(int playerAmount, List<int> playerKeys, List<string> playerNames, int displayedDeckSize)
         {
             for (var i = 0; i < playerAmount + 1; i++)
             {
@@ -109,6 +122,7 @@ namespace ClientControll
 
                 //Kliens referencia eltárolása
                 GetFieldFromKey(playerKeys[i]).SetClient(this);
+                GetFieldFromKey(playerKeys[i]).SetName(playerNames[i]);
 
                 //A játékos beállítása
                 if (i == 0)
@@ -139,19 +153,22 @@ namespace ClientControll
 
         }
         //Továbbítja a kapott új kártya adatokat a megfelelő játékos oldalra, hogy vizuálisan megjelenítse azokat
-        public void DisplayNewCard(Card data, int playerKey, bool visibleForThePlayer, bool isABlindDraw, DrawTarget target)
+        public void DisplayNewCard(Card data, int playerKey, bool visibleForThePlayer, DrawType drawType, DrawTarget target, SkillState skillState)
         {
             //Ha nem vakon húztuk
-            if (!isABlindDraw)
+            if (drawType == DrawType.Normal)
             {
-                GameObject temp = GetFieldFromKey(playerKey).CreateCard(data, visibleForThePlayer);
+                //Létrehozás
+                GameObject temp = GetFieldFromKey(playerKey).CreateCard(data, visibleForThePlayer, skillState);
 
+                //Elhelyezés kézbe
                 if (target == DrawTarget.Hand)
                 {
                     //Kártya objektum hozzáadása a kéz mezőhöz
                     GetFieldFromKey(playerKey).AddCardToHand(temp);
                 }
 
+                //Elhelyezés a mezőre
                 else
                 {
                     GetFieldFromKey(playerKey).BlindSummon(temp);
@@ -159,14 +176,26 @@ namespace ClientControll
                 }
             }
 
-            else
+            //Vakon húzás a mezőre
+            else if(drawType == DrawType.Blind)
             {
-                GameObject temp = GetFieldFromKey(playerKey).CreateCard(data, false);
-                GetFieldFromKey(playerKey).BlindSummon(temp);
+                if(target == DrawTarget.Field)
+                {
+                    GameObject temp = GetFieldFromKey(playerKey).CreateCard(data, false, skillState);
+                    GetFieldFromKey(playerKey).BlindSummon(temp);
+                }
             }
+
+
         }
 
         #endregion
+
+        public void SetTurnButtonStatus(bool newValue)
+        {
+            //endTurnButton.interactable = newValue;
+            endTurnButton.gameObject.SetActive(newValue);
+        }
 
         //Kilépés
         public void Exit()
@@ -277,10 +306,10 @@ namespace ClientControll
             statPanel.GetComponent<CardStatSelectorDisplay>().SetupPanel(this);
         }
 
-        public void DisplayListOfCards(List<Card> cards, SkillEffectAction action)
+        public void DisplayListOfCards(List<Card> cards, SkillEffectAction action, int key)
         {
             cardList = Instantiate(cardListPrefab, ingamePanelCanvas.transform.position, Quaternion.identity, ingamePanelCanvas.transform);
-            cardList.GetComponent<CardListDisplay>().SetupList(this, cards, action);
+            cardList.GetComponent<CardListDisplay>().SetupList(this, cards, action, key);
             isCardListActive = true;
         }
 

@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: Nincs kegyelem
   skillDescription: "A kiszemelt m\xE1sik j\xE1t\xE9kos v\xE1laszt \xE9s lerak egy
     lapot a vesztes Crokjaihoz."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 0
+    skillTarget: 1
+    effectAction: 10
+  multipleSkillRule: 0
   power: 7
   intelligence: 4
   reflex: 3

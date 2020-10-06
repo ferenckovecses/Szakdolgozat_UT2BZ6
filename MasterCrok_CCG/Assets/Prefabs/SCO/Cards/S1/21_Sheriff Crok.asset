@@ -17,6 +17,12 @@ MonoBehaviour:
   type: 9
   skillName: "Pisztolyp\xE1rbaj"
   skillDescription: "Nyer, ha az aktu\xE1lis eredm\xE9ny d\xF6ntetlen."
+  skillProperties:
+  - activationTime: 2
+    skillRequirement: 8
+    skillTarget: 0
+    effectAction: 14
+  multipleSkillRule: 0
   power: 3
   intelligence: 3
   reflex: 5

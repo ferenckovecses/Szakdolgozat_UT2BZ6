@@ -369,6 +369,11 @@ public class Player_Model
 		return lostCards[positionID];
 	}
 
+	public Card GetCardFromDeck(int positionID)
+	{
+		return null;
+	}
+
 	public void SwitchFromHand(int fieldPosition, int handPosition)
 	{
 		Card fieldTemp = cardsOnField[fieldPosition];
@@ -380,6 +385,12 @@ public class Player_Model
 		cardsInHand.RemoveAt(handPosition);
 		cardsInHand.Insert(handPosition, fieldTemp);
 
+	}
+
+	public void TossCard(int positionID)
+	{
+		lostCards.Add(cardsInHand[positionID]);
+		cardsInHand.RemoveAt(positionID);
 	}
 
 }

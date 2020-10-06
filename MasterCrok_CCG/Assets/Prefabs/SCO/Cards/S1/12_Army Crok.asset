@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: "Sorozatl\xF6v\xE9s"
   skillDescription: "Az \xE9rt\xE9kei annyival megn\u0151nek, ah\xE1ny ellenfele
     van. A kicser\xE9lt Crokok is \xFAjabb ellenf\xE9lnek sz\xE1m\xEDtanak."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 10
+    skillTarget: 0
+    effectAction: 11
+  multipleSkillRule: 0
   power: 3
   intelligence: 4
   reflex: 4

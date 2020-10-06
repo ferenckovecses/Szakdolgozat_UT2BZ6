@@ -2,8 +2,6 @@
 using UnityEngine.UI;
 using ClientControll;
 
-public enum SkillState{NotDecided,Store,Use,Pass};
-
 public class CardBehaviour : MonoBehaviour
 {
 	//Státusz változók
@@ -11,8 +9,7 @@ public class CardBehaviour : MonoBehaviour
 	private bool isAboveActiveField;
 	private bool isSummoned;
     private bool isCardVisible;
-    private bool isSkillDecidedInThisTurn;
-    private SkillState skill;
+    public SkillState skill;
 
 	//Pozíciónáló elemek
 	private Vector2 startingPosition;
@@ -31,7 +28,6 @@ public class CardBehaviour : MonoBehaviour
         playerField = gameObject.transform.parent.parent.gameObject;
         this.siblingIndex = gameObject.transform.GetSiblingIndex();
         skill = SkillState.NotDecided;
-        isSkillDecidedInThisTurn = false;
     }
 
     // Update is called once per frame
@@ -79,7 +75,7 @@ public class CardBehaviour : MonoBehaviour
             GetParentField().SetDetailsStatus(true);
 
             //Döntéshozó gombok megjelenítése a fix részletes nézet mellé
-            if(isSummoned && GetParentField().GetSkillStatus() && !isSkillDecidedInThisTurn)
+            if(isSummoned && GetParentField().GetSkillStatus() && skill == SkillState.NotDecided)
             {
                 skillButtonsRequired = true;
             }
@@ -141,9 +137,10 @@ public class CardBehaviour : MonoBehaviour
         this.siblingIndex = gameObject.transform.GetSiblingIndex();
     }
 
-    public void SetupCard(Card data)
+    public void SetupCard(Card data, SkillState newState)
     {
         this.cardData = data;
+        this.skill = newState;
     }
 
     private void Reveal()
@@ -186,7 +183,6 @@ public class CardBehaviour : MonoBehaviour
     public void SetSkillState(SkillState newState)
     {
         this.skill = newState;
-        isSkillDecidedInThisTurn = true;
     }
 
     public SkillState GetSkillState()
@@ -212,13 +208,12 @@ public class CardBehaviour : MonoBehaviour
     {
         if(skill == SkillState.Store)
         {
-            isSkillDecidedInThisTurn = false;
+            this.skill = SkillState.NotDecided;
         }
     }
 
     public void ResetSkill()
     {
         this.skill = SkillState.NotDecided;
-        isSkillDecidedInThisTurn = false;
     }
 }

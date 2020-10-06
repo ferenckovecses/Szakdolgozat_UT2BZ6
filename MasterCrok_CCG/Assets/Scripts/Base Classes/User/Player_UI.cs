@@ -24,6 +24,7 @@ namespace ClientControll
         public TMP_Text deckSize;
         public TMP_Text winSize;
         public TMP_Text lostSize;
+        public TMP_Text nameField;
 
 
         [Header("Kártyákkal kapcsolatos változók")]
@@ -33,8 +34,8 @@ namespace ClientControll
 
         //Kártya a kézben hatás
         private float turningPerCard = 5f;
-        private float cardDistance = 25f;
-        private float cardHeightDiff = 5f;
+        private float cardDistance = 75F;
+        private float cardHeightDiff = 15f;
 
         //Adattárolók
         private int positionID;
@@ -65,6 +66,12 @@ namespace ClientControll
         public void SetClient(Client clientRef)
         {
             this.client = clientRef;
+        }
+
+        public void SetName(string newName)
+        {
+            this.nameField.text = newName;
+            nameField.transform.rotation = Quaternion.identity;
         }
 
         //Kártya hozzáadása a kéz mezőhöz
@@ -139,7 +146,7 @@ namespace ClientControll
 
 
         //Létrehoz egy kártya prefabot a kézbe
-        public GameObject CreateCard(Card data, bool visibleForPlayer)
+        public GameObject CreateCard(Card data, bool visibleForPlayer, SkillState newSkillState)
         {
             GameObject temp = Instantiate(cardPrefab, GetHandField().transform.position, Quaternion.identity, GetHandField().transform);
             temp.transform.rotation = Quaternion.Euler(0f, 0f, rotation);
@@ -151,7 +158,7 @@ namespace ClientControll
             }
 
             //Csatoljuk a GameObjecthez a Card adatokat
-            temp.GetComponent<CardBehaviour>().SetupCard(data);
+            temp.GetComponent<CardBehaviour>().SetupCard(data, newSkillState);
 
             //Beállítjuk a kártya láthatóságát
             temp.GetComponent<CardBehaviour>().SetVisibility(visibleForPlayer);
@@ -405,6 +412,18 @@ namespace ClientControll
             this.skillDecision = newStatus;
         }
 
+        //Ha úgy ért véget a körünk, hogy maradt még nem eldöntött képességű lap, akkor passzoljuk őket
+        public void HandleRemainingCards()
+        {
+            foreach (GameObject card in cardsOnField)
+            {
+                if(card.GetComponent<CardBehaviour>().GetSkillState() == SkillState.NotDecided)
+                {
+                    card.GetComponent<CardBehaviour>().SetSkillState(SkillState.Pass);
+                }
+            }
+        }
+
         public bool GetDetailsStatus()
         {
             return this.client.GetCardDetailWindowStatus();
@@ -476,12 +495,10 @@ namespace ClientControll
 
         public void SwitchHandFromField(Card fieldData, int fieldId, Card handData, int handId, bool visibility)
         {
-            cardsOnField[fieldId].GetComponent<CardBehaviour>().SetupCard(handData);
+            cardsOnField[fieldId].GetComponent<CardBehaviour>().SetupCard(handData, SkillState.Pass);
             cardsOnField[fieldId].GetComponent<CardBehaviour>().SetVisibility(true);
-            cardsOnField[fieldId].GetComponent<CardBehaviour>().SetSkillState(SkillState.Pass);
 
-
-            cardsInHand[handId].GetComponent<CardBehaviour>().SetupCard(fieldData);
+            cardsInHand[handId].GetComponent<CardBehaviour>().SetupCard(fieldData, SkillState.NotDecided);
             cardsInHand[handId].GetComponent<CardBehaviour>().SetVisibility(visibility);
         }
 
@@ -506,6 +523,22 @@ namespace ClientControll
                 }
             }
 
+        }
+
+        public void Toss(int cardID)
+        {
+            lostCardImage.sprite = cardsInHand[cardID].GetComponent<CardBehaviour>().GetArt();
+            cardsInHand[cardID].GetComponent<CardBehaviour>().TerminateCard();
+            lostAmount += 1;
+            this.lostSize.text = lostAmount.ToString();
+            GameObject tempref = cardsInHand[cardID];
+            RemoveSpecificCardFromHand(cardsInHand[cardID]);
+            Destroy(tempref);
+        }
+
+        public void NameBoxTap()
+        {
+            client.ReportNameBoxTapping(positionID);
         }
 
     }

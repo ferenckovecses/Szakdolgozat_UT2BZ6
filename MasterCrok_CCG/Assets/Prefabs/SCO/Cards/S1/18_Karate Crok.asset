@@ -18,6 +18,12 @@ MonoBehaviour:
   skillName: Tigriskarom
   skillDescription: "Ha a vesztesek k\xF6z\xE9 raksz egy Crokot a kezedb\u0151l,
     akkor annak erej\xE9t haszn\xE1lhatod a harcban."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 5
+    skillTarget: 0
+    effectAction: 11
+  multipleSkillRule: 0
   power: 2
   intelligence: 3
   reflex: 6

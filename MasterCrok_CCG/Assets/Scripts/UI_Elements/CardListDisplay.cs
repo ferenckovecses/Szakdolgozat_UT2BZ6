@@ -14,7 +14,7 @@ namespace ClientControll
 
 		private Client client;
 
-		public void SetupList(Client client_in, List<Card> cardList, SkillEffectAction action)
+		public void SetupList(Client client_in, List<Card> cardList, SkillEffectAction action, int key)
 		{
 			this.client = client_in;
 
@@ -26,15 +26,16 @@ namespace ClientControll
 				//Listán belüli indexet ad vissza cseréhez, áldozáshoz.
 				if (action == SkillEffectAction.Store
 					|| action == SkillEffectAction.Switch
-					|| action == SkillEffectAction.Revive)
+					|| action == SkillEffectAction.Revive
+					|| action == SkillEffectAction.TossCard)
 				{
-					temp.onClick.AddListener(delegate { client.ReportCardSelection(cardList.IndexOf(card)); });
+					temp.onClick.AddListener(delegate { client.ReportCardSelection(cardList.IndexOf(card), key); });
 				}
 
 				//A kártya egyedi azonosítóját adja vissza képesség használathoz
 				else if (action == SkillEffectAction.SkillUse)
 				{
-					temp.onClick.AddListener(delegate { client.ReportCardSelection(card.GetCardID()); });
+					temp.onClick.AddListener(delegate { client.ReportCardSelection(card.GetCardID(), key); });
 				}
 			}
 

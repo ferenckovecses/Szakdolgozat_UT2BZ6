@@ -163,4 +163,16 @@ public static class Bot_Behaviour
 		return choice;
 	}
 
+	public static int WhomToToss(List<Card> cardList)
+	{
+		int choice = UnityEngine.Random.Range(0,cardList.Count-1);
+		return choice;
+	}
+
+	public static int WhichPlayerToExecute(List<int> playerKeys)
+	{
+		int choice = UnityEngine.Random.Range(0,playerKeys.Count-1);
+		return playerKeys[choice];
+	}
+
 }
