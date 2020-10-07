@@ -79,7 +79,7 @@ public class Deck
 	}
 
 	//Visszaadja, hogy hány ilyen kártya található a pakliban
-	public int DuplicateCounter(Card cardToCompare)
+	public int DuplicateCounter(CardData cardToCompare)
 	{
 		return (int)cards.Count(p => p.GetCardID() == cardToCompare.GetCardID());
 	}

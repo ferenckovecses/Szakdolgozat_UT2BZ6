@@ -1,113 +1,75 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
-public enum CardType {Master_Crok, Távol_Kelet, Angyal, Démon, Kalandor, Katona, 
-		Sportoló, Villám, Mókás, Vadnyugat, Rendfenntartás};
-
-[CreateAssetMenu(fileName = "New Card", menuName = "Cards")]
-public class Card : ScriptableObject
+public class Card
 {
+    //Default és statikus kártya adatok
+    private CardData data;
 
-	[Header("Alap Információk")]
+    //Objektum specifikus, változó adatok
+    private int power;
+    private int intelligence;
+    private int reflex;
 
-	[SerializeField]
-	private int cardID = 0;
+    public Card(CardData in_data)
+    {
+        this.data = in_data;
+        this.power = data.GetPower();
+        this.intelligence = data.GetIntelligence();
+        this.reflex = data.GetReflex();
+    }
 
-	[SerializeField]
-	private string cardName = null;
+    #region Getters
+    public int GetPower()
+    {
+        return this.power;
+    }
 
-	[SerializeField]
-	private CardType type = default(CardType);
+    public int GetIntelligence()
+    {
+        return this.intelligence;
+    }
 
-	[Header("Képesség")]
-
-	[SerializeField]
-	private string skillName = null;
-
-	[TextArea(10,10)]
-	[SerializeField]
-	private string skillDescription = null;
-
-	[SerializeField]
-	private List<SkillProperty> skillProperties = new List<SkillProperty>();
-
-	[SerializeField]
-	private MultipleSkillRule multipleSkillRule = MultipleSkillRule.None;
-
-
-
-	[Header("Pontok")]
-	[SerializeField]
-	private int power = 0;
-
-	[SerializeField]
-	private int intelligence = 0;
-
-	[SerializeField]
-	private int reflex = 0;
-
-	[Header("Vizuális elemek")]
-	[SerializeField]
-	private Sprite cardImage = null;
+    public int GetReflex()
+    {
+        return this.reflex;
+    }
 
 	public Sprite GetArt()
 	{
-		return this.cardImage;
+		return data.GetArt();
 	}
 
 	public int GetCardID()
 	{
-		return this.cardID;
-	}
-
-	public int[] GetAttributes()
-	{
-		return new int[3] {power,intelligence,reflex};
+		return data.GetCardID();
 	}
 
 	public CardType GetCardType()
 	{
-		return this.type;
-	}
-
-	public int GetPower()
-	{
-		return this.power;
-	}
-
-	public int GetIntelligence()
-	{
-		return this.intelligence;
-	}
-
-	public int GetReflex()
-	{
-		return this.reflex;
+		return data.GetCardType();
 	}
 
 	public string GetCardName()
 	{
-		return this.cardName;		
+		return data.GetCardName();
 	}
 
 	public string GetSkillName()
 	{
-		return this.skillName;
+		return data.GetSkillName();
 	}
 
 	public string GetCardSkill()
 	{
-		return this.skillDescription;
+		return data.GetCardSkill();
 	}
 
 	//Visszaadja, hogy rendelkezik-e a kártya Gyors képességgel
 	public bool HasAQuickSkill()
 	{
-		foreach (SkillProperty property in skillProperties) 
+		foreach (SkillProperty property in data.GetSkillProperty())
 		{
-			if(property.activationTime == SkillActivationTime.Quick)
+			if (property.activationTime == SkillActivationTime.Quick)
 			{
 				return true;
 			}
@@ -118,9 +80,9 @@ public class Card : ScriptableObject
 
 	public bool HasALateSkill()
 	{
-		foreach (SkillProperty property in skillProperties) 
+		foreach (SkillProperty property in data.GetSkillProperty())
 		{
-			if(property.activationTime == SkillActivationTime.Late)
+			if (property.activationTime == SkillActivationTime.Late)
 			{
 				return true;
 			}
@@ -131,7 +93,42 @@ public class Card : ScriptableObject
 
 	public MultipleSkillRule GetSkillRule()
 	{
-		return this.multipleSkillRule;
+		return data.GetSkillRule();
 	}
+
+	#endregion
+
+	#region Setters and modifiers
+	public void SetPower(int newPower)
+    {
+        this.power = newPower;
+    }
+
+    public void SetIntelligence(int newInt)
+    {
+        this.intelligence = newInt;
+    }
+
+    public void SetReflex(int newRef)
+    {
+        this.reflex = newRef;
+    }
+
+    public void IncreaseStats(int pow_bonus, int int_bonus, int ref_bonus)
+    {
+        this.power += pow_bonus;
+        this.intelligence += int_bonus;
+        this.reflex += ref_bonus;
+    }
+
+	public void ResetStats()
+	{
+		this.power = data.GetPower();
+		this.intelligence = data.GetIntelligence();
+		this.reflex = data.GetReflex();
+	}
+	#endregion
+
+
 
 }

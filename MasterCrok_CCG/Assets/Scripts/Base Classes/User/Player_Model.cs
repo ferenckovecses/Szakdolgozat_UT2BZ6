@@ -1,12 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
-
-/*
-Feladata: A játék, illetve a játékos adatmodellje. Játék indulásakor a játékos játékprofilja betöltődik a player változóba,
-majd a játékvezérlőtől kap utasításokat (felhúzás, lerakás, státuszok változatatása)
-*/
 
 public enum PlayerTurnStatus{ChooseCard, ChooseSkill, Finished};
 public enum PlayerTurnResult{Win, Lose, Draw};
@@ -279,7 +273,7 @@ public class Player_Model
 	public int GetActiveCardsValue(CardStatType type)
 	{
 		int sum = 0;
-
+		int index = 0;
 		foreach (Card card in cardsOnField) 
 		{
 			if(type == CardStatType.Power)
@@ -297,8 +291,11 @@ public class Player_Model
 				sum += card.GetReflex();
 			}
 
-			//Laponként hozzáadjuk a boostot
-			sum += GetBonusValue(type);
+			//Laponként hozzáadjuk a globális és lokális boostot
+			sum += GetGlobalBonusValue(type);
+			sum += GetLocalBonusValue(type, index);
+
+			index++;
 		}
 
 		//Az értékek felhasználása után frissítjük a stat bónusz listát
@@ -307,19 +304,46 @@ public class Player_Model
 		return sum;
 	}
 
-	//Visszaadja összesítve, hogy az adott stat értékre mennyi boosttal rendelkezik a játékos
-	private int GetBonusValue(CardStatType statType)
+
+	public int GetLocalBonusValue(CardStatType statType, int index)
 	{
 		int sum = 0;
 
 		foreach (StatBonus bonus in GetStatBonuses()) 
 		{
-			switch (statType) 
+			//Ha a megadott kártyára szól a bónusz
+			if(bonus.targetID == index)
 			{
-				case CardStatType.Power:sum += bonus.GetPowerBoost(); break;
-				case CardStatType.Intelligence:sum += bonus.GetIntelligenceBoost(); break;
-				case CardStatType.Reflex:sum += bonus.GetReflexBoost(); break;
-				default: break;
+				switch (statType) 
+				{
+					case CardStatType.Power:sum += bonus.GetPowerBoost(); break;
+					case CardStatType.Intelligence:sum += bonus.GetIntelligenceBoost(); break;
+					case CardStatType.Reflex:sum += bonus.GetReflexBoost(); break;
+					default: break;
+				}
+			}
+		}
+
+		return sum;
+	}
+
+	//Visszaadja összesítve, hogy az adott stat értékre mennyi globális boosttal rendelkezik a játékos
+	public int GetGlobalBonusValue(CardStatType statType)
+	{
+		int sum = 0;
+
+		foreach (StatBonus bonus in GetStatBonuses()) 
+		{
+			//Csak akkor adjuk hozzá, ha az adott bónusznak nincs kijelölt targetje
+			if(bonus.targetID == -1)
+			{
+				switch (statType) 
+				{
+					case CardStatType.Power:sum += bonus.GetPowerBoost(); break;
+					case CardStatType.Intelligence:sum += bonus.GetIntelligenceBoost(); break;
+					case CardStatType.Reflex:sum += bonus.GetReflexBoost(); break;
+					default: break;
+				}
 			}
 		}
 

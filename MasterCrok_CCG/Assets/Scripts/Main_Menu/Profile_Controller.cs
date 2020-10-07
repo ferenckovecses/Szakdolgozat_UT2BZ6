@@ -51,7 +51,7 @@ public class Profile_Controller : MonoBehaviour
 
     public void LoadProfiles()
     {
-        string path = Path.Combine(Application.persistentDataPath, "savedProfiles.data");
+        string path = Path.Combine(Application.persistentDataPath, "savedPlayerdata.data");
 
         //Ellenőrzi, hogy van-e már mentésünk
         if(File.Exists(path))

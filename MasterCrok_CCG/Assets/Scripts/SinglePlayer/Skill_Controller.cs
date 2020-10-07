@@ -26,6 +26,7 @@ namespace GameControll
 				case 7: NoMercy(); break;
 				case 8: JungleFight(); break;
 				case 9: PowerOfTuition(); break;
+				case 10: Overpowering(); break;
 				case 16: ShieldFight(); break;
 
 				//Bármilyen hiba esetén passzolunk, hogy ne akadjon meg a játék
@@ -157,8 +158,14 @@ namespace GameControll
 				int currentKey = gameState.GetCurrentKey();
 				gameState.GetDataModule().GetPlayerWithKey(currentKey).AddBonus(bonus);
 			}
-			
+
 			gameState.StartCoroutine(gameState.SkillFinished());
+		}
+
+		//A lap, ami használja +2 Erő bónuszt kap az aktuális körre
+		private void Overpowering()
+		{
+			
 		}
 
 		//Erőre változtatja a harc típusát

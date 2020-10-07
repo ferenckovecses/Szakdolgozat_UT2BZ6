@@ -488,6 +488,7 @@ namespace GameControll
                     //Ha a megadott játékosnál van a mezőn gyors skill és még eldöntetlen/felhasználható
                     if(card.HasALateSkill() && clientModule.AskCardSkillStatus(key, position) == SkillState.Use)
                     {
+                        currentActiveCard = position;
                         Use(position);
                         //Jelezzük a játékosnak, hogy itt az idő dönteni a képességről
                         StartCoroutine(clientModule.DisplayNotification(dataModule.GetPlayerName(key) +" késői képességet használt!"));
@@ -644,11 +645,6 @@ namespace GameControll
             this.skillModule.UseSkill(dataModule.GetPlayerWithKey(currentKey).GetCardsOnField()[cardPosition].GetCardID());
         }
         #endregion
-
-        #region Skill Action
-
-        #endregion
-
 
         #region Commands
 

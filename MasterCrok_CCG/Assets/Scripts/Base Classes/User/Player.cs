@@ -1,14 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-/*
-Feladat: Játékos fő profilja. Tartalmazza a coin egyenlegét, illetve a paklijait. Ezek az adatok kerülnek mentésre, 
-illetve továbbításra a játékos modellbe (Player_Slot) 
-
-Adatfolyam:
-[Player] -----activeDeck,username----> Player_Slot <----interakciók---- Játékvezérlő
-*/
+﻿
 
 [System.Serializable]
 public class Player
