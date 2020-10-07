@@ -108,6 +108,11 @@ namespace GameControll
             playerDictionary[playerKey].SwitchFromHand(fieldId, handId);
         }
 
+        public void SwitchFromDeck(int playerKey, int fieldId, int deckId)
+        {
+            playerDictionary[playerKey].SwitchFromDeck(fieldId, deckId);
+        }
+
         public void ReviveLostCard(int playerKey, int cardID)
         {
             playerDictionary[playerKey].ReviveLostCard(cardID);

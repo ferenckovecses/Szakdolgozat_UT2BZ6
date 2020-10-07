@@ -116,6 +116,19 @@ public class Card : ScriptableObject
 		return false;
 	}
 
+	public bool HasALateSkill()
+	{
+		foreach (SkillProperty property in skillProperties) 
+		{
+			if(property.activationTime == SkillActivationTime.Late)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public MultipleSkillRule GetSkillRule()
 	{
 		return this.multipleSkillRule;

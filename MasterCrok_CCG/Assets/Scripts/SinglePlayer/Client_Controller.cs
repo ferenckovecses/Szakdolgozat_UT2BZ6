@@ -136,6 +136,11 @@ namespace GameControll
             client.GetFieldFromKey(playerKey).SwitchHandFromField(fieldData, fieldId, handData, handId, visibility);
         }
 
+        public void SwitchDeckFromField(int playerKey, int fieldId, Card deckData)
+        {
+            client.GetFieldFromKey(playerKey).SwitchDeckFromField(fieldId, deckData);
+        }
+
         public bool AskSkillStatus(int playerKey)
         {
             return client.GetFieldFromKey(playerKey).GetCardSkillStatusFromField();

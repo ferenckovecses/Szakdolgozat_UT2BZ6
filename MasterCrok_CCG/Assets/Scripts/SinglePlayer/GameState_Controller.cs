@@ -31,6 +31,7 @@ namespace GameControll
         private int currentKey;
         private int currentActiveCard;
         private int choosenKey;
+        private int lastWinnerKey;
 
         public MainGameStates currentPhase;
         public CardStatType currentStat;
@@ -61,6 +62,7 @@ namespace GameControll
             currentAction = SkillEffectAction.None;
             currentSelectionType = CardListTarget.None;
             currentActiveCard = -1;
+            lastWinnerKey = -1;
             phaseChange = true;
             firstRound = true;
             displayedMessageStatus = false;
@@ -91,6 +93,8 @@ namespace GameControll
                     case MainGameStates.QuickSkills: StartCoroutine(QuickSkills()); break;
                     case MainGameStates.NormalSkills: StartCoroutine(Skill()); break;
                     case MainGameStates.CompareCards: StartCoroutine(Compare()); break;
+                    case MainGameStates.LateSkills: StartCoroutine(LateSkills()); break;
+                    case MainGameStates.PutCardsAway: StartCoroutine(PutCardsAway()); break;
                     case MainGameStates.BlindMatch: StartCoroutine(BlindMatch()); break;
                     case MainGameStates.CreateResult: StartCoroutine(Result()); break;
                     default: break;
@@ -404,10 +408,6 @@ namespace GameControll
         //Összehasonlítás fázis: Összehasonlítjuk az aktív kártyák értékét
         private IEnumerator Compare()
         {
-
-            //Adunk időt az üzeneteknek, illetve a játékosoknak hogy megnézzék a pályát
-            yield return new WaitForSeconds(GameSettings_Controller.drawTempo * 10);
-
             //Kiértékeléshez szükséges változók
             List<int> values = new List<int>();
             int max = 0;
@@ -417,13 +417,16 @@ namespace GameControll
             {
 
                 //Hozzáadjuk minden mező értékét
-                values.Add(dataModule.GetPlayerWithKey(key).GetActiveCardsValue(currentStat));
+                int playerFieldValue = dataModule.GetPlayerWithKey(key).GetActiveCardsValue(currentStat);
+                Debug.Log(playerFieldValue);
+
+                values.Add(playerFieldValue);
 
 
                 //Eltároljuk a legnagyobb értéket menet közben
-                if (dataModule.GetPlayerWithKey(key).GetActiveCardsValue(currentStat) > max)
+                if (playerFieldValue > max)
                 {
-                    max = dataModule.GetPlayerWithKey(key).GetActiveCardsValue(currentStat);
+                    max = playerFieldValue;
                     maxId = key;
                 }
             }
@@ -431,12 +434,10 @@ namespace GameControll
             //Ha több ember is rendelkezik a max value-val: Vakharc
             if (values.Count(p => p == max) > 1)
             {
-                StartCoroutine(clientModule.DisplayNotification("Döntetlen!\nVakharc következik!"));
+                StartCoroutine(clientModule.DisplayNotification("Döntetlen!"));
                 yield return WaitForEndOfText();
 
                 this.blindMatch = true;
-                currentPhase = MainGameStates.BlindMatch;
-                phaseChange = true;
             }
 
             //Ellenkező esetben eldönthető, hogy ki a győztes
@@ -449,75 +450,88 @@ namespace GameControll
                 //Ha vakharcok voltak, akkor ezzel végetértek
                 if (this.blindMatch)
                 {
-                    blindMatch = false;
+                    this.blindMatch = false;
                 }
-
-                foreach (int key in dataModule.GetKeyList())
-                {
-                    //Ha az első helyezettével megegyezik a kulcs
-                    if (key == maxId)
-                    {
-
-                        dataModule.GetPlayerWithKey(key).SetResult(PlayerTurnResult.Win);
-
-                        //Lapok elrakása a győztesek közé a UI-ban
-                        StartCoroutine(clientModule.PutCardsAway(key, true));
-                    }
-
-                    //Ellenkező esetben vesztes
-                    else
-                    {
-                        dataModule.GetPlayerWithKey(key).SetResult(PlayerTurnResult.Lose);
-
-                        //Lapok elrakása a vesztesek közé a UI-ban
-                        StartCoroutine(clientModule.PutCardsAway(key, false));
-                    }
-
-                    //Player modell frissítése, aktív mező elemeinek elrakása a győztes vagy vesztes tárolóba
-                    dataModule.GetPlayerWithKey(key).PutActiveCardAway();
-                }
-
-                yield return new WaitForSeconds(GameSettings_Controller.drawTempo * 5f);
-
-                //Megnézzük, hogy van-e a győzelmi feltételeknek megfelelő játékos
-                if (CheckForWinners())
-                {
-                    currentPhase = MainGameStates.CreateResult;
-                    phaseChange = true;
-                }
-
-                //Ha nem, akkor megy minden tovább a következő körrel
-                else
-                {
-                    //Az utolsó védő lesz a következő támadó
-                    SetOrder(maxId);
-                }
-
             }
 
-        }
+            lastWinnerKey = maxId;
 
-        //Vakharc: Döntetlen esetén mindegyik lap vesztes lesz, majd lefordítva a pakli felső lapját teszik ki a pájára    
-        private IEnumerator BlindMatch()
-        {
-
+            //Győzelmi státuszok beállítása
             foreach (int key in dataModule.GetKeyList())
             {
 
-                //Az aktív kártyákat a vesztesek közé rakjuk
-                dataModule.GetPlayerWithKey(key).SetResult(PlayerTurnResult.Draw);
-                StartCoroutine(clientModule.PutCardsAway(key, false));
+                //Ha az első helyezettével megegyezik a kulcs és nincs vakharc státusz
+                if (key == lastWinnerKey && !blindMatch)
+                {
+                    dataModule.GetPlayerWithKey(key).SetResult(PlayerTurnResult.Win);
+                }
+
+                //Ellenkező esetben vesztes
+                else
+                {
+                    dataModule.GetPlayerWithKey(key).SetResult(PlayerTurnResult.Lose);
+                }
+            }
+
+            ChangePhase(MainGameStates.LateSkills);
+
+        }
+
+        private IEnumerator LateSkills()
+        {
+            foreach (int key in dataModule.GetKeyList())
+            {
+                currentKey = key;
+                int position = 0;
+                foreach (Card card in dataModule.GetCardsFromField(currentKey)) 
+                {
+                    //Ha a megadott játékosnál van a mezőn gyors skill és még eldöntetlen/felhasználható
+                    if(card.HasALateSkill() && clientModule.AskCardSkillStatus(key, position) == SkillState.Use)
+                    {
+                        Use(position);
+                        //Jelezzük a játékosnak, hogy itt az idő dönteni a képességről
+                        StartCoroutine(clientModule.DisplayNotification(dataModule.GetPlayerName(key) +" késői képességet használt!"));
+                        yield return WaitForEndOfText();
+                    }
+
+                    position++;
+                }
+            }
+
+            ChangePhase(MainGameStates.PutCardsAway);
+        }
+
+        private IEnumerator PutCardsAway()
+        {
+            foreach (int key in dataModule.GetKeyList())
+            {
+                //Ha az első helyezettével megegyezik a kulcs
+                if (dataModule.GetPlayerWithKey(key).GetResult() == PlayerTurnResult.Win)
+                {
+                    //Lapok elrakása a győztesek közé a UI-ban
+                    StartCoroutine(clientModule.PutCardsAway(key, true));
+                }
+
+                //Ellenkező esetben vesztes
+                else
+                {
+                    //Lapok elrakása a vesztesek közé a UI-ban
+                    StartCoroutine(clientModule.PutCardsAway(key, false));
+                }
+
+                //Player modell frissítése, aktív mező elemeinek elrakása a győztes vagy vesztes tárolóba
                 dataModule.GetPlayerWithKey(key).PutActiveCardAway();
 
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(GameSettings_Controller.drawTempo * 5f);
+            }
 
-                //A pakli felső lapját lerakjuk
-                StartCoroutine(DrawCardsUp(key, 1, DrawTarget.Field, DrawType.Blind, SkillState.NotDecided));
-
+            if(this.blindMatch)
+            {
+                ChangePhase(MainGameStates.BlindMatch);
             }
 
             //Megnézzük, hogy van-e a győzelmi feltételeknek megfelelő játékos
-            if (CheckForWinners())
+            else if (CheckForWinners())
             {
                 ChangePhase(MainGameStates.CreateResult);
             }
@@ -526,10 +540,29 @@ namespace GameControll
             else
             {
                 //Az utolsó védő lesz a következő támadó
-                SetOrder(dataModule.GetKeyList()[dataModule.GetKeyList().Count - 1]);
+                SetOrder(lastWinnerKey);
             }
 
         }
+
+        //Vakharc: Döntetlen esetén mindegyik lap vesztes lesz, majd lefordítva a pakli felső lapját teszik ki a pájára    
+        private IEnumerator BlindMatch()
+        {
+            StartCoroutine(clientModule.DisplayNotification("Vakharc következik!"));
+            yield return WaitForEndOfText();
+
+            foreach (int key in dataModule.GetKeyList())
+            {
+                //A pakli felső lapját lerakjuk
+                StartCoroutine(DrawCardsUp(key, 1, DrawTarget.Field, DrawType.Blind, SkillState.NotDecided));
+            }
+
+            //Az utolsó védő lesz a következő támadó
+            SetOrder(dataModule.GetKeyList()[dataModule.GetKeyList().Count - 1]);
+
+        }
+
+        
 
         //Eredmény: Győztes hirdetés.
         private IEnumerator Result()

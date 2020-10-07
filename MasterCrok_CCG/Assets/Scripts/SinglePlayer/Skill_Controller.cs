@@ -25,6 +25,7 @@ namespace GameControll
 				case 6: GreatFight(); break;
 				case 7: NoMercy(); break;
 				case 8: JungleFight(); break;
+				case 9: PowerOfTuition(); break;
 				case 16: ShieldFight(); break;
 
 				//Bármilyen hiba esetén passzolunk, hogy ne akadjon meg a játék
@@ -135,6 +136,7 @@ namespace GameControll
 			}
 		}
 
+		//Kicseréli a pályán lévő lapot a pakli legfelső lapjára
 		private void JungleFight()
 		{
 			//Jelezzük a vezérlőnek, hogy cserére készülünk
@@ -142,6 +144,21 @@ namespace GameControll
 			gameState.SetSwitchType(CardListTarget.Deck);
 
 			SwitchCard(gameState.GetActiveCardID(), 0);
+			gameState.StartCoroutine(gameState.SkillFinished());
+		}
+
+		//A következő körre ad +1 bónusz minden statra
+		private void PowerOfTuition()
+		{
+			//Csak a late skill fázisban adjuk hozzá, hogy a következő körre legyen érvényes
+			if(gameState.GetGameState() == MainGameStates.LateSkills)
+			{
+				StatBonus bonus = new StatBonus(1,1,1);
+				int currentKey = gameState.GetCurrentKey();
+				gameState.GetDataModule().GetPlayerWithKey(currentKey).AddBonus(bonus);
+			}
+			
+			gameState.StartCoroutine(gameState.SkillFinished());
 		}
 
 		//Erőre változtatja a harc típusát
@@ -195,10 +212,17 @@ namespace GameControll
 					cardToSwitch, gameState.IsTheActivePlayerHuman());
 			}
 
+			//Ha a pakliból cserélünk lapot
 			else if(gameState.GetCurrentListType() == CardListTarget.Deck)
 			{
 				Card fieldData = gameState.GetDataModule().GetCardFromField(currentKey, cardOnField);
 				Card deckData = gameState.GetDataModule().GetCardFromDeck(currentKey, cardToSwitch);
+
+				//Model frissítése
+				gameState.GetDataModule().SwitchFromDeck(currentKey, cardOnField, cardToSwitch);
+
+				//UI frissítése
+				gameState.GetClientModule().SwitchDeckFromField(currentKey,cardOnField, deckData );
 			}
 		}
 

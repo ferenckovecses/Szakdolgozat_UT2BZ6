@@ -57,6 +57,23 @@ public class Player_Model
 		statBonus.Add(newBonus);
 	}
 
+	public List<StatBonus> GetStatBonuses()
+	{
+		return this.statBonus;
+	}
+
+	public void UpdateStatBonuses()
+	{
+		//A bónuszok időtartamát csökkentjük
+		foreach (StatBonus bonus in GetStatBonuses()) 
+		{
+			bonus.DecreaseDuration();
+		}
+
+		//A lejárt bónuszokat eltávolítjuk
+		statBonus.RemoveAll(bonus => bonus.active == false);
+	}
+
 	//A játékos paklijából a kézbe rak egy lapot.
 	public Card DrawCardFromDeck()
 	{
@@ -279,6 +296,31 @@ public class Player_Model
 			{
 				sum += card.GetReflex();
 			}
+
+			//Laponként hozzáadjuk a boostot
+			sum += GetBonusValue(type);
+		}
+
+		//Az értékek felhasználása után frissítjük a stat bónusz listát
+		UpdateStatBonuses();
+
+		return sum;
+	}
+
+	//Visszaadja összesítve, hogy az adott stat értékre mennyi boosttal rendelkezik a játékos
+	private int GetBonusValue(CardStatType statType)
+	{
+		int sum = 0;
+
+		foreach (StatBonus bonus in GetStatBonuses()) 
+		{
+			switch (statType) 
+			{
+				case CardStatType.Power:sum += bonus.GetPowerBoost(); break;
+				case CardStatType.Intelligence:sum += bonus.GetIntelligenceBoost(); break;
+				case CardStatType.Reflex:sum += bonus.GetReflexBoost(); break;
+				default: break;
+			}
 		}
 
 		return sum;
@@ -371,7 +413,7 @@ public class Player_Model
 
 	public Card GetCardFromDeck(int positionID)
 	{
-		return null;
+		return this.player.GetActiveDeck().GetCardFromDeck(positionID);
 	}
 
 	public void SwitchFromHand(int fieldPosition, int handPosition)
@@ -384,6 +426,19 @@ public class Player_Model
 
 		cardsInHand.RemoveAt(handPosition);
 		cardsInHand.Insert(handPosition, fieldTemp);
+
+	}
+
+	public void SwitchFromDeck(int fieldPosition, int deckPosition)
+	{
+		Card fieldTemp = cardsOnField[fieldPosition];
+		Card deckTemp = GetCardFromDeck(deckPosition);
+
+		cardsOnField.RemoveAt(fieldPosition);
+		cardsOnField.Insert(fieldPosition, deckTemp);
+
+		player.GetActiveDeck().RemoveCardAt(deckPosition);
+		player.GetActiveDeck().AddCardToIndex(fieldTemp, deckPosition);
 
 	}
 

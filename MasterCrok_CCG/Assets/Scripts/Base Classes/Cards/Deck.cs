@@ -27,6 +27,11 @@ public class Deck
 		cards.Remove(cardToRemove);
 	}
 
+	public void RemoveCardAt(int index)
+	{
+		cards.RemoveAt(index);
+	}
+
 	public void AddCardToIndex(Card newCard, int index)
 	{
 		cards.Insert(index, newCard);
@@ -123,6 +128,11 @@ public class Deck
 		}
 
 		return cardID;
+	}
+
+	public Card GetCardFromDeck(int index)
+	{
+		return this.cards[index];
 	}
 
 

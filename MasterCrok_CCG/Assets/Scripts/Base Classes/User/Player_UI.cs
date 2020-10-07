@@ -502,6 +502,12 @@ namespace ClientControll
             cardsInHand[handId].GetComponent<CardBehaviour>().SetVisibility(visibility);
         }
 
+        public void SwitchDeckFromField( int fieldId, Card deckData)
+        {
+            cardsOnField[fieldId].GetComponent<CardBehaviour>().SetupCard(deckData, SkillState.Pass);
+            cardsOnField[fieldId].GetComponent<CardBehaviour>().SetVisibility(true);
+        }
+
         public void DisplayCards(int type)
         {
             //Csak egyszerre egyszer lehessen megjeleníteni

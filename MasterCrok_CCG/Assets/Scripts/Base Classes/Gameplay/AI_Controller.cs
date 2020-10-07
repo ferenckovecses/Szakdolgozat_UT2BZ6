@@ -105,10 +105,6 @@ namespace GameControll
              {
 
                 List<int> temp = dataModule.GetOtherKeyList(currentKey);
-                foreach (int keypiece in temp) 
-                {
-                    Debug.Log(keypiece);
-                }
                 int choosenKey = Bot_Behaviour.WhichPlayerToExecute(temp);
 
                 gameState.GetInputModule().ReportNameBoxTapping(choosenKey);
