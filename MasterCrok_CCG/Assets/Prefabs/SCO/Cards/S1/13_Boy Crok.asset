@@ -19,7 +19,7 @@ MonoBehaviour:
   skillDescription: "A k\xF6vetkez\u0151 k\xF6rben te t\xE1madsz. V\xE9dekez\xE9skor
     +2 reflex."
   skillProperties:
-  - activationTime: 1
+  - activationTime: 2
     skillRequirement: 0
     skillTarget: 0
     effectAction: 13

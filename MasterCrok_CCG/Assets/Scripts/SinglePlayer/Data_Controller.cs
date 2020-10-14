@@ -164,6 +164,11 @@ namespace GameControll
             }
         }
 
+        public int GetHandCount(int playerKey)
+        {
+            return GetCardsFromHand(playerKey).Count;
+        }
+
         public PlayerTurnRole GetPlayerRole(int key)
         {
             return this.playerDictionary[key].GetRole();
@@ -228,6 +233,19 @@ namespace GameControll
             return GetWinnerList(playerKey).Count;
         }
 
+        public List<int> GetOthersWinAmount(int ownKey)
+        {
+            List<int> temp = new List<int>();
+            foreach (int key in GetKeyList()) 
+            {
+                if(key != ownKey)
+                {
+                    temp.Add(GetWinnerAmount(key));
+                }     
+            } 
+            return temp;
+        }
+
         public int GetLostAmount(int playerKey)
         {
             return GetLostList(playerKey).Count;
@@ -263,17 +281,37 @@ namespace GameControll
             return this.playerDictionary[playerKey].GetCardsOnField();
         }
 
-        //Visszaadja a nem aktív játékosok vesztes kártyáit
-        public List<Card> GetOtherLosers(int playerKey)
+        public int GetDeckAmount(int playerKey)
         {
-            List<Card> temp = new List<Card>();
+            return this.playerDictionary[playerKey].GetDeckSize();
+        }
+
+        public bool IsCardOnTheField(int playerKey, Card card)
+        {
+            List<Card> cardsOnField = GetCardsFromField(playerKey);
+
+            if(cardsOnField.Contains(card))
+            {
+                return true;
+            }
+
+            else 
+            {
+                return false;    
+            }
+        }
+
+        //Visszaadja a nem aktív játékosok vesztes kártyáit
+        public List<PlayerCardPairs> GetOtherLosers(int playerKey)
+        {
+            List<PlayerCardPairs> temp = new List<PlayerCardPairs>();
             foreach (int key in GetKeyList())
             {
                 if (key != playerKey)
                 {
                     foreach (Card card in GetLostList(key))
                     {
-                        temp.Add(card);
+                        temp.Add( new PlayerCardPairs(key, card));
                     }
                 }
 
@@ -291,6 +329,41 @@ namespace GameControll
             }
 
             return names;
+        }
+
+        //Megnézi, hogy az ellenfelek kártyáinak a megadott statja magasabb-e mint a mi azonos típusú statunk értéke
+        public bool IsMyStatIsTheHighest(int playerKey, int statAmount, CardStatType statType)
+        {
+            int otherCardStat = 0;
+
+            foreach (int key in GetKeyList()) 
+            {
+                //Csak az ellenfelek pályájáól kellenek a lapok
+                if(key != playerKey)
+                {
+                    //Megnézünk minden lapot a pályán
+                    foreach (Card card in GetCardsFromField(key)) 
+                    {
+                        //A megadott stat típust nézzük minden alkalommal
+                        switch (statType) 
+                        {
+                            case CardStatType.Power: otherCardStat = card.GetPower(); break;
+                            case CardStatType.Intelligence: otherCardStat = card.GetIntelligence(); break;
+                            case CardStatType.Reflex: otherCardStat = card.GetReflex(); break;
+                            default: break;
+                        }
+
+                        //Ha az adott kártya megadott értéke magasabb vagy egyenlő: false
+                        if(otherCardStat >= statAmount)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            //Ha végignéztünk mindenkit és nem találtunk magasabbat: true
+            return true;
         }
 
         #endregion

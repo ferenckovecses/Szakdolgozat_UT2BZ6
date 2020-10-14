@@ -7,7 +7,8 @@ public class GameSettings_Controller : MonoBehaviour
 {
 	int numberOfOpponents;
     public Player activePlayer;
-    public static float drawTempo = 0.1f;
+    public static float drawTempo = 0.01f;
+    public static float textTempo = 0.5f;
 
     private static GameSettings_Controller instance;
 

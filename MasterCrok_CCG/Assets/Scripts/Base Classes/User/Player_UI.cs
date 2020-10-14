@@ -55,11 +55,11 @@ namespace ClientControll
             this.cardsInHand = new List<GameObject>();
             this.cardsOnField = new List<GameObject>();
             this.cardCount = cardsInHand.Count;
-            deckSize = null;
-            draggableCards = false;
-            skillDecision = false;
-            winAmount = 0;
-            lostAmount = 0;
+            this.deckSize = null;
+            this.draggableCards = false;
+            this.skillDecision = false;
+            this.winAmount = 0;
+            this.lostAmount = 0;
         }
 
         //Kliens referencia csatolása
@@ -398,6 +398,8 @@ namespace ClientControll
             {
                 PutCardIntoLosers();
             }
+
+            client.ReportEndOfAction();
         }
 
         //Visszaadja, hogy dönthetünk-e a skillek helyzetéről
@@ -504,7 +506,7 @@ namespace ClientControll
 
         public void SwitchDeckFromField( int fieldId, Card deckData)
         {
-            cardsOnField[fieldId].GetComponent<CardBehaviour>().SetupCard(deckData, SkillState.Pass);
+            cardsOnField[fieldId].GetComponent<CardBehaviour>().SetupCard(deckData, SkillState.NotDecided);
             cardsOnField[fieldId].GetComponent<CardBehaviour>().SetVisibility(true);
         }
 
@@ -535,8 +537,10 @@ namespace ClientControll
         {
             lostCardImage.sprite = cardsInHand[cardID].GetComponent<CardBehaviour>().GetArt();
             cardsInHand[cardID].GetComponent<CardBehaviour>().TerminateCard();
+
             lostAmount += 1;
             this.lostSize.text = lostAmount.ToString();
+
             GameObject tempref = cardsInHand[cardID];
             RemoveSpecificCardFromHand(cardsInHand[cardID]);
             Destroy(tempref);

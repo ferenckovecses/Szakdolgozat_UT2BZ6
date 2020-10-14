@@ -101,8 +101,16 @@ namespace ClientControll
 
         public void ReportEndOfTurn()
         {
-            inputModule.ReportTurnEnd();
-            SetTurnButtonStatus(false);
+            if(!isMessageOnScreen)
+            {
+                inputModule.ReportTurnEnd();
+                SetTurnButtonStatus(false);
+            }
+        }
+
+        public void ReportEndOfAction()
+        {
+            inputModule.ReportActionEnd();
         }
 
         #endregion

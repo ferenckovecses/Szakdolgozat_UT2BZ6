@@ -4,20 +4,15 @@ using UnityEngine;
 
 public class StatBonus
 {
-	private int duration;
 	private int power = 0;
 	private int intelligence = 0;
 	private int reflex = 0;
-	public int targetID;
-	public bool active = true;
-
-	public StatBonus(int power, int intelligence, int reflex, int duration = 1, int targetID = -1)
+	
+	public StatBonus(int power, int intelligence, int reflex)
 	{
-		this.duration = duration;
 		this.power = power;
 		this.intelligence = intelligence;
 		this.reflex = reflex;
-		this.targetID = targetID;
 	}
 
 	public int[] GetBonus()
@@ -38,15 +33,5 @@ public class StatBonus
 	public int GetReflexBoost()
 	{
 		return this.reflex;
-	}
-
-	public void DecreaseDuration(int decreasingValue = 1)
-	{
-		this.duration -= decreasingValue;
-
-		if (this.duration <= 0) 
-		{
-			active = false;;
-		}
 	}
 }

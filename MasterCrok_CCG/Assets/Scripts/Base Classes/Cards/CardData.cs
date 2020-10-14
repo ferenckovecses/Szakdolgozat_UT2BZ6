@@ -59,7 +59,8 @@ public class CardData : ScriptableObject
 
 	public int GetCardID()
 	{
-		return this.cardID;
+		int id = this.cardID;
+		return id;
 	}
 
 	public int[] GetAttributes()
@@ -134,9 +135,15 @@ public class CardData : ScriptableObject
 		return this.multipleSkillRule;
 	}
 
-	public List<SkillProperty> GetSkillProperty()
+	//Visszaad egy friss, független listát megegyező tartalmú elemekkel
+	public List<SkillProperty> GetSkillProperties()
 	{
-		return this.skillProperties;
+		List<SkillProperty> temp = new List<SkillProperty>();
+		foreach (SkillProperty property in this.skillProperties) 
+		{
+			temp.Add(new SkillProperty(property.activationTime, property.skillRequirement, property.skillTarget, property.effectAction));
+		}
+		return temp;
 	}
 
 }

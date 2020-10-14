@@ -27,11 +27,14 @@ namespace GameControll
         private bool blindMatch;
         private bool turnFinished;
         private bool skillFinished;
+        private bool changedOrder;
         private int storeCount;
-        private int currentKey;
+        public int currentKey;
         private int currentActiveCard;
         private int choosenKey;
         private int lastWinnerKey;
+        private int newAttacker;
+        private List<int> lateSkillKeys;
 
         public MainGameStates currentPhase;
         public CardStatType currentStat;
@@ -50,26 +53,28 @@ namespace GameControll
         private void Awake()
         {
             //Modulok beállítása
-            dataModule = new Data_Controller(this, factory);
-            inputModule = new Input_Controller(this);
-            clientModule = new Client_Controller(this, client);
-            skillModule = new Skill_Controller(this);
-            AI_module = new AI_Controller(this);
+            this.dataModule = new Data_Controller(this, factory);
+            this.inputModule = new Input_Controller(this);
+            this.clientModule = new Client_Controller(this, client);
+            this.skillModule = new Skill_Controller(this);
+            this.AI_module = new AI_Controller(this);
 
             //Játékfázisok és státuszok alapértékezése
-            currentPhase = MainGameStates.SetupGame;
-            currentStat = CardStatType.NotDecided;
-            currentAction = SkillEffectAction.None;
-            currentSelectionType = CardListTarget.None;
-            currentActiveCard = -1;
-            lastWinnerKey = -1;
-            phaseChange = true;
-            firstRound = true;
-            displayedMessageStatus = false;
-            blindMatch = false;
-            actionFinished = true;
-            turnFinished = true;
-            skillFinished = true;
+            this.currentPhase = MainGameStates.SetupGame;
+            this.currentStat = CardStatType.NotDecided;
+            this.currentAction = SkillEffectAction.None;
+            this.currentSelectionType = CardListTarget.None;
+            this.currentActiveCard = -1;
+            this.lastWinnerKey = -1;
+            this.phaseChange = true;
+            this.firstRound = true;
+            this.displayedMessageStatus = false;
+            this.blindMatch = false;
+            this.actionFinished = true;
+            this.turnFinished = true;
+            this.skillFinished = true;
+            this.changedOrder = false;
+            this.lateSkillKeys = new List<int>();
 
             rng = new System.Random();
         }
@@ -172,8 +177,10 @@ namespace GameControll
                 }
 
                 dataModule.GetPlayerWithKey(key).SetStatus(PlayerTurnStatus.ChooseCard);
-            }
 
+                //A kézben lévő lapokra érvényesítjük a bónuszokat, így az a következő fázisban már látható hatással bír
+                dataModule.GetPlayerWithKey(key).ApplyFieldBonusToAll();
+            }
             ChangePhase(MainGameStates.SetStat);
         }
 
@@ -235,7 +242,6 @@ namespace GameControll
                 //Csak akkor kell kézből idézni, ha nincs vakharc
                 if (!this.blindMatch)
                 {
-
                     //Értesítést adunk a kör kezdetéről
                     StartCoroutine(clientModule.DisplayNotification(dataModule.GetPlayerWithKey(currentKey).GetUsername() + " következik!"));
                     yield return WaitForEndOfText();
@@ -271,10 +277,12 @@ namespace GameControll
                         //Ellenkező esetben az AI-al rakatunk le kártyát
                         else
                         {
+
                             //AI agy segítségét hívjuk a döntésben
                             int index = Bot_Behaviour.ChooseRightCard(dataModule.GetPlayerWithKey(playerKey).GetCardsInHand(), currentStat);
 
                             dataModule.GetPlayerWithKey(playerKey).PlayCardFromHand(index);
+
 
                             //Lerakatjuk a kártyát
                             StartCoroutine(clientModule.SummonCard(playerKey, index));
@@ -316,7 +324,8 @@ namespace GameControll
                     if(card.HasAQuickSkill() && clientModule.AskCardSkillStatus(key, position) == SkillState.NotDecided)
                     {
                         Use(position);
-                        //Jelezzük a játékosnak, hogy itt az idő dönteni a képességről
+                        yield return WaitForEndOfSkill();
+
                         StartCoroutine(clientModule.DisplayNotification(dataModule.GetPlayerName(key) +" Gyors képességet használt!"));
                         yield return WaitForEndOfText();
                     }
@@ -336,6 +345,9 @@ namespace GameControll
 
             //Ha mindenki döntött, akkor break
             int playerMadeDecision;
+
+            //A lateSkill kulcsok listáját kitakarítjuk
+            lateSkillKeys.Clear();
 
             SetCurrentAction(SkillEffectAction.None);
 
@@ -378,10 +390,12 @@ namespace GameControll
                         //Ellenkező esetben az AI dönt a képességről
                         else
                         {
-                            StartCoroutine(AI_module.DecideSkill());
+                            StartCoroutine(AI_module.DecideSkill(currentKey));
 
                             //Nem megyünk tovább, amíg nem végez a döntéssel
                             yield return WaitForTurnsEnd();
+
+                            Debug.Log("Waiting ended");
                         }
 
                         SetCurrentAction(SkillEffectAction.None);
@@ -418,7 +432,6 @@ namespace GameControll
 
                 //Hozzáadjuk minden mező értékét
                 int playerFieldValue = dataModule.GetPlayerWithKey(key).GetActiveCardsValue(currentStat);
-                Debug.Log(playerFieldValue);
 
                 values.Add(playerFieldValue);
 
@@ -479,9 +492,10 @@ namespace GameControll
 
         private IEnumerator LateSkills()
         {
-            foreach (int key in dataModule.GetKeyList())
+            foreach (int key in this.lateSkillKeys)
             {
                 currentKey = key;
+                /*
                 int position = 0;
                 foreach (Card card in dataModule.GetCardsFromField(currentKey)) 
                 {
@@ -489,14 +503,19 @@ namespace GameControll
                     if(card.HasALateSkill() && clientModule.AskCardSkillStatus(key, position) == SkillState.Use)
                     {
                         currentActiveCard = position;
+
+                        //Használjuk a késői képességet
                         Use(position);
-                        //Jelezzük a játékosnak, hogy itt az idő dönteni a képességről
+                        yield return WaitForEndOfSkill();
+
                         StartCoroutine(clientModule.DisplayNotification(dataModule.GetPlayerName(key) +" késői képességet használt!"));
                         yield return WaitForEndOfText();
                     }
 
                     position++;
                 }
+                */
+                yield return new WaitForSeconds(0.1f);
             }
 
             ChangePhase(MainGameStates.PutCardsAway);
@@ -506,26 +525,38 @@ namespace GameControll
         {
             foreach (int key in dataModule.GetKeyList())
             {
-                //Ha az első helyezettével megegyezik a kulcs
+                //Ha az első helyezettével megegyezik a kulcs, akkor győztes
                 if (dataModule.GetPlayerWithKey(key).GetResult() == PlayerTurnResult.Win)
                 {
                     //Lapok elrakása a győztesek közé a UI-ban
                     StartCoroutine(clientModule.PutCardsAway(key, true));
                 }
 
-                //Ellenkező esetben vesztes
+                //Ha nem győztes, akkor vesztes.
+                //*Surprised Pikachu fej*
                 else
                 {
                     //Lapok elrakása a vesztesek közé a UI-ban
                     StartCoroutine(clientModule.PutCardsAway(key, false));
+                    
                 }
+                yield return WaitForEndOfAction();
 
-                //Player modell frissítése, aktív mező elemeinek elrakása a győztes vagy vesztes tárolóba
+                //Player modell frissítése, aktív kártya field elemeinek elrakása a győztes vagy vesztes tárolóba
                 dataModule.GetPlayerWithKey(key).PutActiveCardAway();
 
-                yield return new WaitForSeconds(GameSettings_Controller.drawTempo * 5f);
+                //Továbblépés előtt nullázzuk a kézben lévő lapok bónuszait, hogy tiszta lappal kezdődjön a következő kör
+                //Hehe, érted, tiszta LAPPAL, mert ez egy kártyajáték :(( 
+                //Please end my suffer, csak a fránya diplomámat akarom
+                dataModule.GetPlayerWithKey(key).ResetBonuses();
+
+                //Csökkentjük a bónuszok számlálóját és megválunk a lejárt bónuszoktól
+                dataModule.GetPlayerWithKey(key).UpdateBonuses();
+                
             }
 
+
+            //Ha a következő kör vakharc kell hogy legyen.
             if(this.blindMatch)
             {
                 ChangePhase(MainGameStates.BlindMatch);
@@ -540,8 +571,19 @@ namespace GameControll
             //Ha nem, akkor megy minden tovább a következő körrel
             else
             {
-                //Az utolsó védő lesz a következő támadó
-                SetOrder(lastWinnerKey);
+                //Ha történt sorrendváltoztatás
+                if(this.changedOrder)
+                {
+                    SetOrder(newAttacker);
+                }
+
+                //Normál esetben pedig
+                else 
+                {
+                    //A győztes kulccsal rendelkező játékos lesz a következő támadó
+                    SetOrder(lastWinnerKey);
+                }
+
             }
 
         }
@@ -558,8 +600,19 @@ namespace GameControll
                 StartCoroutine(DrawCardsUp(key, 1, DrawTarget.Field, DrawType.Blind, SkillState.NotDecided));
             }
 
-            //Az utolsó védő lesz a következő támadó
-            SetOrder(dataModule.GetKeyList()[dataModule.GetKeyList().Count - 1]);
+            //Ha nincs sorrend változtatás
+            if(!changedOrder)
+            {
+                //Az előző körben lévő utolsó védő lesz a következő támadó
+                SetOrder(dataModule.GetKeyList()[dataModule.GetKeyList().Count - 1]);
+            }
+
+            //Ha egy képesség miatt változott, hogy ki kezd és választ típust a következő körben
+            else 
+            {
+                changedOrder = false;
+                SetOrder(newAttacker);
+            }
 
         }
 
@@ -722,11 +775,11 @@ namespace GameControll
         private IEnumerator CardAmountCheck()
         {
             //Ha több mint 7 lap van a kezünkben, le kell dobni egy szabadon választottat.
-            if(dataModule.GetCardsFromHand(currentKey).Count > 5)
+            if(dataModule.GetCardsFromHand(currentKey).Count > 7)
             {
                 currentAction = SkillEffectAction.TossCard;
                 currentSelectionType = CardListTarget.Hand;
-                skillModule.ChooseCard();
+                skillModule.ChooseCard(currentKey);
                 yield return new WaitForSeconds((GameSettings_Controller.drawTempo)/2);
                 ActionFinished();  
             }
@@ -842,6 +895,7 @@ namespace GameControll
 
         public IEnumerator SkillFinished()
         {
+            SetCurrentAction(SkillEffectAction.None);
             yield return new WaitForSeconds(1f);
             this.skillFinished = true;
         }
@@ -916,6 +970,15 @@ namespace GameControll
             this.displayedMessageStatus = newStatus;
         }
 
+        public void AddKeyToLateSkills(int key)
+        {
+            //Ha még nincs a kulcs közte, akkor hozzáadjuk
+            if(!this.lateSkillKeys.Contains(key))
+            {
+                this.lateSkillKeys.Add(key);
+            }  
+        }
+
         public bool IsMessageOnScreen()
         {
             return this.displayedMessageStatus;
@@ -931,6 +994,12 @@ namespace GameControll
             return dataModule.GetPlayerWithKey(playerKey).GetPlayerStatus();
         }
 
+        public void SetNewAttacker(int key)
+        {
+            this.changedOrder = true;
+            this.newAttacker = key;
+        }
+
         //Visszaadja, hogy van-e vesztesünk
         public bool DoWeHaveLosers()
         {
@@ -943,6 +1012,11 @@ namespace GameControll
             {
                 return false;
             }
+        }
+
+        public void SetBlindMatchState(bool newState)
+        {
+            this.blindMatch = newState;
         }
 
         //Visszaadja, hogy vannak-e jelenleg vesztes lapok az ellenfelek térfelein

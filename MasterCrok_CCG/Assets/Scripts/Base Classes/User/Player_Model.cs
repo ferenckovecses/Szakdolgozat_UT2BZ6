@@ -2,10 +2,6 @@
 using UnityEngine;
 using System.Linq;
 
-public enum PlayerTurnStatus{ChooseCard, ChooseSkill, Finished};
-public enum PlayerTurnResult{Win, Lose, Draw};
-public enum PlayerTurnRole{Attacker, Defender};
-
 public class Player_Model
 {
 	//A játékos a pozícióban
@@ -20,7 +16,7 @@ public class Player_Model
 	private List<Card> cardsOnField;
 
 	//Értékmódosítók
-	private List<StatBonus> statBonus;
+	private List<FieldBonus> fieldBonusList;
 
 	//Játék közbeni státuszok tárolói
 	private PlayerTurnStatus playerStatus;
@@ -39,33 +35,62 @@ public class Player_Model
 		this.cardsInHand = new List<Card>();
 		this.winnerCards = new List<Card>();
 		this.lostCards = new List<Card>();
-		this.statBonus = new List<StatBonus>();
+		this.fieldBonusList = new List<FieldBonus>();
 		this.cardsOnField = new List<Card>();
 		isThePlayer = playerStatus;
 		hasLateEffect = false;
 	}
 
 	//Új stat bónuszt adunk a játékosnak
-	public void AddBonus(StatBonus newBonus)
+	public void AddFieldBonus(FieldBonus newBonus)
 	{
-		statBonus.Add(newBonus);
+		fieldBonusList.Add(newBonus);
 	}
 
-	public List<StatBonus> GetStatBonuses()
+	//Kör elején hozzáadja a bónuszokat a kézben lévő lapokhoz
+	public void ApplyFieldBonusToAll()
 	{
-		return this.statBonus;
+		foreach (Card card in cardsInHand) 
+		{
+			ApplyFieldBonusToCard(card);
+		}
 	}
 
-	public void UpdateStatBonuses()
+	//Megadott laphoz az összes bónuszt hozzáadja
+	public void ApplyFieldBonusToCard(Card card)
 	{
-		//A bónuszok időtartamát csökkentjük
-		foreach (StatBonus bonus in GetStatBonuses()) 
+		//Ha van bónusz a listában
+		if(fieldBonusList.Any())
+		{
+			foreach(FieldBonus fieldBonus in fieldBonusList)
+			{
+				card.AddBonus(fieldBonus.GetBonus());
+			}	
+		}
+	}
+
+	//Kör végén eltávolítja a bónuszokat a lapokról
+	public void ResetBonuses()
+	{
+		foreach (Card card in cardsInHand) 
+		{
+			foreach(FieldBonus fieldBonus in fieldBonusList)
+			{
+				card.ResetBonuses();
+			}
+		}
+	}
+
+	//Frissíti a bónuszok státuszát: Csökkenti a tartalmi idejüket egy körrel
+	//Amik lejártak, azokat kidobja
+	public void UpdateBonuses()
+	{
+		foreach (FieldBonus bonus in fieldBonusList) 
 		{
 			bonus.DecreaseDuration();
 		}
 
-		//A lejárt bónuszokat eltávolítjuk
-		statBonus.RemoveAll(bonus => bonus.active == false);
+		fieldBonusList.RemoveAll(bonus => bonus.GetStatus() == false);
 	}
 
 	//A játékos paklijából a kézbe rak egy lapot.
@@ -74,6 +99,7 @@ public class Player_Model
 		Card temp = player.GetActiveDeck().DrawCard();
 		if(temp != null)
 		{
+			ApplyFieldBonusToCard(temp);
 			cardsInHand.Add(temp);
 			return temp;
 		}
@@ -91,6 +117,7 @@ public class Player_Model
 
 		if(temp != null)
 		{
+			ApplyFieldBonusToCard(temp);
 			cardsOnField.Add(temp);
 			return temp;
 		}
@@ -107,9 +134,11 @@ public class Player_Model
 		//Ha nem üres
 		if(cardList.Any())
 		{
-			foreach (Card cards in cardList) 
+			foreach (Card card in cardList) 
 			{
-				this.player.GetActiveDeck().AddCard(cards);
+				card.ResetSkills();
+				card.ResetBonuses();
+				this.player.GetActiveDeck().AddCard(card);
 			}
 			cardList.Clear();
 		}
@@ -135,6 +164,8 @@ public class Player_Model
 			foreach (Card card in cardsOnField) 
 			{
 				this.winnerCards.Add(card);
+				card.ResetSkills();
+				card.ResetBonuses();
 			}
 		}
 
@@ -143,6 +174,9 @@ public class Player_Model
 			foreach (Card card in cardsOnField) 
 			{
 				this.lostCards.Add(card);
+				
+				card.ResetSkills();
+				card.ResetBonuses();
 			}	
 		}
 
@@ -187,6 +221,7 @@ public class Player_Model
 	public List<Card> GetLosers()
 	{
 		return this.lostCards;
+		
 	}
 
 	//A játékostól begyűjtött id-val rendelkező lapot lerakja
@@ -291,60 +326,7 @@ public class Player_Model
 				sum += card.GetReflex();
 			}
 
-			//Laponként hozzáadjuk a globális és lokális boostot
-			sum += GetGlobalBonusValue(type);
-			sum += GetLocalBonusValue(type, index);
-
 			index++;
-		}
-
-		//Az értékek felhasználása után frissítjük a stat bónusz listát
-		UpdateStatBonuses();
-
-		return sum;
-	}
-
-
-	public int GetLocalBonusValue(CardStatType statType, int index)
-	{
-		int sum = 0;
-
-		foreach (StatBonus bonus in GetStatBonuses()) 
-		{
-			//Ha a megadott kártyára szól a bónusz
-			if(bonus.targetID == index)
-			{
-				switch (statType) 
-				{
-					case CardStatType.Power:sum += bonus.GetPowerBoost(); break;
-					case CardStatType.Intelligence:sum += bonus.GetIntelligenceBoost(); break;
-					case CardStatType.Reflex:sum += bonus.GetReflexBoost(); break;
-					default: break;
-				}
-			}
-		}
-
-		return sum;
-	}
-
-	//Visszaadja összesítve, hogy az adott stat értékre mennyi globális boosttal rendelkezik a játékos
-	public int GetGlobalBonusValue(CardStatType statType)
-	{
-		int sum = 0;
-
-		foreach (StatBonus bonus in GetStatBonuses()) 
-		{
-			//Csak akkor adjuk hozzá, ha az adott bónusznak nincs kijelölt targetje
-			if(bonus.targetID == -1)
-			{
-				switch (statType) 
-				{
-					case CardStatType.Power:sum += bonus.GetPowerBoost(); break;
-					case CardStatType.Intelligence:sum += bonus.GetIntelligenceBoost(); break;
-					case CardStatType.Reflex:sum += bonus.GetReflexBoost(); break;
-					default: break;
-				}
-			}
 		}
 
 		return sum;
@@ -363,6 +345,7 @@ public class Player_Model
 	public void SacrificeAWinner(int id)
 	{
 		Card temp = this.winnerCards[id];
+		temp.ResetBonuses();
 		this.winnerCards.RemoveAt(id);
 		this.lostCards.Add(temp);
 	}
@@ -370,6 +353,7 @@ public class Player_Model
 	public void ReviveLostCard(int id)
 	{
 		Card temp = this.lostCards[id];
+		ApplyFieldBonusToCard(temp);
 		this.lostCards.RemoveAt(id);
 		this.cardsInHand.Add(temp);
 	}
@@ -457,6 +441,7 @@ public class Player_Model
 	{
 		Card fieldTemp = cardsOnField[fieldPosition];
 		Card deckTemp = GetCardFromDeck(deckPosition);
+		ApplyFieldBonusToCard(deckTemp);
 
 		cardsOnField.RemoveAt(fieldPosition);
 		cardsOnField.Insert(fieldPosition, deckTemp);
@@ -464,11 +449,15 @@ public class Player_Model
 		player.GetActiveDeck().RemoveCardAt(deckPosition);
 		player.GetActiveDeck().AddCardToIndex(fieldTemp, deckPosition);
 
+		GetCardFromDeck(deckPosition).ResetBonuses();
+
 	}
 
 	public void TossCard(int positionID)
 	{
-		lostCards.Add(cardsInHand[positionID]);
+		Card temp = cardsInHand[positionID];
+		temp.ResetBonuses();
+		lostCards.Add(temp);
 		cardsInHand.RemoveAt(positionID);
 	}
 

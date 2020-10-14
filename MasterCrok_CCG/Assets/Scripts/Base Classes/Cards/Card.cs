@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
+
 
 public class Card
 {
@@ -10,28 +12,68 @@ public class Card
     private int intelligence;
     private int reflex;
 
+    private List<StatBonus> cardStatBonus;
+    private List<SkillProperty> skillProperties;
+    private int SkillID;
+
     public Card(CardData in_data)
     {
+    	this.cardStatBonus = new List<StatBonus>();
         this.data = in_data;
         this.power = data.GetPower();
         this.intelligence = data.GetIntelligence();
         this.reflex = data.GetReflex();
+    	this.SkillID = data.GetCardID();
+    	this.skillProperties = data.GetSkillProperties();
     }
 
     #region Getters
     public int GetPower()
     {
-        return this.power;
+        return (this.power + GetPowerBonus());
     }
 
     public int GetIntelligence()
     {
-        return this.intelligence;
+        return (this.intelligence + GetIntelligenceBonus());
     }
 
     public int GetReflex()
     {
-        return this.reflex;
+        return (this.reflex + GetReflexBonus());
+    }
+
+    public int GetPowerBonus()
+    {
+    	int sum = 0;
+    	foreach (StatBonus bonus in cardStatBonus) 
+    	{
+    		sum += bonus.GetPowerBoost();
+    	}
+
+    	return sum;
+    }
+
+    public int GetIntelligenceBonus()
+    {
+    	int sum = 0;
+    	foreach (StatBonus bonus in cardStatBonus) 
+    	{
+    		sum += bonus.GetIntelligenceBoost();
+    	}
+
+    	return sum;
+    }
+
+    public int GetReflexBonus()
+    {
+    	int sum = 0;
+    	foreach (StatBonus bonus in cardStatBonus) 
+    	{
+    		sum += bonus.GetReflexBoost();
+    	}
+
+    	return sum;
     }
 
 	public Sprite GetArt()
@@ -41,7 +83,7 @@ public class Card
 
 	public int GetCardID()
 	{
-		return data.GetCardID();
+		return SkillID;
 	}
 
 	public CardType GetCardType()
@@ -67,7 +109,7 @@ public class Card
 	//Visszaadja, hogy rendelkezik-e a kártya Gyors képességgel
 	public bool HasAQuickSkill()
 	{
-		foreach (SkillProperty property in data.GetSkillProperty())
+		foreach (SkillProperty property in skillProperties)
 		{
 			if (property.activationTime == SkillActivationTime.Quick)
 			{
@@ -80,7 +122,7 @@ public class Card
 
 	public bool HasALateSkill()
 	{
-		foreach (SkillProperty property in data.GetSkillProperty())
+		foreach (SkillProperty property in skillProperties)
 		{
 			if (property.activationTime == SkillActivationTime.Late)
 			{
@@ -96,37 +138,47 @@ public class Card
 		return data.GetSkillRule();
 	}
 
+	public List<SkillProperty> GetSkillProperty()
+	{
+		return this.skillProperties;
+	}
+
 	#endregion
 
 	#region Setters and modifiers
-	public void SetPower(int newPower)
-    {
-        this.power = newPower;
-    }
 
-    public void SetIntelligence(int newInt)
-    {
-        this.intelligence = newInt;
-    }
-
-    public void SetReflex(int newRef)
-    {
-        this.reflex = newRef;
-    }
-
-    public void IncreaseStats(int pow_bonus, int int_bonus, int ref_bonus)
-    {
-        this.power += pow_bonus;
-        this.intelligence += int_bonus;
-        this.reflex += ref_bonus;
-    }
-
-	public void ResetStats()
+	public void ResetBonuses()
 	{
-		this.power = data.GetPower();
-		this.intelligence = data.GetIntelligence();
-		this.reflex = data.GetReflex();
+		this.cardStatBonus.Clear();
 	}
+
+	public void AddBonus(StatBonus newBonus)
+	{
+		this.cardStatBonus.Add(newBonus);
+	}
+
+	public void SetSKillID(int newSkillID)
+	{
+		this.SkillID = newSkillID;
+	}
+
+	public void ModifySkills(List<SkillProperty> newSkills)
+	{
+		this.skillProperties.Clear();
+
+		foreach (SkillProperty property in newSkills) 
+		{
+			SkillProperty temp = new SkillProperty(property.activationTime, property.skillRequirement, property.skillTarget, property.effectAction);
+			this.skillProperties.Add(temp);
+		}
+	}
+
+	public void ResetSkills()
+	{
+		this.skillProperties = data.GetSkillProperties();
+		this.SkillID = data.GetCardID();
+	}
+
 	#endregion
 
 

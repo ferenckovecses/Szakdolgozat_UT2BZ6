@@ -30,7 +30,8 @@ public class Profile_Controller : MonoBehaviour
 	public CardFactory factory;
 	public GameObject profilePrefab;
 
-	int playerLimit = 100000;
+	private int playerLimit = 100000;
+	private string fileName = "savedPlayerdata.data";
 
 	void Awake()
 	{
@@ -51,7 +52,7 @@ public class Profile_Controller : MonoBehaviour
 
     public void LoadProfiles()
     {
-        string path = Path.Combine(Application.persistentDataPath, "savedPlayerdata.data");
+        string path = Path.Combine(Application.persistentDataPath, fileName);
 
         //Ellenőrzi, hogy van-e már mentésünk
         if(File.Exists(path))
@@ -98,7 +99,7 @@ public class Profile_Controller : MonoBehaviour
     public void SaveProfiles()
     {
         BinaryFormatter formatter = new BinaryFormatter();
-        string path = Path.Combine(Application.persistentDataPath, "savedProfiles.data");
+        string path = Path.Combine(Application.persistentDataPath, fileName);
         FileStream stream = new FileStream(path, FileMode.Create);
         List<Profile_Data> data = new List<Profile_Data>();
 

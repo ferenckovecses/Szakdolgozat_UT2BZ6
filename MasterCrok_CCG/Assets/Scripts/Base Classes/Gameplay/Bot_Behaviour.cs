@@ -151,10 +151,10 @@ public static class Bot_Behaviour
 		}
 	}
 
-	public static int WhichSkillToUse(List<Card> cardList)
+	public static int WhichSkillToUse(List<PlayerCardPairs> cardList)
 	{
-		int choice = UnityEngine.Random.Range(0,cardList.Count-1);
-		return cardList[choice].GetCardID();
+		int index = UnityEngine.Random.Range(0,cardList.Count-1);
+		return index;
 	}
 
 	public static int WhomToRevive(List<Card> cardList)
@@ -174,5 +174,38 @@ public static class Bot_Behaviour
 		int choice = UnityEngine.Random.Range(0,playerKeys.Count-1);
 		return playerKeys[choice];
 	}
+
+	public static int WhichPlayerToChoose(List<int> playerWins)
+	{
+		int max = 0;
+		int index = -1;
+		int i = 0;
+		foreach (int winAmount in playerWins) 
+		{
+			if(winAmount > max)
+			{
+				max = winAmount;
+				index = i;
+			}
+			i++;
+		}
+
+		//Ha nincs 0-nál több nyertessel rendelkező, akkor véletlen értéket adunk vissza, mert úgyis mindegy
+		if(index == -1)
+		{
+			return UnityEngine.Random.Range(0,playerWins.Count-1);
+		}
+
+		else {
+			return index;
+		}
+	}
+
+	public static int WhichCardToSwitch(List<Card> cards)
+	{
+		return UnityEngine.Random.Range(0, cards.Count - 1);
+	}
+
+
 
 }

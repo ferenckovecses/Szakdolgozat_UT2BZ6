@@ -27,15 +27,11 @@ namespace ClientControll
 				if (action == SkillEffectAction.Store
 					|| action == SkillEffectAction.Switch
 					|| action == SkillEffectAction.Revive
-					|| action == SkillEffectAction.TossCard)
+					|| action == SkillEffectAction.TossCard
+					|| action == SkillEffectAction.SkillUse
+					|| action == SkillEffectAction.SwitchOpponentCard)
 				{
 					temp.onClick.AddListener(delegate { client.ReportCardSelection(cardList.IndexOf(card), key); });
-				}
-
-				//A kártya egyedi azonosítóját adja vissza képesség használathoz
-				else if (action == SkillEffectAction.SkillUse)
-				{
-					temp.onClick.AddListener(delegate { client.ReportCardSelection(card.GetCardID(), key); });
 				}
 			}
 

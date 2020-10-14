@@ -30,7 +30,8 @@ public enum SkillEffectTarget { Self, Opponent, Everyone, Game };
 public enum SkillEffectAction { 
 	None, Store, Switch, Organise, SkillUse, Revive, BlindSwitch, 
 	StatChange, NegateEffects, GreatFight, SacrificeFromHand, StatBonus, 
-	TriggerBlindFight, MakeAttacker, Win, DrawCard, TossCard, Execute};
+	TriggerBlindFight, MakeAttacker, Win, DrawCard, TossCard, Execute, CheckWinnerAmount,
+	SwitchOpponentCard, PickCardForSwitch};
 public enum MultipleSkillRule {None, And, Or};
 
 
@@ -42,4 +43,9 @@ public enum CardListFilter { None, NoMasterCrok };
 //Menü fázisok
 public enum MenuState { MainMenu, Settings, GameTypeSelect, PlayerNumberSelect, MultiplayerSettings, Login, Register };
 public enum DexState { List, Detail };
+
+//Játékos fázisok és helyzetek
+public enum PlayerTurnStatus{ChooseCard, ChooseSkill, Finished};
+public enum PlayerTurnResult{Win, Lose, Draw};
+public enum PlayerTurnRole{Attacker, Defender};
 

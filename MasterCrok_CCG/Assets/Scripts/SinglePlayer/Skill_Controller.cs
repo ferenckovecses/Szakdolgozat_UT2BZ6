@@ -27,6 +27,11 @@ namespace GameControll
 				case 8: JungleFight(); break;
 				case 9: PowerOfTuition(); break;
 				case 10: Overpowering(); break;
+				case 11: Scuffle(); break;
+				case 12: BurstFire(); break;
+				case 13: CheekyTricks(); break;
+				case 14: Rampage(); break;
+				case 15: TheresAnother(); break;
 				case 16: ShieldFight(); break;
 
 				//Bármilyen hiba esetén passzolunk, hogy ne akadjon meg a játék
@@ -42,8 +47,10 @@ namespace GameControll
 			gameState.SetSelectionAction(SkillEffectAction.Switch);
 			gameState.SetSwitchType(CardListTarget.Hand);
 
+			int currentKey = gameState.GetCurrentKey();
+
 			//Megjelenítjük a kézben lévő lapokat, hogy a játékos választhasson közülük
-			ChooseCard(CardListFilter.NoMasterCrok);
+			ChooseCard(currentKey, CardListFilter.NoMasterCrok);
 		}
 
 		//Megváltoztathatjuk a harc típusát
@@ -64,7 +71,8 @@ namespace GameControll
 				//Ha bot, akkor kell egy kis rásegítés neki
 				if (!gameState.IsTheActivePlayerHuman())
 				{
-					ChooseCard();
+					int currentKey = gameState.GetCurrentKey();
+					ChooseCard(currentKey);
 				}
 			}
 
@@ -100,8 +108,10 @@ namespace GameControll
 				gameState.SetSelectionAction(SkillEffectAction.Revive);
 				gameState.SetSwitchType(CardListTarget.Losers);
 
+				int currentKey = gameState.GetCurrentKey();
+
 				//Megjelenítjük a kézben lévő lapokat, hogy a játékos választhasson közülük
-				ChooseCard();
+				ChooseCard(currentKey);
 			}
 
 			else
@@ -129,11 +139,11 @@ namespace GameControll
 		{
 			gameState.SetSelectionAction(SkillEffectAction.Execute);
 			gameState.SetSwitchType(CardListTarget.Hand);
-
+			int currentKey = gameState.GetCurrentKey();
 			//Ha botról van szó
 			if(!gameState.IsTheActivePlayerHuman())
 			{
-				gameState.StartCoroutine(gameState.GetAImodule().CardSelectionEffect(CardListFilter.None, 0));
+				gameState.StartCoroutine(gameState.GetAImodule().CardSelectionEffect(currentKey, CardListFilter.None));
 			}
 		}
 
@@ -144,34 +154,321 @@ namespace GameControll
 			gameState.SetSelectionAction(SkillEffectAction.BlindSwitch);
 			gameState.SetSwitchType(CardListTarget.Deck);
 
-			SwitchCard(gameState.GetActiveCardID(), 0);
+			int currentKey = gameState.GetCurrentKey();
+
+			SwitchCard(currentKey, gameState.GetActiveCardID(), 0);
 			gameState.StartCoroutine(gameState.SkillFinished());
 		}
 
 		//A következő körre ad +1 bónusz minden statra
 		private void PowerOfTuition()
 		{
-			//Csak a late skill fázisban adjuk hozzá, hogy a következő körre legyen érvényes
-			if(gameState.GetGameState() == MainGameStates.LateSkills)
-			{
-				StatBonus bonus = new StatBonus(1,1,1);
-				int currentKey = gameState.GetCurrentKey();
-				gameState.GetDataModule().GetPlayerWithKey(currentKey).AddBonus(bonus);
-			}
+			Data_Controller data = gameState.GetDataModule();
+			int currentKey = gameState.GetCurrentKey();
+			int cardPosition = gameState.GetActiveCardID();
+			Card card = data.GetCardFromField(currentKey, cardPosition);
 
+			gameState.StartCoroutine(PowerOfTuition_LateEffect(currentKey, card));
 			gameState.StartCoroutine(gameState.SkillFinished());
+		}
+
+		private IEnumerator PowerOfTuition_LateEffect(int playerKey, Card target)
+		{
+			Data_Controller data = gameState.GetDataModule();
+
+			while(true)
+			{
+				//Csak a late skill fázisban adjuk hozzá, hogy a következő körre legyen érvényes
+				if(gameState.GetGameState() == MainGameStates.LateSkills && data.IsCardOnTheField(playerKey, target) )
+				{
+					int bonusDuration = 1;
+
+					StatBonus bonusEffect = new StatBonus(1,1,1);
+
+					FieldBonus newBonus = new FieldBonus(bonusEffect, bonusDuration);
+
+					gameState.GetDataModule().GetPlayerWithKey(playerKey).AddFieldBonus(newBonus);
+
+					break;
+				}
+
+				yield return null;
+			}
+			
 		}
 
 		//A lap, ami használja +2 Erő bónuszt kap az aktuális körre
 		private void Overpowering()
 		{
-			
+			Data_Controller data = gameState.GetDataModule();
+			int currentKey = gameState.GetCurrentKey();
+			int cardPosition = gameState.GetActiveCardID();
+			Card card = data.GetCardFromField(currentKey, cardPosition);
+
+			gameState.StartCoroutine(Overpowering_LateEffect(currentKey, card));
+
+			gameState.StartCoroutine(gameState.SkillFinished());
+		}
+
+		private IEnumerator Overpowering_LateEffect(int playerKey, Card target)
+		{
+			Data_Controller data = gameState.GetDataModule();
+			bool needsToCheck = false;
+			bool bonusGiven = false;
+			List<Card> opponentCardList = new List<Card>();
+			List<int> keylist = data.GetKeyList();
+
+			while(true)
+			{
+
+				//Ha nincs már a kártya a mezőn
+				if(!data.IsCardOnTheField(playerKey, target))
+				{
+					break;
+				}
+
+
+				//Ellenséges lapok feljegyzése: Ha új lap kerül a pályára, ami miatt változhat a képesség hatása. 
+				//A változást a pályán észre kell venni és felül kell vizsgálni a helyzetünket.
+				foreach (int key in keylist) 
+                {
+                    if(key != playerKey)
+                    {
+                        foreach (Card card in data.GetCardsFromField(key)) 
+                        {
+                            if(!opponentCardList.Contains(card))
+                            {
+                                opponentCardList.Add(card);
+                                needsToCheck = true;
+                            }
+                        }
+                    }
+                }
+
+				//Ha felülvizsgálásra van szükség
+				if(needsToCheck)
+				{
+					Debug.Log("Player with the effect: " + playerKey.ToString());
+					needsToCheck = false;
+
+					//Ha magasabb az intelligencia statja, mint az ellenfeleié: +2 Erőt kap
+					bool result = data.IsMyStatIsTheHighest(playerKey, target.GetIntelligence(), CardStatType.Intelligence);
+					if( result && !bonusGiven)
+					{
+						StatBonus newBonus = new StatBonus(2,0,0);
+						target.AddBonus(newBonus);
+						bonusGiven = true;
+					}
+
+					//Ha már megadtuk a bónuszt, de nem vagyunk többé a legokosabbak: elvesszük a bónuszt
+					else if(!result && bonusGiven)
+					{
+						StatBonus newBonus = new StatBonus(-2,0,0);
+						target.AddBonus(newBonus);
+						bonusGiven = false;
+					}
+				}
+
+				//Ha az összehasonlítás fázis eljött: végeztünk
+				if(gameState.GetGameState() == MainGameStates.CompareCards)
+                {
+                    break;
+                }
+
+                yield return null;
+			}			
+		}
+
+		//Ha veszítettünk a lappal, akkor vakharc indul és mi leszünk a támadók benne
+		private void Scuffle()
+		{
+			Data_Controller data = gameState.GetDataModule();
+			int playerKey = gameState.GetCurrentKey();
+			gameState.AddKeyToLateSkills(playerKey);
+			int cardPosition = gameState.GetActiveCardID();
+			Card card = data.GetCardFromField(playerKey, cardPosition);
+			gameState.StartCoroutine(Scuffle_LateEffect(playerKey, card));
+			gameState.StartCoroutine(gameState.SkillFinished());
+		}
+
+		private IEnumerator Scuffle_LateEffect(int playerKey, Card target)
+		{
+			Data_Controller data = gameState.GetDataModule();
+			while(true)
+			{
+
+				//Ha nincs már a kártya a mezőn
+				if(!data.IsCardOnTheField(playerKey, target))
+				{
+					break;
+				}
+
+				//Csak a late skill fázisban fejti ki hatását, amikor a mi képességeink érvényesítésének hatása van
+				if(gameState.GetGameState() == MainGameStates.LateSkills 
+					&& gameState.GetCurrentKey() == playerKey
+					&& data.IsCardOnTheField(playerKey, target))
+				{
+					
+					//Ha vesztettünk
+					if(data.GetPlayerWithKey(playerKey).GetResult() == PlayerTurnResult.Lose)
+					{
+						Debug.Log("Player with the effect: " + playerKey.ToString());
+
+						//Vakharccal kezdünk
+						gameState.SetBlindMatchState(true);
+
+						//Beállítjuk, hogy a következő kört mi kezdjük
+						gameState.SetNewAttacker(playerKey);
+					}
+
+						break;
+				}
+
+				yield return null;
+			}
+		}
+
+		//Minden ellenséges crok után +1 minden értékére. Cserék új croknak számítanak
+		private void BurstFire()
+		{
+			Data_Controller data = gameState.GetDataModule();
+			int currentKey = gameState.GetCurrentKey();
+			int cardPosition = gameState.GetActiveCardID();
+			Card card = data.GetCardFromField(currentKey, cardPosition);
+
+			gameState.StartCoroutine(BurstFire_LateEffect(card, currentKey));
+
+			gameState.StartCoroutine(gameState.SkillFinished());
+		}
+
+		private IEnumerator BurstFire_LateEffect(Card cardForBonus, int currentKey)
+        {
+            List<Card> opponentCardList = new List<Card>();
+            Data_Controller data = gameState.GetDataModule();
+            List<int> keylist = data.GetKeyList();
+
+            while(true)
+            {
+
+				//Ha nincs már a kártya a mezőn
+				if(!data.IsCardOnTheField(currentKey, cardForBonus))
+				{
+					break;
+				}
+
+                foreach (int key in keylist) 
+                {
+                    if(key != currentKey)
+                    {
+                        foreach (Card card in data.GetCardsFromField(key)) 
+                        {
+                            if(!opponentCardList.Contains(card) && data.IsCardOnTheField(currentKey, cardForBonus))
+                            {
+                                opponentCardList.Add(card);
+                                cardForBonus.AddBonus(new StatBonus(1,1,1));
+                            }
+                        }
+                    }
+                }
+
+
+                if(gameState.GetGameState() == MainGameStates.CompareCards)
+                {
+                    break;
+                }
+
+                else 
+                {
+                    yield return null;    
+                }
+            }
+        }
+
+		//Mi támadunk a következő körben, illetve +2 Reflex most ha védekezünk.
+		private void CheekyTricks()
+		{
+			Data_Controller data = gameState.GetDataModule();
+			int currentKey = gameState.GetCurrentKey();
+			int cardPosition = gameState.GetActiveCardID();
+			Card card = data.GetCardFromField(currentKey, cardPosition);
+			gameState.AddKeyToLateSkills(currentKey);
+
+			//Csak a normál skill fázisban fejti ki hatását: Védekezéskor bónuszt kapunk
+			if(gameState.GetGameState() == MainGameStates.NormalSkills 
+			&& data.GetPlayerWithKey(currentKey).GetRole() == PlayerTurnRole.Defender)
+			{
+				card.AddBonus(new StatBonus(0,0,2));
+			}
+
+			gameState.StartCoroutine(CheekyTricks_LateEffect(currentKey, card));
+			gameState.StartCoroutine(gameState.SkillFinished());
+		}
+
+		private IEnumerator CheekyTricks_LateEffect(int playerKey, Card target)
+		{
+			Data_Controller data = gameState.GetDataModule();
+			while(true)
+			{
+
+				//Ha nincs már a kártya a mezőn
+				if(!data.IsCardOnTheField(playerKey, target))
+				{
+					break;
+				}
+
+				//Csak a late skill fázisban fejti ki hatását: Mi leszünk a támadók legközelebb
+				if(gameState.GetGameState() == MainGameStates.LateSkills 
+					&& gameState.GetCurrentKey() == playerKey
+					&& data.IsCardOnTheField(playerKey, target))
+				{
+					Debug.Log("Player with the effect: " + playerKey.ToString());
+
+					//Beállítjuk, hogy a következő kört mi kezdjük
+					gameState.SetNewAttacker(playerKey);
+
+					break;
+				}
+
+				else 
+				{
+					yield return null;
+				}
+			}
+		}
+
+
+
+		private void Rampage()
+		{
+			gameState.SetSelectionAction(SkillEffectAction.CheckWinnerAmount);
+			gameState.SetSwitchType(CardListTarget.None);
+			int currentKey = gameState.GetCurrentKey();
+			//Ha botról van szó
+			if(!gameState.IsTheActivePlayerHuman())
+			{
+				gameState.StartCoroutine(gameState.GetAImodule().CardSelectionEffect(currentKey, CardListFilter.None));
+			}
+
+		}
+
+		private void TheresAnother()
+		{
+			gameState.SetSelectionAction(SkillEffectAction.SwitchOpponentCard);
+			gameState.SetSwitchType(CardListTarget.Hand);
+			int currentKey = gameState.GetCurrentKey();
+			//Ha botról van szó
+			if(!gameState.IsTheActivePlayerHuman())
+			{
+				Debug.Log("Bot path start");
+				gameState.StartCoroutine(gameState.GetAImodule().CardSelectionEffect(currentKey, CardListFilter.None));
+			}
 		}
 
 		//Erőre változtatja a harc típusát
 		private void ShieldFight()
 		{
 			SetActiveStat(CardStatType.Power);
+			gameState.StartCoroutine(gameState.SkillFinished());
 		}
 
         #region Skill Actions
@@ -179,31 +476,29 @@ namespace GameControll
         //Jelzünk a játékvezérlőnek, hogy a képesség végzett, mehet a játék tovább
         private void Response()
 		{
-			gameState.ActionFinished();
+			gameState.StartCoroutine(gameState.SkillFinished());
 		}
 
 		//A megadott paraméterekkel megjelenít egy kártya listát, amiből választhat a játékos
-		public void ChooseCard(CardListFilter filter = CardListFilter.None, int limit = 0)
+		public void ChooseCard(int currentKey, CardListFilter filter = CardListFilter.None, int limit = 0)
 		{
 
 			//Ha ember
 			if (gameState.IsTheActivePlayerHuman())
 			{
-				gameState.StartCoroutine(gameState.GetClientModule().DisplayCardList(filter, limit));
+				gameState.StartCoroutine(gameState.GetClientModule().DisplayCardList(currentKey, filter, limit));
 			}
 
 			//Ha bot
 			else
 			{
-				gameState.StartCoroutine(gameState.GetAImodule().CardSelectionEffect(filter, limit));
+				gameState.StartCoroutine(gameState.GetAImodule().CardSelectionEffect(currentKey, filter, limit));
 			}
 		}
 
 		//Kicserél egy mezőn lévő lapot egy másikra
-		public void SwitchCard(int cardOnField, int cardToSwitch)
+		public void SwitchCard(int currentKey, int cardOnField, int cardToSwitch)
 		{
-			int currentKey = gameState.GetCurrentKey();
-
 			//Ha kézben kell keresni a választott lapot
 			if (gameState.GetCurrentListType() == CardListTarget.Hand)
 			{

@@ -100,7 +100,7 @@ namespace GameControll
             gameState.SetMessageStatus(true);
 
             //Adunk időt a játékosoknak, hogy elolvassák
-            yield return new WaitForSeconds(1.2f);
+            yield return new WaitForSeconds(GameSettings_Controller.textTempo);
 
             //Eltüntetjük az üzenetet
             client.HideMessage();
@@ -162,27 +162,19 @@ namespace GameControll
         }
 
         //Bizonyos kártya listát jelenít meg az aktív játékos számára, amiből választhat ezután
-        public IEnumerator DisplayCardList(CardListFilter filter = CardListFilter.None, int limit = 0, int key = -1)
+        public IEnumerator DisplayCardList(int currentKey, CardListFilter filter = CardListFilter.None, int limit = 0)
         {
 
             List<Card> cardList = new List<Card>();
             Data_Controller dataModule = gameState.GetDataModule();
-            int currentKey;
-            //Default eset: Az aktuális játékos kártyáit jelenítjük meg
-            if(key == -1)
-            {
-                currentKey = gameState.GetCurrentKey();
-            }
 
-            else {
-                currentKey = key;
-            }
             switch (gameState.GetCurrentListType())
             {
                 case CardListTarget.Hand: cardList = dataModule.GetPlayerWithKey(currentKey).GetCardsInHand(filter); break;
                 case CardListTarget.Winners: cardList = dataModule.GetPlayerWithKey(currentKey).GetWinners(); break;
                 case CardListTarget.Losers: cardList = dataModule.GetPlayerWithKey(currentKey).GetLosers(); break;
                 case CardListTarget.Deck: cardList = dataModule.GetPlayerWithKey(currentKey).GetDeck(limit); break;
+                case CardListTarget.Field: cardList = dataModule.GetCardsFromField(currentKey); break;
                 default: break;
             }
 
@@ -197,7 +189,8 @@ namespace GameControll
 
             else 
             {
-                Debug.Log("Üres lista");
+                gameState.SetSelectionAction(SkillEffectAction.None);
+                gameState.SetSwitchType(CardListTarget.None);
                 gameState.StartCoroutine(gameState.SkillFinished());
             }
 
