@@ -140,7 +140,13 @@ public class CardBehaviour : MonoBehaviour
     public void SetupCard(Card data, SkillState newState)
     {
         this.cardData = data;
-        this.skill = newState;
+        
+        //Ha nem lett már korábban meghatározva a lap státusza:
+        if(newState != SkillState.Predetermined)
+        {
+            this.skill = newState;  
+        }
+        
     }
 
     private void Reveal()

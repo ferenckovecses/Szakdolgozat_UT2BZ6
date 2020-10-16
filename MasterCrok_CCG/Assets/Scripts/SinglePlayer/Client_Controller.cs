@@ -9,15 +9,17 @@ namespace GameControll
 {
     public class Client_Controller
     {
-        GameState_Controller gameState;
-        Client client;
+        private GameState_Controller gameState;
+        private Client client;
+        private Input_Controller input;
 
         public Client_Controller(GameState_Controller controller_m, Client client_m)
         {
             this.gameState = controller_m;
             this.client = client_m;
+            this.input = gameState.GetInputModule();
 
-            client.SetReportAgent(gameState.GetInputModule());
+            client.SetReportAgent(input);
         }
 
         //Legenerálja a UI felületet
@@ -41,8 +43,8 @@ namespace GameControll
         public IEnumerator SummonCard(int playerKey, int cardHandIndex)
         {
             yield return new WaitForSeconds(GameSettings_Controller.drawTempo * UnityEngine.Random.Range(15, 30));
+
             client.GetFieldFromKey(playerKey).SummonCard(cardHandIndex);
-            client.GetFieldFromKey(playerKey).SetDraggableStatus(false);
             gameState.TurnFinished();
         }
 
@@ -108,9 +110,9 @@ namespace GameControll
         }
 
         //Megjeleníttet az UI felülettel egy listányi kártyát, amiből választani kell
-        public void CardChoice(List<Card> cardData, SkillEffectAction action, int key)
+        public void CardChoice(List<Card> cardData, SkillEffectAction action, int key, string msg)
         {
-            client.DisplayListOfCards(cardData, action, key);
+            client.DisplayListOfCards(cardData, action, key, msg);
         }
 
         //Frissíti a győztes és vesztes halmok képét és darabszámát
@@ -170,18 +172,42 @@ namespace GameControll
 
             switch (gameState.GetCurrentListType())
             {
-                case CardListTarget.Hand: cardList = dataModule.GetPlayerWithKey(currentKey).GetCardsInHand(filter); break;
+                case CardListTarget.Hand: cardList = dataModule.GetCardsFromHand(currentKey, filter); break;
                 case CardListTarget.Winners: cardList = dataModule.GetPlayerWithKey(currentKey).GetWinners(); break;
                 case CardListTarget.Losers: cardList = dataModule.GetPlayerWithKey(currentKey).GetLosers(); break;
                 case CardListTarget.Deck: cardList = dataModule.GetPlayerWithKey(currentKey).GetDeck(limit); break;
                 case CardListTarget.Field: cardList = dataModule.GetCardsFromField(currentKey); break;
                 default: break;
             }
+            SkillEffectAction currentAction = gameState.GetCurrentAction();
+
+            string msg = "";
+            switch (currentAction) 
+            {
+                case SkillEffectAction.Switch: 
+                    msg = "Válaszd ki, hogy melyik lappal cserélsz!"; 
+                    break;
+
+                case SkillEffectAction.Revive: 
+                    msg = "Válaszd ki, hogy melyik lapot éleszted fel!";
+                    break;
+
+                case SkillEffectAction.SwitchOpponentCard: 
+                    msg = "Válaszd ki, hogy melyik ellenséges lapot cseréled ki!";
+                    break;
+
+                case SkillEffectAction.SacrificeFromHand: 
+                    msg = "Válaszd ki, hogy melyik lapot áldozod fel az Erőért!";
+                    break;
+
+                default:
+                    break;
+            }
 
             //Ha van miből választani, akkor megjelenítjük a listát
             if(cardList.Count > 0)
             {
-                CardChoice(cardList, gameState.GetCurrentAction(), currentKey);
+                CardChoice(cardList, currentAction, currentKey, msg);
 
                 //Várunk a visszajelzésére
                 yield return gameState.WaitForEndOfAction();
@@ -189,6 +215,11 @@ namespace GameControll
 
             else 
             {
+                if(currentAction == SkillEffectAction.SacrificeDoppelganger)
+                {
+                    gameState.StartCoroutine(DisplayNotification("Nincs megfelelő lap a kezedben!"));
+                }
+
                 gameState.SetSelectionAction(SkillEffectAction.None);
                 gameState.SetSwitchType(CardListTarget.None);
                 gameState.StartCoroutine(gameState.SkillFinished());
@@ -204,13 +235,47 @@ namespace GameControll
         public void HandleRemainingCards(int playerKey)
         {
             client.GetFieldFromKey(playerKey).HandleRemainingCards();
-            gameState.GetInputModule().CheckIfFinished();
+            input.CheckIfFinished();
         }
 
         public void TossCard(int playerKey, int cardID)
         {
             client.GetFieldFromKey(playerKey).Toss(cardID);
         }
+
+        #region Client State Modifiers
+
+        public void StartOfRound()
+        {
+            client.SetClientStates(ClientStates.WaitingForTurn);
+        }
+
+        public void WaitForSummon()
+        {
+            client.SetClientStates(ClientStates.WaitingForSummon);
+        }
+
+        public void SummonEnded()
+        {
+            client.SetClientStates(ClientStates.SummonFinished);
+        }
+
+        public void WaitForSkill()
+        {
+            client.SetClientStates(ClientStates.WaitingForSkills);
+        }
+
+        public void SkillStateEnded()
+        {
+            client.SetClientStates(ClientStates.SkillStateFinished);
+        }
+
+        public void EndOfRound()
+        {
+            client.SetClientStates(ClientStates.RoundEnded);
+        }
+
+        #endregion
 
     }
 }

@@ -5,6 +5,9 @@ public enum MainGameStates
     RevealCards, QuickSkills, NormalSkills, CompareCards, CreateResult, 
     LateSkills, PutCardsAway, BlindMatch, AwardPlayers, EndGame
 };
+
+public enum ClientStates{ WaitingForTurn, WaitingForSummon, SummonFinished, WaitingForSkills, SkillStateFinished ,RoundEnded };
+
 //A három fő harctípus, amelyek alapján a harc folyik épp
 public enum CardStatType { NotDecided, Power, Intelligence, Reflex };
 
@@ -18,7 +21,7 @@ public enum DrawTarget { Hand, Field };
 public enum SkillChoises { Use, Store, Pass };
 
 //Kártya UI objektumok állapotai
-public enum SkillState{NotDecided,Store,Use,Pass};
+public enum SkillState{NotDecided,Store,Use,Pass,Predetermined};
 
 //Skillekhez kapcsolatos fázis változók
 public enum SkillActivationTime {Quick, Normal, Late, Hand};
@@ -31,13 +34,13 @@ public enum SkillEffectAction {
 	None, Store, Switch, Organise, SkillUse, Revive, BlindSwitch, 
 	StatChange, NegateEffects, GreatFight, SacrificeFromHand, StatBonus, 
 	TriggerBlindFight, MakeAttacker, Win, DrawCard, TossCard, Execute, CheckWinnerAmount,
-	SwitchOpponentCard, PickCardForSwitch};
+	SwitchOpponentCard, PickCardForSwitch, SacrificeDoppelganger};
 public enum MultipleSkillRule {None, And, Or};
 
 
 //Kártyalistázási paraméterek
 public enum CardListTarget { None, Deck, Hand, Winners, Losers, Field };
-public enum CardListFilter { None, NoMasterCrok };
+public enum CardListFilter { None, NoMasterCrok, EnemyDoppelganger };
 
 
 //Menü fázisok

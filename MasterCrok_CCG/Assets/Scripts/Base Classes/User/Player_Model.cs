@@ -271,33 +271,9 @@ public class Player_Model
 		return isThePlayer;
 	}
 
-	public List<Card> GetCardsInHand(CardListFilter filter = CardListFilter.None)
+	public List<Card> GetCardsInHand()
 	{
-
-		//Ha nem jeleníthetünk meg Master Crockot
-		if(filter == CardListFilter.NoMasterCrok)
-		{
-			List<Card> temp = new List<Card>();
-			foreach (Card card in cardsInHand) 
-			{
-				if(card.GetCardType() != CardType.Master_Crok)
-				{
-					temp.Add(card);
-				}
-			}
-			return temp;
-		}
-
-		//Ha nincs különösebb kitétel arra, hogy milyen lapokat adjunk vissza
-		else if(filter == CardListFilter.None)
-		{
-			return this.cardsInHand;
-		}
-
-		else 
-		{
-			return null;
-		}
+		return this.cardsInHand;
 	}
 
 	public int GetHandCount()

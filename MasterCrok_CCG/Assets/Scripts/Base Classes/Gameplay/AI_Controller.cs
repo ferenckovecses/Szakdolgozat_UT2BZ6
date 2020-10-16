@@ -16,14 +16,32 @@ namespace GameControll
         private int currentKey;
         private int cardCount;
         private CardStatType currentStat;
+        private Data_Controller data;
+        private Input_Controller input;
+        private Client_Controller client;
 
 
-        public AI_Controller(GameState_Controller cont)
+        public AI_Controller(GameState_Controller in_gameState)
         {
-            this.gameState = cont;
+            this.gameState = in_gameState;
             List<Card> cardsOnField = new List<Card>();
             List<List<Card>> opponentCards = new List<List<Card>>();
             List<Card> cardsInHand = new List<Card>();
+            this.data = gameState.GetDataModule();
+            this.client = gameState.GetClientModule();
+            this.input = gameState.GetInputModule();
+        }
+
+        public void SummonCard(int playerKey)
+        {
+            GetCurrentContext(playerKey);
+
+            //AI agy segítségét hívjuk a döntésben
+            int cardIndex = Bot_Behaviour.ChooseRightCard(this.cardsInHand, this.currentStat);
+
+            //Lerakatjuk a kártyát a UI-ban
+            gameState.StartCoroutine(client.SummonCard(currentKey, cardIndex));
+
         }
 
         //Dönt a képességeiről
@@ -31,29 +49,23 @@ namespace GameControll
         {
             GetCurrentContext(key);
 
-            Debug.Log("Before the loop");
             for(var id = 0; id < cardCount; id++)
             {
-                Debug.Log("Start of the loop");
-                if(gameState.GetClientModule().AskCardSkillStatus(currentKey, id) == SkillState.NotDecided)
+                if(client.AskCardSkillStatus(currentKey, id) == SkillState.NotDecided)
                 {
-                    Debug.Log("In the If");
                     //GetSkillChoiceFromAIBrain
-                    gameState.GetInputModule().ReportSkillStatusChange(SkillState.Use, id, false);
+                    input.ReportSkillStatusChange(SkillState.Use, id, false);
                     yield return gameState.WaitForEndOfSkill();
 
-                    gameState.GetClientModule().SetSkillState(currentKey, id, SkillState.Use);
+                    client.SetSkillState(currentKey, id, SkillState.Use);
                     
                 }
             }
             yield return new WaitForSeconds(0.01f);
 
-            Debug.Log("End of the loop");
-
             //Az AI végzett a körével a döntések után
-            gameState.GetDataModule().GetPlayerWithKey(currentKey).SetStatus(PlayerTurnStatus.Finished);
+            data.GetPlayerWithKey(currentKey).SetStatus(PlayerTurnStatus.Finished);
 
-            Debug.Log("Turn Finished");
             gameState.TurnFinished();
         }
 
@@ -69,14 +81,13 @@ namespace GameControll
             gameState.SetActiveStat(newStat);
 
             //Jelenítsük meg a változást
-            gameState.GetClientModule().RefreshStatDisplay();
+            client.RefreshStatDisplay();
         }
 
         //Kártyacsere vagy választás
         public IEnumerator CardSelectionEffect(int key, CardListFilter filter, int limit = 0, int otherPlayer = -1)
         {
             GetCurrentContext(key);
-            Data_Controller dataModule = gameState.GetDataModule();
 
             //Ha cseréről van szó
             if (gameState.GetCurrentAction() == SkillEffectAction.Switch)
@@ -86,8 +97,8 @@ namespace GameControll
                 //Ha kézből cserélünk
                 if (gameState.GetCurrentListType() == CardListTarget.Hand)
                 {
-                    handID = Bot_Behaviour.HandSwitch(dataModule.GetCardsFromHand(currentKey),
-                        dataModule.GetCardsFromField(currentKey), dataModule.GetOpponentsCard(currentKey), currentStat);
+                    handID = Bot_Behaviour.HandSwitch(data.GetCardsFromHand(currentKey),
+                        data.GetCardsFromField(currentKey), data.GetOpponentsCard(currentKey), currentStat);
 
                     gameState.GetSkillModule().SwitchCard(currentKey, gameState.GetActiveCardID(), handID);
                 }
@@ -97,8 +108,8 @@ namespace GameControll
             else if (gameState.GetCurrentAction() == SkillEffectAction.SkillUse)
             {
                 //Adatgyűjtés
-                Card ownCard = dataModule.GetCardFromField(currentKey, gameState.GetActiveCardID());
-                List<PlayerCardPairs> cards = dataModule.GetOtherLosers(currentKey);
+                Card ownCard = data.GetCardFromField(currentKey, gameState.GetActiveCardID());
+                List<PlayerCardPairs> cards = data.GetOtherLosers(currentKey);
                 int index = Bot_Behaviour.WhichSkillToUse(cards);
                 int otherKey = cards[index].playerKey;
                 Card otherCard = cards[index].card;
@@ -116,51 +127,46 @@ namespace GameControll
             //Ha felélesztésről van szó
             else if (gameState.GetCurrentAction() == SkillEffectAction.Revive)
             {
-                List<Card> cards = dataModule.GetLostList(currentKey);
+                List<Card> cards = data.GetLostList(currentKey);
                 int cardID = Bot_Behaviour.WhomToRevive(cards);
                 gameState.GetSkillModule().ReviveCard(cardID);
             }
 
             else if(gameState.GetCurrentAction() == SkillEffectAction.Execute)
              {
-                List<int> temp = dataModule.GetOtherKeyList(currentKey);
+                List<int> temp = data.GetOtherKeyList(currentKey);
                 int choosenKey = Bot_Behaviour.WhichPlayerToExecute(temp);
 
-                gameState.GetInputModule().ReportNameBoxTapping(choosenKey);
+                input.ReportNameBoxTapping(choosenKey);
                 yield return gameState.WaitForEndOfAction();
              }
 
              else if(gameState.GetCurrentAction() == SkillEffectAction.SwitchOpponentCard)
              {
-                Debug.Log("Switch Opponent Card");
-                List<int> temp = dataModule.GetOtherKeyList(currentKey);
+                List<int> temp = data.GetOtherKeyList(currentKey);
                 int choosenKey = Bot_Behaviour.WhichPlayerToExecute(temp);
 
-                gameState.GetInputModule().ReportNameBoxTapping(choosenKey);
+                input.ReportNameBoxTapping(choosenKey);
                 yield return gameState.WaitForEndOfAction();
              }
 
              else if(gameState.GetCurrentAction() == SkillEffectAction.PickCardForSwitch)
              {
-                Debug.Log("Pick Card To Switch");
-                List<Card> cardsOnField = dataModule.GetCardsFromField(otherPlayer);
+                List<Card> cardsOnField = data.GetCardsFromField(otherPlayer);
                 int choosenCardID = Bot_Behaviour.WhichCardToSwitch(cardsOnField);
-                int deckCount = (dataModule.GetDeckAmount(otherPlayer)) - 1;
+                int deckCount = (data.GetDeckAmount(otherPlayer)) - 1;
                 gameState.SetSwitchType(CardListTarget.Deck);
                 gameState.GetSkillModule().SwitchCard(otherPlayer, choosenCardID, deckCount);
-
-                Debug.Log("Key: " + otherPlayer.ToString());
-                Debug.Log("Deck: " + deckCount.ToString());
              }
 
              else if(gameState.GetCurrentAction() == SkillEffectAction.CheckWinnerAmount)
              {
-                List<int> keyList = dataModule.GetOtherKeyList(currentKey);
-                List<int> winAmounts = dataModule.GetOthersWinAmount(currentKey);
+                List<int> keyList = data.GetOtherKeyList(currentKey);
+                List<int> winAmounts = data.GetOthersWinAmount(currentKey);
 
                 int playerID = Bot_Behaviour.WhichPlayerToChoose(winAmounts);
 
-                gameState.GetInputModule().ReportNameBoxTapping(keyList[playerID]);
+                input.ReportNameBoxTapping(keyList[playerID]);
              }
 
             //Ha kézből eldobásról van szó
@@ -170,12 +176,34 @@ namespace GameControll
                 if(cardsInHand.Count > 1)
                 {
                     int cardID = Bot_Behaviour.WhomToToss(cardsInHand);
-                    gameState.GetInputModule().HandleCardSelection(cardID, currentKey);
+                    input.HandleCardSelection(cardID, currentKey);
                 }
 
                 else 
                 {
                     Debug.Log("Nincs mit eldobni");
+                    gameState.ActionFinished();
+                }
+            }
+
+            else if(gameState.GetCurrentAction() == SkillEffectAction.SacrificeFromHand)
+            {
+                int cardID = Bot_Behaviour.WhomToToss(cardsInHand);
+                input.HandleCardSelection(cardID, currentKey);
+            }
+
+            else if(gameState.GetCurrentAction() == SkillEffectAction.SacrificeDoppelganger)
+            {
+                List<Card> cardList = data.GetCardsFromHand(currentKey, filter);
+                if(cardList.Count > 0)
+                {
+                    int cardID = Bot_Behaviour.WhomToToss(cardList);
+                    input.HandleCardSelection(cardID, currentKey);
+                }
+
+                else 
+                {
+                    Debug.Log("Nincs megfelelő lap a kézben");
                     gameState.ActionFinished();
                 }
             }
@@ -186,24 +214,12 @@ namespace GameControll
         //Lekéri az aktuális számára is elérhető adatokat
         private void GetCurrentContext(int key)
         {
-            //Default eset: Aktuális játékos lekérdezése
-            if(key == -1)
-            {
-                //Aktuális adatok lekérése
-                this.currentKey = gameState.GetCurrentKey();
-            }
-
-            //Megadott kulcsú játékos lekérdezése
-            else 
-            {
-                this.currentKey = key;
-            }
-
-            this.cardsOnField = gameState.GetDataModule().GetPlayerWithKey(currentKey).GetCardsOnField();
+            this.currentKey = key;
+            this.cardsOnField = data.GetPlayerWithKey(currentKey).GetCardsOnField();
             this.cardCount = cardsOnField.Count;
-            this.opponentCards = gameState.GetDataModule().GetOpponentsCard(currentKey);
-            this.cardsInHand = gameState.GetDataModule().GetPlayerWithKey(currentKey).GetCardsInHand();
-            this.winAmount = gameState.GetDataModule().GetWinnerAmount(currentKey);
+            this.opponentCards = data.GetOpponentsCard(currentKey);
+            this.cardsInHand = data.GetPlayerWithKey(currentKey).GetCardsInHand();
+            this.winAmount = data.GetWinnerAmount(currentKey);
             this.currentStat = gameState.GetActiveStat();
         }
     }

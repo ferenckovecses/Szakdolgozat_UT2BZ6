@@ -269,7 +269,7 @@ namespace ClientControll
             RemoveSpecificCardFromHand(card);
             this.cardsOnField.Add(card);
 
-            //Itt még ad egy jelzést a kliens felé, amit ő továbbít a Game Controllernek
+            //Jelezzük a Vezérlők felé, hogy idézés történt és módosítsák a data model-t
             client.ReportSummon(handIndex, this.positionID);
         }
 
@@ -285,6 +285,9 @@ namespace ClientControll
             //A gameobject listákat frissítjük
             RemoveSpecificCardFromHand(card);
             this.cardsOnField.Add(card);
+
+            //Jelezzük a Vezérlők felé, hogy idézés történt és módosítsák a data model-t
+            client.ReportSummon(handIndex, this.positionID);
         }
 
         //Vak idézés: Nem kézben lévő lapot idézünk meg
@@ -497,16 +500,16 @@ namespace ClientControll
 
         public void SwitchHandFromField(Card fieldData, int fieldId, Card handData, int handId, bool visibility)
         {
-            cardsOnField[fieldId].GetComponent<CardBehaviour>().SetupCard(handData, SkillState.Pass);
+            cardsOnField[fieldId].GetComponent<CardBehaviour>().SetupCard(handData, SkillState.Predetermined);
             cardsOnField[fieldId].GetComponent<CardBehaviour>().SetVisibility(true);
 
-            cardsInHand[handId].GetComponent<CardBehaviour>().SetupCard(fieldData, SkillState.NotDecided);
+            cardsInHand[handId].GetComponent<CardBehaviour>().SetupCard(fieldData, SkillState.Predetermined);
             cardsInHand[handId].GetComponent<CardBehaviour>().SetVisibility(visibility);
         }
 
         public void SwitchDeckFromField( int fieldId, Card deckData)
         {
-            cardsOnField[fieldId].GetComponent<CardBehaviour>().SetupCard(deckData, SkillState.NotDecided);
+            cardsOnField[fieldId].GetComponent<CardBehaviour>().SetupCard(deckData, SkillState.Predetermined);
             cardsOnField[fieldId].GetComponent<CardBehaviour>().SetVisibility(true);
         }
 

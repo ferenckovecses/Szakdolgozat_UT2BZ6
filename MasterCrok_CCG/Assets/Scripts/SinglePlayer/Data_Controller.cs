@@ -208,6 +208,24 @@ namespace GameControll
             return activeCardsOnTheField;
         }
 
+        public List<int> GetOtherCardsID(int currentPlayer)
+        {
+            List<int> temp = new List<int>();
+
+            foreach (int key in GetKeyList())
+            {
+                if (key != currentPlayer)
+                {
+                    foreach (Card card in GetCardsFromField(key)) 
+                    {
+                        temp.Add(card.GetCardID());
+                    }
+                }
+            }
+
+            return temp;
+        }
+
         public List<Card> GetWinnerList(int playerKey)
         {
             return this.playerDictionary[playerKey].GetWinners();
@@ -271,14 +289,48 @@ namespace GameControll
             return this.playerDictionary[playerKey].GetCardFromDeck(cardID);
         }
 
-        public List<Card> GetCardsFromHand(int playerKey)
+        public List<Card> GetCardsFromHand(int playerKey, CardListFilter filter = CardListFilter.None)
         {
-            return this.playerDictionary[playerKey].GetCardsInHand();
+            List<Card> cardsInHand = this.playerDictionary[playerKey].GetCardsInHand();
+            List<Card> temp = new List<Card>();
+
+            foreach (Card card in cardsInHand) 
+            {
+                temp.Add(card);
+            }
+
+            if(filter != CardListFilter.None)
+            {
+                temp = GetFilteredList(temp, playerKey, filter);
+            }
+
+            return temp;
+
+            
         }
 
         public List<Card> GetCardsFromField(int playerKey)
         {
             return this.playerDictionary[playerKey].GetCardsOnField();
+        }
+
+        private List<Card> GetFilteredList(List<Card> cardlist, int playerKey, CardListFilter filter)
+        {
+
+            //Ha nem jeleníthetünk meg Master Crockot
+            if(filter == CardListFilter.NoMasterCrok)
+            {
+                cardlist.RemoveAll(card => card.GetCardType() == CardType.Master_Crok);
+            }
+
+            //Ha nincs különösebb kitétel arra, hogy milyen lapokat adjunk vissza
+            else if(filter == CardListFilter.EnemyDoppelganger)
+            {
+                List<int> opponentsID = GetOtherCardsID(playerKey);
+                cardlist.RemoveAll(card => !(opponentsID.Contains(card.GetCardID()) ));
+            }
+
+            return cardlist;
         }
 
         public int GetDeckAmount(int playerKey)

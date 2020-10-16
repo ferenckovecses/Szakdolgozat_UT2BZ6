@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 
 namespace ClientControll
@@ -11,13 +12,15 @@ namespace ClientControll
 		public GameObject displayField;
 		public Button cardPrefab;
 		public Button backButton;
+		public TMP_Text instructionText;
 
 		private Client client;
 
-		public void SetupList(Client client_in, List<Card> cardList, SkillEffectAction action, int key)
+		public void SetupList(Client client_in, List<Card> cardList, SkillEffectAction action, int key, string msg)
 		{
 			this.client = client_in;
-
+			this.instructionText.text = msg;
+			
 			foreach (Card card in cardList)
 			{
 				Button temp = Instantiate(cardPrefab, displayField.transform.position, Quaternion.identity, displayField.transform);
@@ -29,7 +32,9 @@ namespace ClientControll
 					|| action == SkillEffectAction.Revive
 					|| action == SkillEffectAction.TossCard
 					|| action == SkillEffectAction.SkillUse
-					|| action == SkillEffectAction.SwitchOpponentCard)
+					|| action == SkillEffectAction.SwitchOpponentCard
+					|| action == SkillEffectAction.SacrificeFromHand
+					|| action == SkillEffectAction.SacrificeDoppelganger)
 				{
 					temp.onClick.AddListener(delegate { client.ReportCardSelection(cardList.IndexOf(card), key); });
 				}

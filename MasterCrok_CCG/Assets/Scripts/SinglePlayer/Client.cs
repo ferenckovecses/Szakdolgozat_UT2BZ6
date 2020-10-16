@@ -42,11 +42,12 @@ namespace ClientControll
         private GameObject statPanel;
         private GameObject messageText;
         private GameObject cardList;
+        private ClientStates currentState;
 
         //Létrehozáskor fut le
         private void Awake()
         {
-            endTurnButton.gameObject.SetActive(false);
+            SetTurnButtonStatus(false);
             playerFields = new Dictionary<int, GameObject>();
             isMessageOnScreen = false;
             isDetailsShowed = false;
@@ -61,6 +62,7 @@ namespace ClientControll
         {
             inputModule.ReportSummon(handIndex);
         }
+
         //Jelez a vezérlőnek a felhasználó döntéséről a megadott kártyát illetően, Gombok használják
         public void ReportSkillDecision(SkillState state, int key, int cardFieldPosition, int cardTypeID)
         {
@@ -205,6 +207,12 @@ namespace ClientControll
             endTurnButton.gameObject.SetActive(newValue);
         }
 
+        public void SetClientStates(ClientStates newState)
+        {
+            this.currentState = newState;
+        }
+
+
         //Kilépés
         public void Exit()
         {
@@ -223,6 +231,7 @@ namespace ClientControll
         }
 
         #region Player Specific Methods
+
         //A Harctípus választó ablak gombjainak függvénye
         public void ChooseStatButton(CardStatType stat)
         {
@@ -314,10 +323,10 @@ namespace ClientControll
             statPanel.GetComponent<CardStatSelectorDisplay>().SetupPanel(this);
         }
 
-        public void DisplayListOfCards(List<Card> cards, SkillEffectAction action, int key)
+        public void DisplayListOfCards(List<Card> cards, SkillEffectAction action, int key, string msg)
         {
             cardList = Instantiate(cardListPrefab, ingamePanelCanvas.transform.position, Quaternion.identity, ingamePanelCanvas.transform);
-            cardList.GetComponent<CardListDisplay>().SetupList(this, cards, action, key);
+            cardList.GetComponent<CardListDisplay>().SetupList(this, cards, action, key, msg);
             isCardListActive = true;
         }
 
