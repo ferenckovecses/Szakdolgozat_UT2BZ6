@@ -200,6 +200,10 @@ namespace GameControll
                     msg = "Válaszd ki, hogy melyik lapot áldozod fel az Erőért!";
                     break;
 
+                case SkillEffectAction.Reorganize: 
+                    msg = "Változtasd meg a sorrendjét a kártyáidnak!";
+                    break;
+
                 default:
                     break;
             }

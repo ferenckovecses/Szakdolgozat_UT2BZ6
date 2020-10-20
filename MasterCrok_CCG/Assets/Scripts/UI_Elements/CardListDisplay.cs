@@ -16,7 +16,7 @@ namespace ClientControll
 
 		private Client client;
 
-		public void SetupList(Client client_in, List<Card> cardList, SkillEffectAction action, int key, string msg)
+		public void SetupList(Client client_in, List<Card> cardList, SkillEffectAction action, string msg)
 		{
 			this.client = client_in;
 			this.instructionText.text = msg;
@@ -36,7 +36,7 @@ namespace ClientControll
 					|| action == SkillEffectAction.SacrificeFromHand
 					|| action == SkillEffectAction.SacrificeDoppelganger)
 				{
-					temp.onClick.AddListener(delegate { client.ReportCardSelection(cardList.IndexOf(card), key); });
+					temp.onClick.AddListener(delegate { client.ReportCardSelection(cardList.IndexOf(card)); });
 				}
 			}
 

@@ -19,7 +19,7 @@ MonoBehaviour:
   skillDescription: "Azonnal hat\xE1stalan\xEDtja a [D\xE9mon] Crokok k\xE9pess\xE9geit,
     vagy h\xFAzhatsz egy lapot."
   skillProperties:
-  - activationTime: 1
+  - activationTime: 0
     skillRequirement: 7
     skillTarget: 2
     effectAction: 8

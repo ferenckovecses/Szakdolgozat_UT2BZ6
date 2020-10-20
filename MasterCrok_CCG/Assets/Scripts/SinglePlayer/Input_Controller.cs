@@ -289,6 +289,15 @@ namespace GameControll
             }
         }
 
+        public void HandleChangeOfCardOrder(List<Card> cards, int playerKey)
+        {
+            //Ha az akció tartalékolás volt
+            if (gameState.GetCurrentAction() == SkillEffectAction.Reorganize)
+            {
+                data.ChangeCardOrderInDeck(cards, playerKey, 0);
+            }
+        }
+
         public void ReportActionEnd()
         {
             gameState.ActionFinished();

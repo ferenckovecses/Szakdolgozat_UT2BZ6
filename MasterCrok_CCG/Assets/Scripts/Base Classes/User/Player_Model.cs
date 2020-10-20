@@ -362,8 +362,7 @@ public class Player_Model
 
 	public List<Card> GetDeck(int limit)
 	{
-		//Ha nincs limit az egész paklit visszaadjuk
-		if(limit == 0)
+		if(limit == 0 || limit > GetDeckSize())
 		{
 			return player.GetActiveDeck().GetDeck();
 		}

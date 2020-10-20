@@ -322,6 +322,7 @@ namespace GameControll
                     //Ha a megadott játékosnál van a mezőn gyors skill és még eldöntetlen/felhasználható
                     if(card.HasAQuickSkill() && clientModule.AskCardSkillStatus(key, position) == SkillState.NotDecided)
                     {
+                        currentActiveCard = position;
                         Use(position);
                         yield return WaitForEndOfSkill();
                     }
@@ -485,6 +486,12 @@ namespace GameControll
                 if (key == lastWinnerKey && !blindMatch)
                 {
                     dataModule.GetPlayerWithKey(key).SetResult(PlayerTurnResult.Win);
+                }
+
+                //Ha vakharc lesz, akkor döntetlen volt az eredmény
+                else if(blindMatch)
+                {
+                    dataModule.GetPlayerWithKey(key).SetResult(PlayerTurnResult.Draw);
                 }
 
                 //Ellenkező esetben vesztes
@@ -731,7 +738,7 @@ namespace GameControll
 
 
         //Felhúz megadott számú lapot a megadott játékosnak
-        private IEnumerator DrawCardsUp(int key, int amount = 1,  DrawTarget target = DrawTarget.Hand, DrawType drawType = DrawType.Normal, SkillState newState = SkillState.NotDecided)
+        public IEnumerator DrawCardsUp(int key, int amount = 1,  DrawTarget target = DrawTarget.Hand, DrawType drawType = DrawType.Normal, SkillState newState = SkillState.NotDecided)
         {
             for (var i = 0; i < amount; i++)
             {
@@ -834,6 +841,10 @@ namespace GameControll
                 }
             }
 
+            if(blindMatch)
+            {
+                blindMatch = false;
+            }
             lastWinnerKey = selectedKey;
             this.instantWin = true;
             TurnFinished();

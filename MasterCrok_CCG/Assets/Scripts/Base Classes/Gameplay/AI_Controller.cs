@@ -208,6 +208,13 @@ namespace GameControll
                 }
             }
 
+            else if(gameState.GetCurrentAction() == SkillEffectAction.Reorganize)
+            {
+                List<Card> cardsInDeck = data.GetPlayerWithKey(currentKey).GetDeck(limit);
+                cardsInDeck = Bot_Behaviour.OrganiseCardsInDeck(cardsInDeck, data.GetRNG());
+                input.HandleChangeOfCardOrder(cardsInDeck, currentKey);
+            }
+
             gameState.StartCoroutine(gameState.SkillFinished());
         }
 

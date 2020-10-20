@@ -37,8 +37,11 @@ namespace GameControll
 				case 14: Rampage(); break;
 				case 15: TheresAnother(); break;
 				case 16: ShieldFight(); break;
+				case 17: Scouting(); break;
 				case 18: TigerClaw(); break;
 				case 19: Arrest(); break;
+				case 20: Preach(); break;
+				case 21: GunFight(); break;
 
 				//Bármilyen hiba esetén passzolunk, hogy ne akadjon meg a játék
 				default: this.gameState.Pass(); break;
@@ -507,6 +510,14 @@ namespace GameControll
 			gameState.StartCoroutine(gameState.SkillFinished());
 		}
 
+		private void Scouting()
+		{
+			gameState.SetSelectionAction(SkillEffectAction.Reorganize);
+			gameState.SetSwitchType(CardListTarget.Deck);
+
+			MakePlayerChooseCard(CardListFilter.None, 6);
+		}
+
 		//A kézből ledobott kártya Erejét használhatod
 		private void TigerClaw()
 		{
@@ -522,6 +533,101 @@ namespace GameControll
 			gameState.SetSwitchType(CardListTarget.Hand);
 
 			MakePlayerChooseCard(CardListFilter.EnemyDoppelganger);
+		}
+
+		private void Preach()
+		{
+			int currentKey = gameState.GetCurrentKey();
+			int positionID = gameState.GetActiveCardID();
+			client.SetSkillState(currentKey, positionID, SkillState.Use);
+
+			bool purified = false;
+			foreach (int key in data.GetKeyList()) 
+			{
+				if(key != currentKey)
+				{
+					int position = 0;
+					foreach (Card card in data.GetCardsFromField(key)) 
+					{
+						if(card.GetCardType() == CardType.Démon)
+						{
+							client.SetSkillState(key, position, SkillState.Pass);
+							purified = true;
+						}
+
+						position += 1;
+					}
+				}
+			}
+
+			if(purified)
+			{
+				gameState.StartCoroutine(client.DisplayNotification("A Démonok képességei blokkolva!"));
+			}
+
+			else 
+			{
+				gameState.StartCoroutine(gameState.DrawCardsUp(currentKey));
+			}
+
+			gameState.StartCoroutine(gameState.SkillFinished());
+		}
+
+		private void GunFight()
+		{
+			int currentKey = gameState.GetCurrentKey();
+			gameState.AddKeyToLateSkills(currentKey);
+			int cardPosition = gameState.GetActiveCardID();
+			Card card = data.GetCardFromField(currentKey, cardPosition);
+
+			gameState.StartCoroutine(GunFight_LateEffect(card, currentKey));
+
+			gameState.StartCoroutine(gameState.SkillFinished());
+		}
+
+		private IEnumerator GunFight_LateEffect(Card target, int playerKey)
+		{
+			Debug.Log("rutin started");
+			while(true)
+			{
+				//Csak a late skill fázisban fejti ki hatását: Nyerünk, ha döntetlen
+				if(gameState.GetGameState() == MainGameStates.LateSkills && gameState.GetCurrentKey() == playerKey)
+				{
+
+					Debug.Log("sajt");
+					if(data.GetPlayerWithKey(playerKey).GetResult() == PlayerTurnResult.Draw)
+					{
+						Debug.Log("alma");
+						foreach (int key in data.GetKeyList()) 
+						{
+							if(key == playerKey)
+							{
+								data.GetPlayerWithKey(key).SetResult(PlayerTurnResult.Win);
+							}
+
+							else
+							{
+								data.GetPlayerWithKey(key).SetResult(PlayerTurnResult.Lose);
+							}
+						}
+
+						gameState.SetBlindMatchState(false);
+						Debug.Log("Player with Gun Fight effect: " + playerKey.ToString());
+						break;
+					}
+
+					else
+					{
+						Debug.Log("break");
+						break;	
+					}
+				}
+
+				else 
+				{
+					yield return null;
+				}
+			}
 		}
 
         #region Skill Actions

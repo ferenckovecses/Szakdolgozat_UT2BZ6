@@ -206,6 +206,21 @@ public static class Bot_Behaviour
 		return UnityEngine.Random.Range(0, cards.Count - 1);
 	}
 
+	public static List<Card> OrganiseCardsInDeck(List<Card> cards, System.Random rng)
+	{
+		int n = cards.Count;
+        while (n > 1)
+        {
+            n--;
+            int k = rng.Next(n + 1);
+            Card tmp = cards[k];
+            cards[k] = cards[n];
+            cards[n] = tmp;
+        }
+
+        return cards;
+	}
+
 
 
 }

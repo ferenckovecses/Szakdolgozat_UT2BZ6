@@ -123,6 +123,17 @@ namespace GameControll
             playerDictionary[playerKey].TossCard(cardID);
         }
 
+        public void ChangeCardOrderInDeck(List<Card> cards, int playerKey, int startIndex)
+        {
+            List<Card> deck = playerDictionary[playerKey].GetDeck(0);
+            int loopAmount = cards.Count-1;
+            for(var i = startIndex + loopAmount; i >= startIndex ; i-- )
+            {
+                deck.RemoveAt(i);
+                deck.Insert(i, cards[i]);
+            }
+        }
+
         #endregion
 
 
@@ -416,6 +427,11 @@ namespace GameControll
 
             //Ha végignéztünk mindenkit és nem találtunk magasabbat: true
             return true;
+        }
+
+        public System.Random GetRNG()
+        {
+            return this.rng;
         }
 
         #endregion

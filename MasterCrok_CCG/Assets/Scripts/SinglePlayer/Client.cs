@@ -19,6 +19,7 @@ namespace ClientControll
         public GameObject prefabMessageText;
         public TMP_Text deckSize;
         public GameObject cardListPrefab;
+        public GameObject cardOrganizePrefab;
 
         [Header("Referenciák")]
         public List<GameObject> positions;
@@ -43,6 +44,7 @@ namespace ClientControll
         private GameObject messageText;
         private GameObject cardList;
         private ClientStates currentState;
+        private int keyOfTarget;
 
         //Létrehozáskor fut le
         private void Awake()
@@ -77,11 +79,11 @@ namespace ClientControll
             inputModule.ReportExit();
         }
 
-        public void ReportCardSelection(int id, int key)
+        public void ReportCardSelection(int id)
         {
             Destroy(cardList);
             isCardListActive = false;
-            inputModule.HandleCardSelection(id, key);
+            inputModule.HandleCardSelection(id, keyOfTarget);
         }
 
         public void ReportSelectionCancel()
@@ -113,6 +115,13 @@ namespace ClientControll
         public void ReportEndOfAction()
         {
             inputModule.ReportActionEnd();
+        }
+
+        public void ReportOrderChange(List<Card> cards)
+        {
+            Destroy(cardList);
+            isCardListActive = false;
+            inputModule.HandleChangeOfCardOrder(cards, keyOfTarget);
         }
 
         #endregion
@@ -325,8 +334,28 @@ namespace ClientControll
 
         public void DisplayListOfCards(List<Card> cards, SkillEffectAction action, int key, string msg)
         {
-            cardList = Instantiate(cardListPrefab, ingamePanelCanvas.transform.position, Quaternion.identity, ingamePanelCanvas.transform);
-            cardList.GetComponent<CardListDisplay>().SetupList(this, cards, action, key, msg);
+            keyOfTarget = key;
+
+            //Ha sorrend változtatásról van szó
+            if(action == SkillEffectAction.Reorganize)
+            {
+                
+                cardList = Instantiate(cardOrganizePrefab, ingamePanelCanvas.transform.position, Quaternion.identity, ingamePanelCanvas.transform);
+                cardList.GetComponent<CardOrganizeDisplay>().SetupScreen(this, msg);
+                foreach (Card card in cards) 
+                {
+                    cardList.GetComponent<CardOrganizeDisplay>().AddCard(card);
+                }
+                
+            }
+
+            //Ha egy lap kiválasztásáról van szó
+            else 
+            {
+                cardList = Instantiate(cardListPrefab, ingamePanelCanvas.transform.position, Quaternion.identity, ingamePanelCanvas.transform);
+                cardList.GetComponent<CardListDisplay>().SetupList(this, cards, action, msg);
+            }
+
             isCardListActive = true;
         }
 

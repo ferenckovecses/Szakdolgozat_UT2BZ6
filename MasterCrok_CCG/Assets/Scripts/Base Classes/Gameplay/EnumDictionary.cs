@@ -34,7 +34,7 @@ public enum SkillEffectAction {
 	None, Store, Switch, Organise, SkillUse, Revive, BlindSwitch, 
 	StatChange, NegateEffects, GreatFight, SacrificeFromHand, StatBonus, 
 	TriggerBlindFight, MakeAttacker, Win, DrawCard, TossCard, Execute, CheckWinnerAmount,
-	SwitchOpponentCard, PickCardForSwitch, SacrificeDoppelganger};
+	SwitchOpponentCard, PickCardForSwitch, SacrificeDoppelganger, Reorganize};
 public enum MultipleSkillRule {None, And, Or};
 
 
@@ -51,4 +51,7 @@ public enum DexState { List, Detail };
 public enum PlayerTurnStatus{ChooseCard, ChooseSkill, Finished};
 public enum PlayerTurnResult{Win, Lose, Draw};
 public enum PlayerTurnRole{Attacker, Defender};
+
+public enum CardType {Master_Crok, Távol_Kelet, Angyal, Démon, Kalandor, Katona, 
+		Sportoló, Villám, Mókás, Vadnyugat, Rendfenntartás};
 

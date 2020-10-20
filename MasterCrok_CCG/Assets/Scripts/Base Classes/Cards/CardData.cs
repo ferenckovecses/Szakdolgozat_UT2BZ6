@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum CardType {Master_Crok, Távol_Kelet, Angyal, Démon, Kalandor, Katona, 
-		Sportoló, Villám, Mókás, Vadnyugat, Rendfenntartás};
-
 [CreateAssetMenu(fileName = "New Card", menuName = "Cards")]
 public class CardData : ScriptableObject
 {
