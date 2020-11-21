@@ -3,14 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-
-public enum DeckStatus {NotEnoughCard, TooManyCards, Verified};
-
 [System.Serializable]
 public class Deck
 {
 	private List<Card> cards;
-	private DeckStatus deckStatus;
 
 	public Deck()
 	{
@@ -44,29 +40,6 @@ public class Deck
 		cards[indexB] = tmp;
 	}
 
-	//Változtatások esetén fut majd le az aktív paklin
-	//Ellenőrzi, hogy a pakli a szabályoknak megfelelő-e.
-	public bool VerifyDeckSize()
-	{
-		if(cards.Count < 10)
-		{
-			deckStatus = DeckStatus.NotEnoughCard;
-			return false;
-		}
-
-		else if(cards.Count > 60)
-		{
-			deckStatus = DeckStatus.TooManyCards;
-			return false;
-		}
-
-		else 
-		{
-			deckStatus = DeckStatus.Verified;
-			return true;	
-		}
-	}
-
 	//Fisher-Yates keverés implementálása
 	public void ShuffleDeck(System.Random rng)
 	{
@@ -76,17 +49,6 @@ public class Deck
 	        int k = rng.Next(n + 1); 
 	        SwapCards(k,n); 
     	}  
-	}
-
-	//Visszaadja, hogy hány ilyen kártya található a pakliban
-	public int DuplicateCounter(CardData cardToCompare)
-	{
-		return (int)cards.Count(p => p.GetCardID() == cardToCompare.GetCardID());
-	}
-
-	public DeckStatus GetDeckStatus()
-	{
-		return this.deckStatus;
 	}
 
 	public int GetDeckSize()

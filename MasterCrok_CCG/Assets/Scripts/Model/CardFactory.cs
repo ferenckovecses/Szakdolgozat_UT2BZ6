@@ -8,22 +8,7 @@ namespace GameControll
 	[System.Serializable]
 	public class CardFactory : MonoBehaviour
 	{
-		public List<CardData> cardDataList;
-
-		public int GetCardCount()
-		{
-			return this.cardDataList.Count;
-		}
-
-		public Card GetCardByID(int id)
-		{
-			return new Card(cardDataList[id]);
-		}
-
-		public Sprite GetImageByID(int id)
-		{
-			return this.cardDataList[id].GetArt();
-		}
+		public CardDatabase cardDataList;
 
 		//Egy első szériás kezdőpaklit ad az új játékosnak
 		public Deck GetStarterDeck()
@@ -32,18 +17,7 @@ namespace GameControll
 
 			for (var i = 0; i < 21; i++)
 			{
-				/*
-				if(i <= 10)
-				{
-					newDeck.AddCard(new Card(cardDataList[17]));
-				}
-
-				else {
-					newDeck.AddCard(new Card(cardDataList[i]));
-				}
-				*/
-
-				newDeck.AddCard(new Card(cardDataList[i]));
+				newDeck.AddCard(cardDataList.GetCardByID(i));
 			}
 
 			return newDeck;
@@ -56,25 +30,10 @@ namespace GameControll
 			for (var i = 0; i < cardIdentifiers.Count; i++)
 			{
 				int cardIndex = cardIdentifiers[i] - 1;
-				newDeck.AddCard(new Card(cardDataList[cardIndex]));
+				newDeck.AddCard(cardDataList.GetCardByID(cardIndex));
 			}
 
 			return newDeck;
-		}
-
-		public List<CardData> GetAllCard()
-		{
-			return this.cardDataList;
-		}
-
-		public List<Sprite> GetAllArt()
-		{
-			List<Sprite> imageList = new List<Sprite>();
-			foreach (CardData card in cardDataList)
-			{
-				imageList.Add(card.GetArt());
-			}
-			return imageList;
 		}
 
 

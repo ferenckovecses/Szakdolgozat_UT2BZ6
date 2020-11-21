@@ -54,3 +54,5 @@ public enum PlayerTurnStatus{ChooseCard, ChooseSkill, Finished};
 public enum PlayerTurnResult{Win, Lose, Draw};
 public enum PlayerTurnRole{Attacker, Defender};
 
+public enum DeckStatus{Verified, Illegal};
+

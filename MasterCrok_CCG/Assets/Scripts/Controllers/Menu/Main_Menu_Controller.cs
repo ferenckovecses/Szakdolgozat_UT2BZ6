@@ -16,13 +16,15 @@ namespace ClientSide
         [Header("UI Elem Referenciák")]
         public GameObject displayPanel;
         public TMP_Text titleText;
-        public GameObject profilePanel;
         public GameObject mainCanvas;
         public TMP_Text profileStatus;
 
         [Header("Prefab Elemek")]
         public Button buttonPrefab;
         public GameObject profileSettingsPrefab;
+        public List<MainMenuButtonData> mainButtonData;
+        public List<MainMenuButtonData> gameModeButtonData;
+        public List<MainMenuButtonData> singleplayerButtonData;
 
         //Adattárolók
         private List<Button> menuButtons;
@@ -55,7 +57,6 @@ namespace ClientSide
                     case MenuState.MainMenu: SetupMainMenu(); break;
                     case MenuState.GameTypeSelect: SetupGameSelect(); break;
                     case MenuState.PlayerNumberSelect: SetupPlayerNumberSelect(); break;
-                    case MenuState.MultiplayerSettings: SetupMultiplayerMode(); break;
                     default: break;
                 }
 
@@ -74,22 +75,19 @@ namespace ClientSide
         void SetupMainMenu()
         {
             titleText.text = "Master Crok";
-            var titles = new List<string> {"Aréna", "Bolt", "Pakli", "Szabályok", "Játék Infó", "Kilépés"};
             var functions = new List<Action> {StartNewGame, OpenShop, OrganiseDeck, Rules, Credits, ExitGame};
-            CreateButtons(titles, functions); 
+            CreateButtons(mainButtonData ,functions); 
         }
 
         void SetupGameSelect()
         {
             titleText.text = "Válassz játékmódot!";
-            var titles = new List<string> {"Egyjátékos mód", "Többjátékos mód", "Vissza"};
             var functions = new List<Action> {SinglePlayer, Multiplayer, Back};
-            CreateButtons(titles, functions); 
+            CreateButtons(gameModeButtonData ,functions); 
         }
 
         void SetupPlayerNumberSelect()
         {
-            var titles = new List<string> {"1v1", "1v2", "1v3", "Vissza"};
             var functions = new List<Action>();
             for(var i = 0; i < 3; i++)
             {
@@ -97,19 +95,7 @@ namespace ClientSide
                 functions.Add(new Action(() => StartSinglePlayer(temp)));
             }
             functions.Add(new Action(() => Back()));
-            CreateButtons(titles, functions); 
-        }
-
-        void SetupMultiplayerMode()
-        {
-            var titles = new List<string> {"Hosztolás", "Csatlakozás", "Vissza"};
-            var functions = new List<Action>();
-            for(var i = 0; i < titles.Count-1; i++)
-            {
-                functions.Add(new Action(() => StartMultiplayer()));
-            }
-            functions.Add(new Action(() => Back()));
-            CreateButtons(titles, functions); 
+            CreateButtons(singleplayerButtonData ,functions); 
         }
 
         public void ExitGame()
@@ -125,22 +111,22 @@ namespace ClientSide
 
         public void OpenShop()
         {
-            Debug.Log("Majd...");
+            Notification_Controller.DisplayNotification("Dolgozok rajta, eskü!");
         }
 
         public void Rules()
         {
-            Debug.Log("TODO");
+            SceneManager.LoadScene("Rules");
         }
 
         public void Credits()
         {
-            Debug.Log("TODO");
+            SceneManager.LoadScene("Credits");
         }
 
         public void OrganiseDeck()
         {
-            Debug.Log("TODO");
+            SceneManager.LoadScene("DeckOrganise");
         }
 
         public void SinglePlayer()
@@ -151,8 +137,8 @@ namespace ClientSide
 
         public void Multiplayer()
         {
-            currentState = MenuState.MultiplayerSettings;
-            needsUpdate = true;
+            //SceneManager.LoadScene("Multiplayer");
+            Notification_Controller.DisplayNotification("Dolgozok rajta, eskü!");
         }
 
         public void Back()
@@ -173,14 +159,9 @@ namespace ClientSide
             SceneManager.LoadScene("SinglePlayer_Battle");
         }
 
-        public void StartMultiplayer()
+        void CreateButtons(List<MainMenuButtonData> cardData, List<Action> functions)
         {
-            Debug.Log("Multiplayer coming soon...");
-        }
-
-        void CreateButtons(List<string> titles, List<Action> functions)
-        {
-            if(titles.Count != functions.Count)
+            if(cardData.Count != functions.Count)
             {
                 return;
             }
@@ -188,8 +169,7 @@ namespace ClientSide
             foreach(Action function in functions) 
             {
                 Button temp = Instantiate(buttonPrefab,displayPanel.transform);
-                temp.name = titles[i];
-                temp.GetComponentInChildren<TMP_Text>().text = titles[i];
+                temp.GetComponent<MainMenuButton_Controller>().SetupButton(cardData[i]);
                 temp.onClick.AddListener(delegate{function();});
                 i++;
                 menuButtons.Add(temp);

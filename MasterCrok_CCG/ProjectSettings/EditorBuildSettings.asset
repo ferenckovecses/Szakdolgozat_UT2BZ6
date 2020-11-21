@@ -14,4 +14,13 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/DeckOrganise.unity
     guid: 68cb149a20bd45645ae97fc7e3d07a6d
+  - enabled: 1
+    path: Assets/Scenes/Multiplayer.unity
+    guid: 35f03a09b4df75f4cbb99cb6b1411dcb
+  - enabled: 1
+    path: Assets/Scenes/Rules.unity
+    guid: 1c67562c1a22df144b83f1f87d587a03
+  - enabled: 1
+    path: Assets/Scenes/Credits.unity
+    guid: 7ebfe5c061b5c1c43bda00fbb6185dfe
   m_configObjects: {}

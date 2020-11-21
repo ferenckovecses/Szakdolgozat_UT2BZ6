@@ -23,6 +23,11 @@ public class Notification_Controller : MonoBehaviour
 		{
 			instance = this;
 		}
+
+        else
+        {
+            Destroy(gameObject);
+        }
 	}
 
     void Start()

@@ -29,13 +29,18 @@ namespace ClientSide
 			if(instance == null)
 	        {
 	            instance = this;
+    	        formatter = new BinaryFormatter();
+				mainMenuController = GameObject.Find("Menu_Controller").GetComponent<Main_Menu_Controller>();
+				settingsState = ProfileSettings.Default;
+				needsToBeUpdated = false;
+				LoadProfile();
 	        }
 
-	        formatter = new BinaryFormatter();
-			mainMenuController = GameObject.Find("Menu_Controller").GetComponent<Main_Menu_Controller>();
-			settingsState = ProfileSettings.Default;
-			needsToBeUpdated = false;
-			LoadProfile();
+            else
+	        {
+	            Destroy(gameObject);
+	        }
+
 		}
 
 		void Start()
@@ -88,7 +93,8 @@ namespace ClientSide
 
 	            else
 	            {
-	                Debug.Log("A betöltés sikertelen!");
+	                Notification_Controller.DisplayNotification("A betöltés sikertelen!");
+	                settingsState = ProfileSettings.NewProfile;
 	                AskForName();
 	                NewProfile();
 	            }
@@ -98,7 +104,8 @@ namespace ClientSide
 	        //Ha nincs még mentés file
 	        else
 	        {
-	            Debug.Log("A mentést tartalmazó fájl nem található!");
+	            Notification_Controller.DisplayNotification("A mentést tároló fájl nincs létrehozva!");
+	            settingsState = ProfileSettings.NewProfile;
 	            AskForName();
 	        }
 	    }
@@ -113,7 +120,7 @@ namespace ClientSide
 
 
 		//Karakter és játék adatok elmentése
-	    private void SaveProfile()
+	    public void SaveProfile()
 	    {
 	        FileStream stream = OpenFile(FileMode.Create);
 	        Profile_Data data = playerProfile.GetData();
@@ -130,25 +137,16 @@ namespace ClientSide
 	        }
 
 	        stream.Close();
-	        Debug.Log("Sikeres mentés!");
-	    }
 
-	    public void AutoSave(Profile_Data data)
-	    {
-	        FileStream stream = OpenFile(FileMode.Create);
-	        try
-	        {
-	        	formatter.Serialize(stream,data);
-	        }
+	        if(settingsState == ProfileSettings.NewProfile)
+	    	{
+	    		Notification_Controller.DisplayNotification("Az új profil létrehozva!");
+	    	}
 
-	        catch(SerializationException e)
-	        {
-	        	Debug.Log(e);
-	        	throw;
-	        }
-
-	        stream.Close();
-	        Debug.Log("Sikeres automatikus mentés!");
+	    	else 
+	    	{
+	    		Notification_Controller.DisplayNotification("A változtatások sikeresen elmentve!");
+	    	}
 	    }
 
 	    private void AskForName()

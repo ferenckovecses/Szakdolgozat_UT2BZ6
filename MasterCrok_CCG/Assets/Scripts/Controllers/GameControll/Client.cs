@@ -13,7 +13,6 @@ namespace ClientControll
         [Header("UI prefabok")]
         public GameObject prefabPlayerUI;
         public GameObject prefabExitPanel;
-        public GameObject prefabDetailedView;
         public GameObject cardWithDetails;
         public GameObject statChoiceBox;
         public GameObject prefabMessageText;
@@ -275,7 +274,7 @@ namespace ClientControll
         //Megjeleníti a kijelölt kártya részletes nézetét
         public void DisplayCardDetaislWindow(Card data, int displayedCardId, bool skillDecision, int position)
         {
-            cardDetailWindow = Instantiate(cardWithDetails, ingamePanelCanvas.transform.position, Quaternion.identity, ingamePanelCanvas.transform);
+            cardDetailWindow = Instantiate(cardWithDetails);
             cardDetailWindow.GetComponent<DetailedCardDisplay>().SetupDisplay(data, skillDecision);
             isDetailsShowed = true;
             //Ha a gombok is megjelennek, akkor be kell konfigurálni is őket
