@@ -11,19 +11,19 @@ namespace ClientSide
 		{
 			Profile_Controller.settingsState = ProfileSettings.ChangeName;
 			Profile_Controller.needsToBeUpdated = true;
-			Destroy(this.gameObject);
+			Destroy(gameObject);
 		}
 
 		public void ResetProfile()
 		{
 			Profile_Controller.settingsState = ProfileSettings.NewProfile;
 			Profile_Controller.needsToBeUpdated = true;
-			Destroy(this.gameObject);
+			Destroy(gameObject);
 		}
 
 		public void Back()
 		{
-			Destroy(this.gameObject);
+			Destroy(gameObject);
 		}
 	}
 }

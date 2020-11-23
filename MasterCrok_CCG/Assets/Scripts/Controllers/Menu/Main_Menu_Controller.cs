@@ -18,6 +18,7 @@ namespace ClientSide
         public TMP_Text titleText;
         public GameObject mainCanvas;
         public TMP_Text profileStatus;
+        public TMP_Text balance;
 
         [Header("Prefab Elemek")]
         public Button buttonPrefab;
@@ -67,7 +68,8 @@ namespace ClientSide
                 }
                 else 
                 {
-                    profileStatus.text = $"Üdv, {profileController.GetActivePlayer().GetUsername()}!";    
+                    profileStatus.text = $"Üdv, {profileController.GetActivePlayer().GetUsername()}!";
+                    balance.text = profileController.GetActivePlayer().GetCoinBalance().ToString();    
                 }
             }
         }
@@ -111,7 +113,7 @@ namespace ClientSide
 
         public void OpenShop()
         {
-            Notification_Controller.DisplayNotification("Dolgozok rajta, eskü!");
+            SceneManager.LoadScene("Card_Shop");
         }
 
         public void Rules()

@@ -8,8 +8,6 @@ using System.Text.RegularExpressions;
 
 namespace ClientSide
 {
-
-
 	public class NameForm_Controller : MonoBehaviour
 	{
 

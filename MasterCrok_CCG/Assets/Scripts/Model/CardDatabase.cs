@@ -39,5 +39,11 @@ public class CardDatabase : ScriptableObject
 		return imageList;
 	}
 
+	public Card GetRandomCard()
+	{
+		int id = UnityEngine.Random.Range(0,(cardDataList.Count - 1));
+		return new Card(cardDataList[id]);
+	}
+
 
 }

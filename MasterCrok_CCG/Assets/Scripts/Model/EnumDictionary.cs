@@ -47,7 +47,8 @@ public enum CardListFilter { None, NoMasterCrok, EnemyDoppelganger };
 
 //Menü fázisok
 public enum MenuState { MainMenu, Settings, GameTypeSelect, PlayerNumberSelect, MultiplayerSettings };
-public enum ProfileSettings {Default, NewProfile, ChangeName};
+
+public enum ProfileSettings {Default, NewProfile, ChangeName, Silent};
 
 //Játékos fázisok és helyzetek
 public enum PlayerTurnStatus{ChooseCard, ChooseSkill, Finished};

@@ -23,4 +23,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Credits.unity
     guid: 7ebfe5c061b5c1c43bda00fbb6185dfe
+  - enabled: 1
+    path: Assets/Scenes/Card_Shop.unity
+    guid: c27f8592e918aa24c9528439e31f7738
   m_configObjects: {}

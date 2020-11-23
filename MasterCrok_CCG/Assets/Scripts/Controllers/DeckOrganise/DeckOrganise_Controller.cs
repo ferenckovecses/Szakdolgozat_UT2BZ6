@@ -80,7 +80,9 @@ namespace ClientSide
 
 	    private void CreateCards()
 	    {
+	    	profile.GetActivePlayer().GetActiveDeck().SortDeck();
 	    	activeCards = profile.GetActivePlayer().GetActiveDeck().GetDeck();
+
 	    	foreach (Card card in activeCards) 
 	    	{
 	    		GameObject temp = Instantiate(cardPrefab);
@@ -88,6 +90,7 @@ namespace ClientSide
 	    		activeCardField.AddNewCard(temp);
 	    	}
 
+	    	profile.GetActivePlayer().GetSecondaryDeck().SortDeck();
 	    	secondaryCards = profile.GetActivePlayer().GetSecondaryDeck().GetDeck();
 	    	foreach (Card card in secondaryCards) 
 	    	{

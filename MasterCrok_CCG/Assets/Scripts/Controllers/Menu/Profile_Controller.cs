@@ -12,6 +12,7 @@ namespace ClientSide
 		[Header("Referenciák")]
 		public CardFactory factory;
 		public GameObject nameFormPrefab;
+
 		private static Profile_Controller instance = null;
 		private Player playerProfile;
 		private string profileName;
@@ -143,9 +144,14 @@ namespace ClientSide
 	    		Notification_Controller.DisplayNotification("Az új profil létrehozva!");
 	    	}
 
-	    	else 
+	    	else if (settingsState == ProfileSettings.Default) 
 	    	{
 	    		Notification_Controller.DisplayNotification("A változtatások sikeresen elmentve!");
+	    	}
+
+	    	else if (settingsState == ProfileSettings.Silent) 
+	    	{
+	    		settingsState = ProfileSettings.Default;
 	    	}
 	    }
 
