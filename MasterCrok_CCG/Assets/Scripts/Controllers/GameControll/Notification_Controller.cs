@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 public class Notification_Controller : MonoBehaviour
@@ -40,10 +41,15 @@ public class Notification_Controller : MonoBehaviour
         
     }
 
-    public static void DisplayNotification(string msg)
+    public static void DisplayNotification(string msg, Action func = null)
     {
     	GameObject obj = Instantiate(Notification_Controller.staticPrefab);
     	obj.GetComponent<NotificationPanel_Controller>().ChangeText(msg);
+
+    	if(func != null)
+    	{
+    		obj.GetComponent<NotificationPanel_Controller>().ChangeFunction(func);
+    	}
     }
 
 }

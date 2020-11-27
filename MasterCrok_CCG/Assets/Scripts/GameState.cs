@@ -2,17 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameState : MonoBehaviour
+public static class GameState
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+	public static void Init()
+	{
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+	}
 }

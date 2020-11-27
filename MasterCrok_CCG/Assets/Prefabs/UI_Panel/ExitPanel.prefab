@@ -415,7 +415,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Biztos ki akarsz l\xE9pni a F\u0151men\xFCbe?"
+  m_text: "Biztos ki akarsz l\xE9pni a F\u0151men\xFCbe? A j\xE1t\xE9k \xE1r\xE1t
+    nem kapod vissza!"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -484,12 +485,12 @@ MonoBehaviour:
   m_margin: {x: -129.87659, y: -6.5787964, z: -349.23175, w: -80.92407}
   m_textInfo:
     textComponent: {fileID: 3041469048425073128}
-    characterCount: 34
+    characterCount: 65
     spriteCount: 0
-    spaceCount: 5
-    wordCount: 6
+    spaceCount: 11
+    wordCount: 12
     linkCount: 0
-    lineCount: 2
+    lineCount: 3
     pageCount: 1
     materialCount: 2
   m_isUsingLegacyAnimationComponent: 0

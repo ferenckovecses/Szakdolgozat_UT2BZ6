@@ -1209,7 +1209,7 @@ PrefabInstance:
     - target: {fileID: 8862359350013428065, guid: 7136d7f2051be104da3379e3fc1771a5,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: ProfileSettings
+      value: OpenProfileSettings
       objectReference: {fileID: 0}
     - target: {fileID: 8862359350013428065, guid: 7136d7f2051be104da3379e3fc1771a5,
         type: 3}
@@ -1410,9 +1410,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 76505368515380c4cad79ef16b1060ca, type: 2}
   - {fileID: 11400000, guid: 729350347abe0a34c9212402bde5972f, type: 2}
   singleplayerButtonData:
-  - {fileID: 11400000, guid: e68c377460859fc4faee0c2060486d48, type: 2}
-  - {fileID: 11400000, guid: 5c78557c19d14614e9ac696b99a96a83, type: 2}
-  - {fileID: 11400000, guid: cf703fe1195795a46b3eadc43fc3a350, type: 2}
+  - {fileID: 11400000, guid: 94d896a6e098eff4688f721521600bbf, type: 2}
+  - {fileID: 11400000, guid: e218d6438b4fc2b42ba4709b8450e685, type: 2}
+  - {fileID: 11400000, guid: e892ad6fd270a9843bf8b47dd80d3032, type: 2}
   - {fileID: 11400000, guid: 729350347abe0a34c9212402bde5972f, type: 2}
 --- !u!1 &1879071938
 GameObject:

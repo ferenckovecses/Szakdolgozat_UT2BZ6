@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using ClientControll;
+using UnityEngine.SceneManagement;
+using ClientSide;
 
 namespace GameControll
 {
@@ -652,18 +654,34 @@ namespace GameControll
                 }
             }
 
+            yield return new WaitForSeconds(0.1f);
+
             //Ha van holtverseny
             if (winnerCardCount.Count(p => p == maxWin) > 1)
             {
-                StartCoroutine(modules.GetClientModule().DisplayNotification("Játék Vége!\nAz eredmény döntetlen!"));
+                Notification_Controller.DisplayNotification("Játék Vége!\nAz eredmény döntetlen!", ExitGame);
             }
 
             //Ha egyértelmű a győzelem
             else
             {
-                StartCoroutine(modules.GetClientModule().DisplayNotification("Játék Vége!\nA győztes: " + modules.GetDataModule().GetPlayerWithKey(maxKey).GetUsername()));
+                int reward = 0;
+
+                switch (GameObject.Find("GameData_Controller").GetComponent<GameSettings_Controller>().GetOpponents()) 
+                {
+                    case 1: reward = 50; break;
+                    case 2: reward = 200; break;
+                    case 3: reward = 500; break;
+                    default: break;
+                }
+
+                GameObject.Find("Profile_Controller").GetComponent<Profile_Controller>().GetActivePlayer().AddCoins(reward);
+                Profile_Controller.settingsState = ProfileSettings.Silent;
+                GameObject.Find("Profile_Controller").GetComponent<Profile_Controller>().SaveProfile();
+
+
+                Notification_Controller.DisplayNotification($"Játék Vége!\nA győztes: {modules.GetDataModule().GetPlayerWithKey(maxKey).GetUsername()}", ExitGame);
             }
-            yield return WaitForEndOfText();
         }
         #endregion
 
@@ -716,6 +734,13 @@ namespace GameControll
         #endregion
 
         #region Commands
+
+        public void ExitGame()
+        {
+            modules.GetDataModule().ResetDecks();
+            SceneManager.LoadScene("Main_Menu");
+
+        }
 
         //Felhúz a játékosok kezébe 4 lapot kezdésnél
         private IEnumerator DrawStarterCards()
@@ -1083,6 +1108,7 @@ namespace GameControll
             return false;
         }
         #endregion
+
 
 
     }

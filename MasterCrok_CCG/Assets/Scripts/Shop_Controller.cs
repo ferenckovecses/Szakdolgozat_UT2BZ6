@@ -91,7 +91,6 @@ namespace ClientSide
 		{
 			Notification_Controller.DisplayNotification("Nem rendelkezel elég érmével!");
 		}
-		
 	}
 
 	public void Return()

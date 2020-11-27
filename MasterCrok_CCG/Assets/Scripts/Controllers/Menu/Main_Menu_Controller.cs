@@ -33,7 +33,7 @@ namespace ClientSide
         private Profile_Controller profileController;
         private MenuState currentState;
         private bool needsUpdate;
-        private bool isLoggedIn = false;
+        private bool isLoggedIn;
 
         void Start()
         {
@@ -61,17 +61,9 @@ namespace ClientSide
                     default: break;
                 }
 
-                //Profil státusz üzenetének változtatása
-                if(!isLoggedIn)
-                {
-                    profileStatus.text = "Nincs Aktív Profil!";
-                }
-                else 
-                {
-                    profileStatus.text = $"Üdv, {profileController.GetActivePlayer().GetUsername()}!";
-                    balance.text = profileController.GetActivePlayer().GetCoinBalance().ToString();    
-                }
+                RefreshDisplayedData();
             }
+
         }
 
         void SetupMainMenu()
@@ -157,8 +149,30 @@ namespace ClientSide
 
         public void StartSinglePlayer(int playerNumber)
         {
-            dataController.SetOpponents(playerNumber);
-            SceneManager.LoadScene("SinglePlayer_Battle");
+            bool result;
+            int price;
+            switch (playerNumber) 
+            {
+                case 1: price = 0; result = (profileController.GetActivePlayer().GetCoinBalance() >= price); break;
+                case 2: price = 100; result = (profileController.GetActivePlayer().GetCoinBalance() >= price); break;
+                case 3: price = 200; result = (profileController.GetActivePlayer().GetCoinBalance() >= price); break;
+                default: result = false; price = 0; break;
+            }
+
+            if(result)
+            {
+                profileController.GetActivePlayer().SpendCoins(price);
+                Profile_Controller.settingsState = ProfileSettings.Silent;
+                profileController.SaveProfile();
+
+                dataController.SetOpponents(playerNumber);
+                SceneManager.LoadScene("SinglePlayer_Battle");
+            }
+
+            else 
+            {
+                Notification_Controller.DisplayNotification("Nem rendelkezel elég érmével!");
+            }
         }
 
         void CreateButtons(List<MainMenuButtonData> cardData, List<Action> functions)
@@ -190,11 +204,6 @@ namespace ClientSide
             menuButtons.Clear();
         }
 
-        public void ProfileSettings()
-        {
-            Instantiate(profileSettingsPrefab);
-        }
-
         public void PlayerLoginStatus(bool status)
         {
             needsUpdate = true;
@@ -207,6 +216,17 @@ namespace ClientSide
             {
                 isLoggedIn = true;
             }   
+        }
+
+        public void RefreshDisplayedData()
+        {
+            profileStatus.text = $"Üdv, {profileController.GetActivePlayer().GetUsername()}!";
+            balance.text = profileController.GetActivePlayer().GetCoinBalance().ToString();
+        }
+
+        public void OpenProfileSettings()
+        {
+            Instantiate(profileSettingsPrefab);
         }
 
 

@@ -147,15 +147,15 @@ namespace ClientSide
 	    	}
 	    }
 
-	    private bool DuplicateVerification()
-	    {
-	    	var maxValue =  (from x in activeCards
-	    					group x by x.GetCardID() into g
-	    					let count = g.Count()
-	    					orderby count descending
-	    					select new {Count = count}).Take(1);
+		private bool DuplicateVerification()
+		{
+			var maxValue =  (from x in activeCards
+							group x by x.GetCardID() into g
+							let count = g.Count()
+							orderby count descending
+							select new {Count = count}).Take(1);
 
-	    	foreach (var x in maxValue) 
+			foreach (var x in maxValue) 
 			{
 				if(x.Count > (int)(activeCards.Count / 10))
 				{
@@ -164,8 +164,8 @@ namespace ClientSide
 			}				
 			
 
-	    	return true;
-	    }
+			return true;
+		}
 
 	    private void HandleSave()
 	    {

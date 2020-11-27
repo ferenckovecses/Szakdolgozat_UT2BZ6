@@ -31,7 +31,6 @@ namespace ClientSide
 	        {
 	            instance = this;
     	        formatter = new BinaryFormatter();
-				mainMenuController = GameObject.Find("Menu_Controller").GetComponent<Main_Menu_Controller>();
 				settingsState = ProfileSettings.Default;
 				needsToBeUpdated = false;
 				LoadProfile();
@@ -61,6 +60,7 @@ namespace ClientSide
 	    public void LoadProfile()
 	    {
 	        string path = Path.Combine(Application.persistentDataPath, fileName);
+	        mainMenuController = GameObject.Find("Menu_Controller").GetComponent<Main_Menu_Controller>();
 
 	        //Ellenőrzi, hogy van-e már mentésünk
 	        if(File.Exists(path))
@@ -177,6 +177,10 @@ namespace ClientSide
 	    		RefreshName();
 	    		settingsState = ProfileSettings.Default;
 	    	}
+
+			//Aztán eltüntetjük a névbekérő mezőt
+			Destroy(nameForm);
+
 	    }
 
 
@@ -192,15 +196,15 @@ namespace ClientSide
 
 			//Aztán betöltjük a játékba
 			LoadProfile();
-
-			//Aztán eltüntetjük a névbekérő mezőt
-			Destroy(nameForm);
 		}
 
 		private void RefreshName()
 		{
 			playerProfile.ChangeName(profileName);
 			SaveProfile();
+
+			//Aztán betöltjük a játékba
+			LoadProfile();
 		}
 
 		public int GenerateRandomID()

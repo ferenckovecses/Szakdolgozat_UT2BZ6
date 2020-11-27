@@ -24,16 +24,6 @@ public class Card
         return (data.GetPower() + GetPowerBonus());
     }
 
-    public int GetIntelligence()
-    {
-        return (data.GetIntelligence() + GetIntelligenceBonus());
-    }
-
-    public int GetReflex()
-    {
-        return (data.GetReflex() + GetReflexBonus());
-    }
-
     public int GetPowerBonus()
     {
     	int sum = 0;
@@ -43,6 +33,16 @@ public class Card
     	}
 
     	return sum;
+    }
+
+    public int GetIntelligence()
+    {
+        return (data.GetIntelligence() + GetIntelligenceBonus());
+    }
+
+    public int GetReflex()
+    {
+        return (data.GetReflex() + GetReflexBonus());
     }
 
     public int GetIntelligenceBonus()
