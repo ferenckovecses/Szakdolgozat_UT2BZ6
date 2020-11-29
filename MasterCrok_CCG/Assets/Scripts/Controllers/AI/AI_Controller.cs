@@ -45,7 +45,6 @@ namespace GameControll
 
             for(var id = 0; id < cardCount; id++)
             {
-                Debug.Log("Player: " + currentKey.ToString() + " ID of card:" + id.ToString() + " Number of cards on field: " + cardCount.ToString());
                 if(modules.GetClientModule().AskCardSkillStatus(currentKey, id) == SkillState.NotDecided)
                 {
                     //GetSkillChoiceFromAIBrain

@@ -201,6 +201,10 @@ namespace GameControll
                     msg = "Változtasd meg a sorrendjét a kártyáidnak!";
                     break;
 
+                case SkillEffectAction.TossCard: 
+                    msg = "Válaszd ki, hogy melyik lapot dobod el!";
+                    break;
+
                 default:
                     break;
             }

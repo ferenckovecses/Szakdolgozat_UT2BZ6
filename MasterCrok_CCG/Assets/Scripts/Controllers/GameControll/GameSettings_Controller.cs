@@ -6,8 +6,8 @@ using UnityEngine;
 public class GameSettings_Controller : MonoBehaviour
 {
 	private int numberOfOpponents;
-    public static float drawTempo = 0.01f;
-    public static float textTempo = 0.5f;
+    public static float drawTempo = 0.05f;
+    public static float textTempo = 0.8f;
     public static int winsNeeded = 5;
 
     private static GameSettings_Controller instance;

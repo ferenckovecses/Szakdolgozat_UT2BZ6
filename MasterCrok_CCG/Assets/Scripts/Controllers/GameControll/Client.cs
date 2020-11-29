@@ -261,7 +261,7 @@ namespace ClientControll
             {
                 isExitPanelExist = true;
                 //Megjeleníti a kérdőablakot
-                GameObject exitPanel = Instantiate(prefabExitPanel, HUDcanvas.transform.position, Quaternion.identity, HUDcanvas.transform);
+                GameObject exitPanel = Instantiate(prefabExitPanel);
                 //If yes: ExitBattle()
                 Button yesBtn = GameObject.Find("YesButton").GetComponent<Button>();
                 yesBtn.onClick.AddListener(delegate { Exit(); });

@@ -592,6 +592,7 @@ namespace GameControll
 				{
 					if(modules.GetDataModule().GetPlayerWithKey(playerKey).GetResult() == PlayerTurnResult.Draw)
 					{
+						Debug.Log("Gunfight: Draw situation");
 						foreach (int key in modules.GetDataModule().GetKeyList()) 
 						{
 							if(key == playerKey)

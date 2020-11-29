@@ -13,7 +13,9 @@ public class BattleMenu_Controller : MonoBehaviour
 
 	private void Awake()
 	{
-		status = false;
+		status = true;
+		transform.position = new Vector3(transform.position.x - 310f,transform.position.y, transform.position.z);	
+		openButton.GetComponentInChildren<TMP_Text>().text = ">>";
 	}
 
 	public void HandleClicks()

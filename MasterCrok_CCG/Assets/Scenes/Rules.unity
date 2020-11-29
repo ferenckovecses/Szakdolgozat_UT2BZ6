@@ -422,8 +422,8 @@ RectTransform:
   - {fileID: 294478978}
   - {fileID: 234702105}
   - {fileID: 956111817}
-  - {fileID: 1125066396}
   - {fileID: 2031086070}
+  - {fileID: 1125066396}
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -480,7 +480,7 @@ MonoBehaviour:
     T\xE1mad\xF3.\nFelfed\xE9s ut\xE1n folytat\xF3dik a j\xE1t\xE9k a k\xE9pess\xE9g
     f\xE1zissal."
   - "J\xE1t\xE9k megnyer\xE9se:\n\nA j\xE1t\xE9kot az nyeri, aki el\u0151sz\xF6r
-    \xE9r el hatszoros csoportgy\u0151zelmet. A csoportgy\u0151zelem k\xFCl\xF6nb\xF6z\u0151
+    \xE9r el \xF6tsz\xF6r\xF6s csoportgy\u0151zelmet. A csoportgy\u0151zelem k\xFCl\xF6nb\xF6z\u0151
     csoportjel\u0171 nyertes k\xE1rty\xE1kat jelent.\n\nHa valakinek elfogy az \xF6sszes
     k\xE1rty\xE1ja, akkor is v\xE9get \xE9r a j\xE1t\xE9k. Ilyen esetben a legt\xF6bb
     gy\u0151ztes lappal rendelkez\u0151 nyer."
@@ -1469,7 +1469,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 649654196}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}

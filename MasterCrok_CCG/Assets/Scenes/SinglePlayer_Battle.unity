@@ -2271,7 +2271,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   prefabPlayerUI: {fileID: 735356920331122807, guid: 0c75f0d68a616e44c8c390a5a6801db1,
     type: 3}
-  prefabExitPanel: {fileID: 3041469048412157529, guid: 36278cac0872af0449dddd4c11e67157,
+  prefabExitPanel: {fileID: 1509601710340558098, guid: 6d9e85f1d698cd5408140ea04a1cedd6,
     type: 3}
   cardWithDetails: {fileID: 7897078100250755219, guid: e8186189066067340a8e4bd143f57f10,
     type: 3}
