@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58f31c3eb0750a6448c6e4a94c09b7b7, type: 3}
+  m_Name: 1_Master Crok
+  m_EditorClassIdentifier: 
+  cardID: 1
+  cardName: Master Crok
+  type: 0
+  skillName: "V\xE1ratlan csap\xE1s"
+  skillDescription: "Kicser\xE9lheted egy m\xE1sik, a kezedben l\xE9v\u0151 Crokra,
+    ha az nem Master Crok."
+  skillProperties:
+  - activationTime: 1
+    skillRequirement: 0
+    skillTarget: 0
+    effectAction: 2
+  multipleSkillRule: 0
+  power: 8
+  intelligence: 7
+  reflex: 9
+  cardImage: {fileID: 21300000, guid: 880dbc29047212c4bac38eb63c51848e, type: 3}
