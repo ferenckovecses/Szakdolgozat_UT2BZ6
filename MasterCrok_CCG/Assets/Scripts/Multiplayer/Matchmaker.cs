@@ -32,20 +32,23 @@ public class Matchmaker : NetworkBehaviour
 	public static Matchmaker instance;
 	public SyncListMatch matches = new SyncListMatch();
 	public SyncList<string> matchIDList = new SyncList<string>();
+	[SerializeField] GameObject turnManagerPrefab;
 
 	private void Start()
 	{
 		instance = this;
 	}
 
-	public bool HostGame(string matchID, GameObject host)
+	public bool HostGame(string matchID, GameObject host, out int playerIndex)
 	{
+		playerIndex = -1;
 		//Ha az id még nem foglalt
 		if(!matchIDList.Contains(matchID))
 		{
 			matchIDList.Add(matchID);
 			matches.Add(new Match(matchID,host));
 			Debug.Log("Match generated");
+			playerIndex = 1;
 			return true;
 		}
 
@@ -53,6 +56,53 @@ public class Matchmaker : NetworkBehaviour
 		{
 			Debug.Log("Match ID already exists!");
 			return false;	
+		}
+	}
+	public bool JoinGame(string _matchID, GameObject player, out int playerIndex)
+	{
+		playerIndex = -1;
+		//Ha a megadott ID létezik
+		if(matchIDList.Contains(_matchID))
+		{
+			for (int i = 0; i < matches.Count; i++)
+			{
+				if(matches[i].matchID == _matchID)
+				{
+					matches[i].players.Add(player);
+					playerIndex = matches[i].players.Count;
+					break;
+				}
+			}
+			Debug.Log("Joined to match");
+			return true;
+		}
+
+		else 
+		{
+			Debug.Log("Match ID does not exist!");
+			return false;	
+		}
+	}
+
+	public void BeginGame(string _matchID)
+	{
+		GameObject newTurnManager = Instantiate(turnManagerPrefab);
+		NetworkServer.Spawn(newTurnManager);
+		TurnManager turnManager = newTurnManager.GetComponent<TurnManager>();
+		newTurnManager.GetComponent<NetworkMatchChecker>().matchId = _matchID.ToGuid();
+
+		for (int i = 0; i < matches.Count; i++)
+		{
+			if(matches[i].matchID == _matchID)
+			{
+				foreach (var player in matches[i].players)
+				{
+					Multiplayer_Player _player = player.GetComponent<Multiplayer_Player>();
+					turnManager.AddPlayer(_player);
+					_player.StartGame();
+				}
+				break;
+			}
 		}
 	}
 

@@ -512,6 +512,7 @@ GameObject:
   - component: {fileID: 519990390}
   - component: {fileID: 519990389}
   - component: {fileID: 519990388}
+  - component: {fileID: 519990391}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -596,7 +597,8 @@ MonoBehaviour:
     type: 3}
   autoCreatePlayer: 1
   playerSpawnMethod: 0
-  spawnPrefabs: []
+  spawnPrefabs:
+  - {fileID: 4690026226843300060, guid: 9c22ee720df1aeb4a9654344e466bda8, type: 3}
 --- !u!4 &519990390
 Transform:
   m_ObjectHideFlags: 0
@@ -611,6 +613,21 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519990391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519990387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6442dc8070ceb41f094e44de0bf87274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showGUI: 1
+  offsetX: 50
+  offsetY: 50
 --- !u!1001 &697195491
 PrefabInstance:
   m_ObjectHideFlags: 0

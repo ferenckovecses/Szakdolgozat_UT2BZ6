@@ -131,8 +131,7 @@ namespace ClientSide
 
         public void Multiplayer()
         {
-            //SceneManager.LoadScene("Multiplayer");
-            Notification_Controller.DisplayNotification("Dolgozok rajta, eskü!");
+            SceneManager.LoadScene("Multiplayer_Entry");
         }
 
         public void Back()

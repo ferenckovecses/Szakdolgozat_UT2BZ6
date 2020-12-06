@@ -14,7 +14,7 @@ namespace ClientSide
 		public GameObject nameFormPrefab;
 
 		private static Profile_Controller instance = null;
-		private Player playerProfile;
+		public static Player playerProfile = null;
 		private string profileName;
 		private string fileName = "NotTheSaveGame.topsecret";
 		private Main_Menu_Controller mainMenuController;
@@ -214,7 +214,7 @@ namespace ClientSide
 
 		public Player GetActivePlayer()
 	    {
-	        return this.playerProfile;
+	        return playerProfile;
 	    }
 	}
 }
