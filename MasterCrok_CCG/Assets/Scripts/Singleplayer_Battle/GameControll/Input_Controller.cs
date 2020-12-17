@@ -32,7 +32,7 @@ namespace GameControll
             //Ellenkező esetben skill okozta a változtatást, jelezzük hogy a skillnek vége
             else
             {
-                modules.GetGameModule().ActionFinished();    
+                modules.GetGameModule().ActionFinished();
             }
         }
 
@@ -101,9 +101,6 @@ namespace GameControll
             //Elvesszük a játékostól a drag jogot
             modules.GetClientModule().SetDragStatus(modules.GetGameModule().GetCurrentKey(), false);
 
-            //A klienst idézés vége fázisra állítjuk
-            modules.GetClientModule().SummonEnded();
-
             //Ha az aktív player ember
             if(modules.GetGameModule().IsTheActivePlayerHuman())
             {
@@ -126,7 +123,6 @@ namespace GameControll
         //Kezeljük a játékos kiválasztott kártyáját
         public void HandleCardSelection(int selectedCard, int currentKey)
         {
-
             //Ha az akció tartalékolás volt
             if (modules.GetGameModule().GetCurrentAction() == SkillEffectAction.Store)
             {
@@ -155,10 +151,11 @@ namespace GameControll
             modules.GetClientModule().ResetCardSkill(modules.GetGameModule().GetCurrentKey(), modules.GetGameModule().GetActiveCardID());
         }
 
+        //Megjeleníti a kártyakupac tartalmát
         public void ReportDisplayRequest(CardListTarget listType, int playerKey)
         {
             List<Card> cardList = new List<Card>();
-            string msg;
+            string msg = "";
 
             switch (listType)
             {
@@ -193,106 +190,119 @@ namespace GameControll
 
         }
 
+        //Kezeli a játékos névre kattintást
         public void ReportNameBoxTapping(int playerKey)
         {
-            //Nem vált ki akciót magunkra tappelve
+            //Nem vált ki akciót magunkra kattintva
             if(playerKey != modules.GetGameModule().GetCurrentKey())
             {
-                //Kivégzés képesség
-                if(modules.GetGameModule().GetCurrentAction() == SkillEffectAction.Execute)
+                switch(modules.GetGameModule().GetCurrentAction())
                 {
+                    case SkillEffectAction.Execute: ExecutionHandling(playerKey); break;
+                    case SkillEffectAction.CheckWinnerAmount: RampageHandling(playerKey); break;
+                    case SkillEffectAction.SwitchOpponentCard: OpponentSwitchHandling(playerKey); break;
+                    default: break;
+                } 
+            }
+        }
 
-                    //Csak akkor dob le lapot, ha legalább 1 van még a kezében azon kívül
-                    if(modules.GetDataModule().GetHandCount(playerKey) > 1)
-                    {
-                        modules.GetGameModule().SetCurrentAction(SkillEffectAction.TossCard);
-                        modules.GetGameModule().SetSwitchType(CardListTarget.Hand);
+        //Kivégzés képesség kezelése
+        private void ExecutionHandling(int playerKey)
+        {
+            //Csak akkor dob le lapot, ha legalább 1 van még a kezében azon kívül
+            if(modules.GetDataModule().GetHandCount(playerKey) > 1)
+            {
+                modules.GetGameModule().SetCurrentAction(SkillEffectAction.TossCard);
+                modules.GetGameModule().SetSwitchType(CardListTarget.Hand);
 
-                        //Ha ember a választott játékos
-                        if (modules.GetGameModule().IsThisPlayerHuman(playerKey))
-                        {
-                            modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayCardList(playerKey, CardListFilter.None, 0));
-                        }
-                    }
+                Debug.Log($"Choosen player: {playerKey}");
 
-                    else
-                    {
-                        ReportActionEnd();
-                        modules.GetGameModule().SkillFinished();
-                    }
+                //Ha ember a választott játékos, akkor megjelenítjük neki a kártyaválasztó képernyőt
+                if (modules.GetGameModule().IsThisPlayerHuman(playerKey))
+                {
+                    modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayCardList(playerKey, CardListFilter.None, 0));
                 }
 
-                //Dühöngés képesség
-                else if(modules.GetGameModule().GetCurrentAction() == SkillEffectAction.CheckWinnerAmount)
+                //Ha bot, akkor jelzünk neki, hogy dobjon el egy lapot
+                else
                 {
-                    //Szükséges adatok lekérése
-                    int cardPosition = modules.GetGameModule().GetActiveCardID();
-                    int ownKey = modules.GetGameModule().GetCurrentKey();
-                    int ownWinners = modules.GetDataModule().GetWinnerAmount(ownKey);
-                    int opponentWinners = modules.GetDataModule().GetWinnerAmount(playerKey);
-                    Card cardToStrengthen = modules.GetDataModule().GetCardFromPlayer(ownKey, cardPosition, CardListTarget.Field);
+                    modules.GetClientModule().TriggerAction(playerKey);
+                }
+            }
 
-                    //Ha olyat választottunk, akinek több győztese van, bónuszt kapunk
-                    if(ownWinners < opponentWinners)
-                    {
-                        int difference = opponentWinners - ownWinners;
-                        cardToStrengthen.AddBonus(new StatBonus(difference,difference,difference));
-                    }
+            else
+            {
+                ReportActionEnd();
+                modules.GetGameModule().SkillFinished();
+            }
+        }
 
-                    //Ha olyat választott, akinek kevesebb vagy egyenlő a győzteseinek száma
-                    else 
-                    {
-                        //Ha játékos, akkor erről tájékoztatást is kap
-                        if(modules.GetGameModule().IsThisPlayerHuman(ownKey))
-                        {
-                            modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayNotification("A választott játékos nem rendelkezik több győztessel!\nBónusz nem lett aktiválva!"));                              
-                        }
-                    }
-                    modules.GetGameModule().SetSelectionAction(SkillEffectAction.None);
-                    ReportActionEnd();
+        //Dühöngés képesség kezelése
+        private void RampageHandling(int playerKey)
+        {
+            //Szükséges adatok lekérése
+            int cardPosition = modules.GetGameModule().GetActiveCardID();
+            int ownKey = modules.GetGameModule().GetCurrentKey();
+            int ownWinners = modules.GetDataModule().GetWinnerAmount(ownKey);
+            int opponentWinners = modules.GetDataModule().GetWinnerAmount(playerKey);
+            Card cardToStrengthen = modules.GetDataModule().GetCardFromPlayer(ownKey, cardPosition, CardListTarget.Field);
+
+            //Ha olyat választottunk, akinek több győztese van, bónuszt kapunk
+            if(ownWinners < opponentWinners)
+            {
+                int difference = opponentWinners - ownWinners;
+                cardToStrengthen.AddBonus(new StatBonus(difference,difference,difference));
+            }
+
+            //Ha olyat választott, akinek kevesebb vagy egyenlő a győzteseinek száma
+            else 
+            {
+                //Ha játékos, akkor erről tájékoztatást is kap
+                if(modules.GetGameModule().IsThisPlayerHuman(ownKey))
+                {
+                    modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayNotification("A választott játékos nem rendelkezik több győztessel!\nBónusz nem lett aktiválva!"));                              
+                }
+            }
+
+            modules.GetGameModule().SetSelectionAction(SkillEffectAction.None);
+            ReportActionEnd();
+        }
+
+        private void OpponentSwitchHandling(int playerKey)
+        {
+             int ownKey = modules.GetGameModule().GetCurrentKey();
+            //A kiválasztott játékosnak van a paklijában lap
+            if(modules.GetDataModule().GetDeckAmount(playerKey) > 0)
+            {
+                modules.GetGameModule().SetSwitchType(CardListTarget.Field);
+
+                //Ha emberek a választó fél
+                if (modules.GetGameModule().IsThisPlayerHuman(ownKey))
+                {
+                    modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayCardList(playerKey, CardListFilter.None, 0));
                 }
 
-                //"Van másik!" képesség
-                else if(modules.GetGameModule().GetCurrentAction() == SkillEffectAction.SwitchOpponentCard)
+                //Ha bot
+                else
                 {
-                    int ownKey = modules.GetGameModule().GetCurrentKey();
-                    //A kiválasztott játékosnak van a paklijában lap
-                    if(modules.GetDataModule().GetDeckAmount(playerKey) > 0)
-                    {
-                        modules.GetGameModule().SetSwitchType(CardListTarget.Field);
-
-                        //Ha emberek a választó fél
-                        if (modules.GetGameModule().IsThisPlayerHuman(ownKey))
-                        {
-                            modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayCardList(playerKey, CardListFilter.None, 0));
-                        }
-
-                        //Ha bot
-                        else
-                        {
-                            modules.GetGameModule().SetSelectionAction(SkillEffectAction.PickCardForSwitch);
-                        }
-                    }
-
-                    //Ha nincs elég lapja a választott játékosnak
-                    else 
-                    {
-                        //Ha játékos, akkor erről tájékoztatást kap
-                        if(modules.GetGameModule().IsThisPlayerHuman(ownKey))
-                        {
-                            modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayNotification("A választott játékos nem rendelkezik elég lappal a pakliban!"));                              
-                        }
-  
-                    }
-                    
+                    modules.GetGameModule().SetSelectionAction(SkillEffectAction.PickCardForSwitch);
                 }
-               
+            }
+
+            //Ha nincs elég lapja a választott játékosnak
+            else 
+            {
+                //Ha játékos, akkor erről tájékoztatást kap
+                if(modules.GetGameModule().IsThisPlayerHuman(ownKey))
+                {
+                    modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayNotification("A választott játékos nem rendelkezik elég lappal a pakliban!"));                              
+                }
+
             }
         }
 
         public void HandleChangeOfCardOrder(List<Card> cards, int playerKey)
         {
-            //Ha az akció tartalékolás volt
             if (modules.GetGameModule().GetCurrentAction() == SkillEffectAction.Reorganize)
             {
                 modules.GetDataModule().ChangeCardOrderInDeck(cards, playerKey, 0);

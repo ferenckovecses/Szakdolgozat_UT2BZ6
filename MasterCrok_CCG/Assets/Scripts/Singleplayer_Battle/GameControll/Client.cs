@@ -43,7 +43,6 @@ namespace ClientControll
         private GameObject statPanel;
         private GameObject messageText;
         private GameObject cardList;
-        private ClientStates currentState;
         private int keyOfTarget;
 
         //Létrehozáskor fut le
@@ -168,6 +167,7 @@ namespace ClientControll
                     temp.name = "Opponent " + i.ToString();
                     GetFieldFromKey(playerKeys[i]).ChangeOpenHand(false);
                     GameObject ai_agent = Instantiate(aiAgent, temp.transform.position, Quaternion.identity, temp.transform);
+                    ai_agent.name = "AI_Agent";
                     ai_agent.GetComponent<AI>().AddKey(playerKeys[i]);
                 }
 
@@ -228,11 +228,6 @@ namespace ClientControll
         {
             //endTurnButton.interactable = newValue;
             endTurnButton.gameObject.SetActive(newValue);
-        }
-
-        public void SetClientStates(ClientStates newState)
-        {
-            this.currentState = newState;
         }
 
         //Játék folytatása
@@ -382,9 +377,20 @@ namespace ClientControll
             return this.isDetailsFixed;
         }
         //Shortcut: Visszaadja a listában szereplő gameObjecten lévő scriptet, hogy közvetlenül referálhassuk 
-        public Player_UI GetFieldFromKey(int key)
+        public PlayerField GetFieldFromKey(int key)
         {
-            return this.playerFields[key].GetComponent<Player_UI>();
+            return this.playerFields[key].GetComponent<PlayerField>();
+        }
+
+        private GameObject GetGameObjectByKey(int playerKey)
+        {
+            return this.playerFields[playerKey];
+        }
+
+        public AI GetBot(int playerKey)
+        {
+            GameObject temp = GetGameObjectByKey(playerKey);
+            return temp.transform.Find("AI_Agent").GetComponent<AI>();
         }
         #endregion
 

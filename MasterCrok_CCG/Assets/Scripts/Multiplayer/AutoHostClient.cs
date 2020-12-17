@@ -2,29 +2,30 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
+using UnityEngine.SceneManagement;
 
 public class AutoHostClient : MonoBehaviour
 {
-	[SerializeField] private NetworkManager networkManager;
+	private NetworkManager networkManager;
 
 	private void Start()
 	{
-		//Not a headless build
-		if(!Application.isBatchMode)
-		{
-			Debug.Log("***Client build***");
-			networkManager.StartClient();
-		}
+		networkManager = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
+	}
 
-		else 
-		{
-			Debug.Log("***Server build***");
-		}
+	public void HostLocal()
+	{
+		networkManager.StartHost();
 	}
 
 	public void JoinLocal()
 	{
 		networkManager.networkAddress = "localhost";
 		networkManager.StartClient();
+	}
+
+	public void ReturnMenu()
+	{
+		SceneManager.LoadScene("Main_Menu");
 	}
 }

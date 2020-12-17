@@ -43,9 +43,6 @@ namespace GameControll
 
         public static bool readyForAction = false;
 
-        //Gyakori interakciók
-        private Interactions interactions;
-
         //Fázisok
         private OrderChangeState orderChangeState;
         private PreparationState preparationState;
@@ -72,24 +69,21 @@ namespace GameControll
             //Modulok beállítása
             this.modules = Module_Controller.CreateModuleController(this, factory, client);
 
-            //Interakciók beállítása
-            this.interactions = new Interactions(this, modules);
-
             //Játékfázisok beállítása
-            this.orderChangeState = new OrderChangeState(modules, this, interactions);
-            this.preparationState = new PreparationState(modules, this, interactions);
-            this.starterDrawState = new StarterDrawState(modules, this, interactions);
-            this.settingRoleState = new SettingRoleState(modules, this, interactions);
-            this.selectFightTypeState = new SelectFightTypeState(modules, this, interactions);
-            this.summonState = new SummonState(modules, this, interactions);
-            this.revealCardsState = new RevealCardsState(modules, this, interactions);
-            this.quickSkillState = new QuickSkillState(modules, this, interactions);
-            this.mainSkillState = new MainSkillState(modules, this, interactions);
-            this.compareState = new CompareState(modules, this, interactions);
-            this.lateSkillState = new LateSkillState(modules, this, interactions);
-            this.cardPutAwayState = new CardPutAwayState(modules, this, interactions);
-            this.blindMatchState = new BlindMatchState(modules, this, interactions);
-            this.resultState = new ResultState(modules, this, interactions);
+            this.orderChangeState = new OrderChangeState(modules, this);
+            this.preparationState = new PreparationState(modules, this);
+            this.starterDrawState = new StarterDrawState(modules, this);
+            this.settingRoleState = new SettingRoleState(modules, this);
+            this.selectFightTypeState = new SelectFightTypeState(modules, this);
+            this.summonState = new SummonState(modules, this);
+            this.revealCardsState = new RevealCardsState(modules, this);
+            this.quickSkillState = new QuickSkillState(modules, this);
+            this.mainSkillState = new MainSkillState(modules, this);
+            this.compareState = new CompareState(modules, this);
+            this.lateSkillState = new LateSkillState(modules, this);
+            this.cardPutAwayState = new CardPutAwayState(modules, this);
+            this.blindMatchState = new BlindMatchState(modules, this);
+            this.resultState = new ResultState(modules, this);
 
             //Játékfázisok és státuszok alapértékezése
             this.currentPhase = MainGameStates.SetupGame;
@@ -281,7 +275,18 @@ namespace GameControll
                 currentAction = SkillEffectAction.TossCard;
                 currentSelectionType = CardListTarget.Hand;
 
-                modules.GetSkillModule().MakePlayerChooseCard();
+                //Ha a játékos, feldobjuk neki a lap választó ablakot
+                if(IsTheActivePlayerHuman())
+                {
+                    modules.GetSkillModule().MakePlayerChooseCard();
+                }
+
+                //Ha Bot, akkor jelzünk neki, hogy eldobásra várunk
+                else
+                {
+                    modules.GetClientModule().TriggerAction(currentKey);
+                }
+
                 yield return new WaitForSeconds((GameSettings_Controller.drawTempo)/2);
                 ActionFinished();  
             }

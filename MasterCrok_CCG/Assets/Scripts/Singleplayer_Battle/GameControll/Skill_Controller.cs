@@ -47,17 +47,28 @@ namespace GameControll
 		//Cserélhet kézből egy nem Master Crok lapot
 		private void UnexpectedAttack()
 		{
-
 			//Jelezzük a vezérlőnek, hogy cserére készülünk
 			modules.GetGameModule().SetSelectionAction(SkillEffectAction.Switch);
 			modules.GetGameModule().SetSwitchType(CardListTarget.Hand);
+			
+			//Ha a játékos ember, jelenítsük meg a kártya választó képernyőt
+			if(modules.GetGameModule().IsTheActivePlayerHuman())
+			{
+				MakePlayerChooseCard(CardListFilter.NoMasterCrok);
+			}
 
-			MakePlayerChooseCard();
+			//Ellenkező esetben a megfelelő Bot számára jelzünk, hogy cseréljen
+			else
+			{
+				BotAction();
+			}
 		}
 
 		//Megváltoztathatjuk a harc típusát
 		private void PlotTwist()
 		{
+			modules.GetGameModule().SetSelectionAction(SkillEffectAction.StatChange);
+
 			modules.GetGameModule().StartCoroutine(TriggerStatChange());
 		}
 
@@ -90,6 +101,7 @@ namespace GameControll
 				{
 					modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayNotification("Nincsenek vesztes lapok!"));
 				}
+
 				modules.GetGameModule().Pass();
 			}
 		}
@@ -107,8 +119,6 @@ namespace GameControll
             {
             	yield return null;
             }
-
-            Debug.Log("First Cut");
 
             int ownKey = modules.GetGameModule().GetCurrentKey();
 
@@ -132,6 +142,7 @@ namespace GameControll
 
 		}
 
+		//Feltámaszt egy lapot a vesztesek közül
 		private void Revive()
 		{
 			//Van-e feltámasztható vesztes
@@ -141,7 +152,17 @@ namespace GameControll
 				modules.GetGameModule().SetSelectionAction(SkillEffectAction.Revive);
 				modules.GetGameModule().SetSwitchType(CardListTarget.Losers);
 
-				MakePlayerChooseCard();
+				//Ha a játékos ember, jelenítsük meg a kártya választó képernyőt
+				if(modules.GetGameModule().IsTheActivePlayerHuman())
+				{
+					MakePlayerChooseCard();
+				}
+
+				//Ellenkező esetben a megfelelő Bot számára jelzünk
+				else
+				{
+					BotAction();
+				}
 			}
 
 			else
@@ -149,10 +170,9 @@ namespace GameControll
 				modules.GetGameModule().Pass();
 			}
 		}
-		//Ütközet indítása: Felhúz mindenkie +1 lapot a pakli tetejéről
+		//Ütközet indítása: Felhúz mindenki +1 lapot a pakli tetejéről
 		private void GreatFight()
 		{
-
 			foreach (int key in modules.GetDataModule().GetKeyList())
 			{
 				if(modules.GetDataModule().GetCardsFromPlayer(key, CardListTarget.Field).Count < 4)
@@ -160,7 +180,6 @@ namespace GameControll
 					modules.GetGameModule().DrawTheCard(key, DrawTarget.Field, DrawType.Normal, SkillState.Pass);
 				}
 			}
-
 			modules.GetGameModule().SkillFinished();
 		}
 
@@ -169,11 +188,16 @@ namespace GameControll
 		{
 			modules.GetGameModule().SetSelectionAction(SkillEffectAction.Execute);
 			modules.GetGameModule().SetSwitchType(CardListTarget.Hand);
-			int currentKey = modules.GetGameModule().GetCurrentKey();
-			//Ha botról van szó
+
+			//Ha a játékosról van szó, adunk neki jelzést
 			if(modules.GetGameModule().IsTheActivePlayerHuman())
 			{
 				modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayNotification("Nevezz meg egy játékost, aki eldobjon egy kártyát!"));
+			}
+
+			else
+			{
+				BotAction();
 			}
 		}
 
@@ -638,6 +662,12 @@ namespace GameControll
 
         #region Skill Actions
 
+		private void BotAction()
+		{
+			int playerKey = modules.GetGameModule().GetCurrentKey();
+			modules.GetClientModule().TriggerAction(playerKey);
+		}
+
         //Jelzünk a játékvezérlőnek, hogy a képesség végzett, mehet a játék tovább
         private void Response()
 		{
@@ -680,7 +710,7 @@ namespace GameControll
 		{
 			int currentKey = modules.GetGameModule().GetCurrentKey();
 
-			//Ha kézben kell keresni a választott lapot
+			//Ha a vesztesek közül keresünk lapot épp
 			if (modules.GetGameModule().GetCurrentListType() == CardListTarget.Losers)
 			{
 				//Adatok kinyerése
@@ -704,18 +734,20 @@ namespace GameControll
 		//Megváltoztatásra kerül az aktív harctípus
 		public IEnumerator TriggerStatChange()
 		{
+			//Ha a játékos dönthet
 			if (modules.GetGameModule().IsTheActivePlayerHuman())
 			{
 				modules.GetGameModule().ShowStatBox();
-				yield return modules.GetGameModule().WaitForEndOfAction();
 			}
 
+			//Ellenkező esetben a megfelelő Bot számára jelzünk
 			else
 			{
-				int currentKey = modules.GetGameModule().GetCurrentKey();
-				modules.GetAImodule().DecideNewStat(currentKey);
-				modules.GetGameModule().SkillFinished();
+				BotAction();
 			}
+
+			yield return modules.GetGameModule().WaitForEndOfAction();
+			modules.GetGameModule().SkillFinished();
 		}
 
 		//Megváltoztatja a harc típusát egy megadott értékre
@@ -728,22 +760,11 @@ namespace GameControll
 		//A játékos választ egy előre definiált paraméterekkel rendelkező kártyalistából
         public void MakePlayerChooseCard(CardListFilter filter = CardListFilter.None, int limit = 0)
         {
-			int currentKey = modules.GetGameModule().GetCurrentKey();
+			int playerKey = modules.GetGameModule().GetCurrentKey();
 
 			//Megjelenítjük a kézben lévő lapokat, hogy a játékos választhasson közülük
-			ChooseCard(currentKey, filter, limit);
+			modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayCardList(playerKey, filter, limit));
         }
-
-        //A megadott paraméterekkel megjelenít egy kártya listát, amiből választhat a játékos
-		private void ChooseCard(int currentKey, CardListFilter filter, int limit)
-		{
-
-			//Ha ember
-			if (modules.GetGameModule().IsTheActivePlayerHuman())
-			{
-				modules.GetGameModule().StartCoroutine(modules.GetClientModule().DisplayCardList(currentKey, filter, limit));
-			}
-		}
 
 		//A játékos listáról választott lapjával kezdünk valamit
 		public void HandleSelectionForSkill(int selectedCard, int currentKey)
@@ -752,7 +773,6 @@ namespace GameControll
             if (modules.GetGameModule().GetCurrentAction() == SkillEffectAction.Switch)
             {
                 SwitchCard(currentKey, modules.GetGameModule().GetActiveCardID(), selectedCard);
-                modules.GetGameModule().SetCurrentAction(SkillEffectAction.None);
                 modules.GetGameModule().ActionFinished();
             }
 
@@ -765,7 +785,7 @@ namespace GameControll
                 if (otherCard.GetCardID() == 3)
                 {
                     modules.GetGameModule().Pass();
-                    modules.GetGameModule().SetCurrentAction(SkillEffectAction.None);
+                    
                 }
 
                 //Amúgy meg használjuk a másik lap képességét
@@ -780,15 +800,14 @@ namespace GameControll
             else if (modules.GetGameModule().GetCurrentAction() == SkillEffectAction.Revive)
             {
                 ReviveCard(selectedCard);
-                modules.GetGameModule().SetCurrentAction(SkillEffectAction.None);
                 modules.GetGameModule().ActionFinished();
             }
 
             else if(modules.GetGameModule().GetCurrentAction() == SkillEffectAction.TossCard)
             {
+				Debug.Log("Tossed");
                 modules.GetDataModule().TossCardFromHand(currentKey, selectedCard);
                 modules.GetClientModule().TossCard(currentKey, selectedCard);
-                modules.GetGameModule().SetCurrentAction(SkillEffectAction.None);
                 modules.GetGameModule().ActionFinished();
             }
 
@@ -814,7 +833,6 @@ namespace GameControll
                 modules.GetDataModule().TossCardFromHand(currentKey, selectedCard);
                 modules.GetClientModule().TossCard(currentKey, selectedCard);
 
-                modules.GetGameModule().SetCurrentAction(SkillEffectAction.None);
                 modules.GetGameModule().ActionFinished();
             }
 
@@ -832,6 +850,8 @@ namespace GameControll
             	modules.GetGameModule().ActionFinished();
             }
 
+			Debug.Log("Skill Finished!");
+			modules.GetGameModule().SetCurrentAction(SkillEffectAction.None);
             modules.GetGameModule().SkillFinished();
 		}
 

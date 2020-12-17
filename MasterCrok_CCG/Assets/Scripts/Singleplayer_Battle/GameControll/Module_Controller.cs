@@ -16,7 +16,6 @@ namespace GameControll
 	    private Input_Controller inputModule;
 	    private Client_Controller clientModule;
 	    private Skill_Controller skillModule;
-	    private AI_Controller AI_module;
 
         public static Module_Controller CreateModuleController(GameState_Controller in_gameModule, CardFactory factory, Client client)
         {
@@ -35,13 +34,7 @@ namespace GameControll
 	    	this.inputModule = new Input_Controller(this);
 	    	this.clientModule = new Client_Controller(client, this);
 	    	this.skillModule = new Skill_Controller(this);
-	    	this.AI_module = new AI_Controller(this);
 	    }
-
-	    public AI_Controller GetAImodule()
-        {
-            return this.AI_module;
-        }
 
         public Skill_Controller GetSkillModule()
         {

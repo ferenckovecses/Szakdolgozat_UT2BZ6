@@ -13,11 +13,15 @@ public class Multiplayer_Player : NetworkBehaviour
 	public string playerName = "Player";
 
 	private NetworkMatchChecker networkMatchChecker;
+	private GameObject lobbyUI; 
 
 	void Start()
 	{
 		networkMatchChecker = GetComponent<NetworkMatchChecker>();
+	}
 
+	public override void OnStartClient()
+	{
 		if(Profile_Controller.playerProfile != null)
 		{
 			this.playerName = Profile_Controller.playerProfile.GetUsername();
@@ -30,8 +34,18 @@ public class Multiplayer_Player : NetworkBehaviour
 
 		else
 		{
-			UILobby.instance.SpawnPlayerPrefab(this);
+			lobbyUI = UILobby.instance.SpawnPlayerPrefab(this);
 		}
+	}
+
+	public override void OnStopClient()
+	{
+		ClientDisconnect();
+	}
+
+	public override void OnStopServer()
+	{
+		ServerDisconnect();
 	}
 
 	//****Host Game****
@@ -131,5 +145,40 @@ public class Multiplayer_Player : NetworkBehaviour
 	private void TargetBeginGame()
 	{
 		SceneManager.LoadScene("Multiplayer_Battle", LoadSceneMode.Additive);
+	}
+
+	//****Disconnect Game****
+
+	public void DisconnectGame()
+	{
+		CmdDisconnectGame();
+	}
+
+	//Kliens -> Szerver
+	[Command]
+	private void CmdDisconnectGame()
+	{
+		ServerDisconnect();
+	}
+
+	private void ServerDisconnect()
+	{
+		Matchmaker.instance.PlayerDisconnected(this, matchID);
+		RcpDisconnectGame();
+		networkMatchChecker.matchId = string.Empty.ToGuid();
+	}
+
+	[ClientRpc]
+	private void RcpDisconnectGame()
+	{
+		ClientDisconnect();
+	}
+
+	private void ClientDisconnect()
+	{
+		if(lobbyUI != null)
+		{
+			Destroy(lobbyUI);
+		}
 	}
 }

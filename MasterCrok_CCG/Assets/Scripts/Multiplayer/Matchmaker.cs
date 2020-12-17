@@ -47,7 +47,6 @@ public class Matchmaker : NetworkBehaviour
 		{
 			matchIDList.Add(matchID);
 			matches.Add(new Match(matchID,host));
-			Debug.Log("Match generated");
 			playerIndex = 1;
 			return true;
 		}
@@ -106,6 +105,26 @@ public class Matchmaker : NetworkBehaviour
 		}
 	}
 
+	public void PlayerDisconnected(Multiplayer_Player player, string _matchID)
+	{
+		for(int i = 0; i < matches.Count; i++)
+		{
+			if(matches[i].matchID == _matchID)
+			{
+				int playerIndex = matches[i].players.IndexOf(player.gameObject);
+				matches[i].players.RemoveAt(playerIndex);
+
+				if(matches[i].players.Count == 0)
+				{
+					matches.RemoveAt(i);
+					matchIDList.Remove(_matchID);
+				}
+
+				break;
+			}
+		}
+	}
+
 	public static string GetRandomMatchID()
 	{
 		string id = string.Empty;
@@ -123,8 +142,6 @@ public class Matchmaker : NetworkBehaviour
 				id += (random - 26).ToString();	
 			}
 		}
-
-		Debug.Log($"Random match ID: {id}");
 
 		return id;
 	}

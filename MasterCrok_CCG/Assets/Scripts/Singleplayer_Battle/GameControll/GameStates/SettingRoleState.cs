@@ -6,11 +6,10 @@ namespace GameControll
 {
 	public class SettingRoleState : GameState
 	{
-		public SettingRoleState(Module_Controller in_module, GameState_Controller in_controller, Interactions in_interactions) : base(in_module, in_controller, in_interactions)
+		public SettingRoleState(Module_Controller in_module, GameState_Controller in_controller) : base(in_module, in_controller)
 		{
 			this.modules = in_module;
 			this.controller = in_controller;
-			this.interactions = in_interactions;
 		}
 
 		public override void Init()
@@ -33,8 +32,6 @@ namespace GameControll
 
                 //A kézben lévő lapokra érvényesítjük a bónuszokat, így az a következő fázisban már látható hatással bír
                 modules.GetDataModule().GetPlayerWithKey(key).ApplyFieldBonusToAll();
-
-                modules.GetClientModule().StartOfRound();
             }
 
             ChangeState();

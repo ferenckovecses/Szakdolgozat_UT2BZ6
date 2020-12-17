@@ -11,11 +11,10 @@ namespace GameControll
     	private int currentKey;
 
 
-		public MainSkillState(Module_Controller in_module, GameState_Controller in_controller, Interactions in_interactions) : base(in_module, in_controller, in_interactions)
+		public MainSkillState(Module_Controller in_module, GameState_Controller in_controller) : base(in_module, in_controller)
 		{
 			this.modules = in_module;
             this.controller = in_controller;
-            this.interactions = in_interactions;
 		}
 
 		public override void Init()
@@ -34,9 +33,6 @@ namespace GameControll
 
             controller.SetCurrentAction(SkillEffectAction.None);
 
-            controller.StartCoroutine(modules.GetClientModule().DisplayNotification("Képesség fázis"));
-            yield return controller.WaitForEndOfText();
-
             //Addig megyünk, amíg mindenki el nem használja vagy passzolja a képességét
             while (!everyoneDecided)
             {
@@ -45,11 +41,9 @@ namespace GameControll
                 {
                     currentKey = playerKey;
                     controller.SetCurrentKey(currentKey);
-                    Debug.Log($"Key: {currentKey}");
-
                     controller.NewSkillCycle(currentKey);
 
-                    modules.GetClientModule().WaitForSkill();
+                    Debug.Log($"Current Player: {currentKey}");
 
                     //Ha ember, akkor várunk a döntésre
                     if (modules.GetDataModule().GetPlayerWithKey(currentKey).GetPlayerStatus())
@@ -83,8 +77,6 @@ namespace GameControll
 
                     controller.SetCurrentAction(SkillEffectAction.None);
 
-                    modules.GetClientModule().SkillStateEnded();
-
                     if(controller.GetInstantWinStatus())
                     {
                     	controller.SetInstantWinStatus(false);
@@ -103,8 +95,6 @@ namespace GameControll
                 {
                     everyoneDecided = true;
                 }
-
-
             }
 
             ChangeState();

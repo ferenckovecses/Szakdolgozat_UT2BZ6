@@ -8,7 +8,7 @@ namespace ClientControll
 	public class AI : MonoBehaviour
 	{
 		private GameState_Controller controller;
-		private Player_UI field;
+		private PlayerField field;
 
 		private string agentName;
 		private int playerKey;
@@ -28,18 +28,22 @@ namespace ClientControll
 		private void Awake()
 		{
 			this.controller = GameObject.Find("BattleController").GetComponent<GameState_Controller>();
-			this.field = transform.parent.GetComponent<Player_UI>();
+			this.field = transform.parent.GetComponent<PlayerField>();
 			this.agentName = field.GetName();
 			this.currentState = AI_States.Idle;
 			this.previousState = MainGameStates.SetupGame;
 			this.updateNeeded = false;
 		}
 
+        public void AddKey(int newKey)
+	    {
+	    	this.playerKey = newKey;
+	    }
+
 	    // Update is called once per frame
 	    private void Update()
 	    {
-	    	//Figyeli, hogy a mi körünk van-e.
-	    	CheckForTurn();
+	    	RefreshState();
 
 	    	if(updateNeeded)
 	    	{
@@ -49,17 +53,23 @@ namespace ClientControll
 	    		{
 	    			case AI_States.Idle: break;
 	    			case AI_States.ChooseStat: controller.StartCoroutine(ChooseActiveStat()); break;
-	    			case AI_States.SummonCard: Debug.Log($"{agentName}: I summon!"); controller.StartCoroutine(SummonCard()); break;
-	    			case AI_States.DecideSkill: Debug.Log($"{agentName}: I decide my card skill!"); controller.StartCoroutine(DecideSkill()); break;
+	    			case AI_States.SummonCard: controller.StartCoroutine(SummonCard()); break;
+	    			case AI_States.DecideSkill: controller.StartCoroutine(DecideSkill()); break;
 	    			default: break;
 	    		}
 	    	}   
 	    }
 
-	    private void CheckForTurn()
+        //Visszaadja, hogy a bot köre van-e épp
+        private bool CheckTurnStatus()
+        {
+            return (this.playerKey == controller.GetCurrentKey());
+        }
+
+	    private void RefreshState()
 	    {
-	    	//Ha az aktív kulcs az övé és az aktuális fázisban még nem váltottunk, illetve engedélyezett az akció
-	    	if(this.playerKey == controller.GetCurrentKey()
+	    	//Ha az aktív kulcs alapján a bot következik és az aktuális fázisban még nem frissítettünk
+	    	if( CheckTurnStatus()
 	    		&& (controller.GetGameState() != previousState)
 	    		&& GameState_Controller.readyForAction)
 	    	{
@@ -83,10 +93,15 @@ namespace ClientControll
             {
             	yield return null;
             }
-            this.cardsInHand = Module_Controller.instance.GetDataModule().GetCardsFromPlayer(playerKey, CardListTarget.Hand);
-            CardStatType stat = Bot_Behaviour.ChooseFightType(this.cardsInHand);
-            field.ReportStatChoice(stat);
+
+            if(CheckTurnStatus())
+            {
+                this.cardsInHand = Module_Controller.instance.GetDataModule().GetCardsFromPlayer(playerKey, CardListTarget.Hand);
+                CardStatType stat = Bot_Behaviour.ChooseFightType(this.cardsInHand);
+                field.ReportStatChoice(stat);
+            }
 	    }
+
 
 	    private IEnumerator SummonCard()
 	    {
@@ -96,55 +111,61 @@ namespace ClientControll
             	yield return null;
             }
 
-            GetCurrentContext();
+            if(CheckTurnStatus())
+            {
+                GetCurrentContext();
 
-            //Gondolkodási idő
-            yield return new WaitForSeconds(GameSettings_Controller.drawTempo * UnityEngine.Random.Range(15, 30));
+                //Gondolkodási idő
+                yield return new WaitForSeconds(GameSettings_Controller.drawTempo * UnityEngine.Random.Range(15, 30));
 
-            //Meghozzuk a döntést
-            int cardIndex = Bot_Behaviour.ChooseRightCard(this.cardsInHand, controller.GetActiveStat());
+                //Meghozzuk a döntést
+                int cardIndex = Bot_Behaviour.ChooseRightCard(this.cardsInHand, controller.GetActiveStat());
 
-            //Lerakatjuk a kártyát a UI-ban
-            field.SummonCard(cardIndex);
+                //Lerakatjuk a kártyát a UI-ban
+                field.SummonCard(cardIndex);
+            }
+
 	    }
 
 	    private IEnumerator DecideSkill()
 	    {
+            Debug.Log("Skill decision lock");
+
 	    	//Várunk, hogy a főszál beérjen a lockhoz
             while (controller.GetTurnWaitStatus()) 
             {
             	yield return null;
             }
 
-            GetCurrentContext();
-            Debug.Log($"Card count: {cardCount}\nCurrent key: {controller.GetCurrentKey()}");
-            for(var id = 0; id < cardCount; id++)
+            Debug.Log("Skill decision started");
+
+            if(CheckTurnStatus())
             {
-                if(Module_Controller.instance.GetClientModule().AskCardSkillStatus(playerKey, id) == SkillState.NotDecided)
+                GetCurrentContext();
+                for(var id = 0; id < cardCount; id++)
                 {
-                    //GetSkillChoiceFromAIBrain
-                    SkillState choice = Bot_Behaviour.ChooseSkill(id, cardsInHand, cardsOnField, opponentCards, winAmount);
-                    Module_Controller.instance.GetInputModule().ReportSkillStatusChange(SkillState.Use, id, false);
+                    if(Module_Controller.instance.GetClientModule().AskCardSkillStatus(playerKey, id) == SkillState.NotDecided)
+                    {
+                        Debug.Log("Card Found!");
+                        SkillState choice = Bot_Behaviour.ChooseSkill(id, cardsInHand, cardsOnField, opponentCards, winAmount);
+                        Module_Controller.instance.GetInputModule().ReportSkillStatusChange(SkillState.Use, id, false);
 
-                    controller.StartCoroutine(HandleSkills());
+                        controller.StartCoroutine(HandleSkills());
 
-                    //Skill lock
-                    yield return controller.WaitForEndOfSkill();
+                        //Gondolkodási idő
+                        yield return new WaitForSeconds(0.05f);
+
+                        //Skill lock
+                        yield return controller.WaitForEndOfSkill();
+                    }
                 }
+
+                //Az AI végzett a körével a döntések után
+                Module_Controller.instance.GetDataModule().GetPlayerWithKey(playerKey).SetStatus(PlayerTurnStatus.Finished);
+
+                controller.TurnFinished();
             }
 
-            //Gondolkodási idő
-            yield return new WaitForSeconds(0.05f);
-
-            //Az AI végzett a körével a döntések után
-            Module_Controller.instance.GetDataModule().GetPlayerWithKey(playerKey).SetStatus(PlayerTurnStatus.Finished);
-
-            controller.TurnFinished();
-	    }
-
-	    public void AddKey(int newKey)
-	    {
-	    	this.playerKey = newKey;
 	    }
 
 	    //Lekéri az aktuális játékhelyzetet
@@ -157,6 +178,126 @@ namespace ClientControll
             this.winAmount = Module_Controller.instance.GetDataModule().GetWinnerAmount(playerKey);
         }
 
+        //Jelzés a Botnak, hogy bizonyos akciót el kell végeznie
+        public void TriggerAction()
+        {
+            switch(controller.GetCurrentAction())
+            {
+                case SkillEffectAction.TossCard: controller.StartCoroutine(TossCard()); break;
+                case SkillEffectAction.Switch: controller.StartCoroutine(SwitchCards()); break;
+                case SkillEffectAction.StatChange: controller.StartCoroutine(StatChange()); break;
+                case SkillEffectAction.Revive: controller.StartCoroutine(ReviveCard()); break;
+                case SkillEffectAction.Execute: controller.StartCoroutine(ExecuteCard()); break;
+                default: break;
+            }
+        }
+
+        #region Actions
+
+        //Eldob a kézből egy lapot
+        private IEnumerator TossCard()
+        {
+            //Várunk, hogy a főszál beérjen a lockhoz
+            while (controller.GetSkillWaitStatus()) 
+            {
+            	yield return null;
+            }
+
+            //Csak akkor dob el lapot, ha van
+            if(cardsInHand.Count >= 1)
+            {
+                int cardID = Bot_Behaviour.WhomToToss(cardsInHand);
+                Module_Controller.instance.GetInputModule().HandleCardSelection(cardID, this.playerKey);
+            }
+
+            else 
+            {
+                controller.ActionFinished();
+            }
+        }
+
+        //Lapot cserél
+        private IEnumerator SwitchCards()
+        {
+            //Várunk, hogy a főszál beérjen a lockhoz
+            while (controller.GetSkillWaitStatus()) 
+            {
+            	yield return null;
+            }
+
+            int handID = -1;
+
+            //Csere kézből
+            if (controller.GetCurrentListType() == CardListTarget.Hand)
+            {
+                //Adatok lekérése
+                List<Card> cardsInHand = Module_Controller.instance.GetDataModule().GetCardsFromPlayer(this.playerKey, CardListTarget.Hand);
+                List<Card> cardsOnField = Module_Controller.instance.GetDataModule().GetCardsFromPlayer(this.playerKey, CardListTarget.Field);
+                List<PlayerCardPairs> opponentCards = Module_Controller.instance.GetDataModule().GetOpponentsCard(this.playerKey);
+
+                //Döntés meghozása
+                handID = Bot_Behaviour.HandSwitch(cardsInHand, cardsOnField, opponentCards, controller.GetActiveStat());
+
+                //Cserélés
+                Module_Controller.instance.GetInputModule().HandleCardSelection(handID, this.playerKey);
+                //Module_Controller.instance.GetSkillModule().SwitchCard(this.playerKey, controller.GetActiveCardID(), handID);
+            }
+
+            Debug.Log("Csere volt!");
+        }
+
+        //Megváltoztatja a harctípust
+        private IEnumerator StatChange()
+        {
+            //Várunk, hogy a főszál beérjen a lockhoz
+            while (controller.GetSkillWaitStatus()) 
+            {
+            	yield return null;
+            }
+
+            GetCurrentContext();
+
+            //AI agy segítségét hívjuk a döntésben
+            CardStatType newStat = Bot_Behaviour.ChangeFightType(cardsOnField,
+                opponentCards, controller.GetActiveStat());
+
+            Module_Controller.instance.GetInputModule().ReportStatChange(newStat);
+        }
+
+        //Visszavesz egy lapot a vesztesek közül
+        private IEnumerator ReviveCard()
+        {
+            //Várunk, hogy a főszál beérjen a lockhoz
+            while (controller.GetSkillWaitStatus()) 
+            {
+            	yield return null;
+            }
+
+            List<Card> cards = Module_Controller.instance.GetDataModule().GetCardsFromPlayer(this.playerKey, CardListTarget.Losers);
+            int cardID = Bot_Behaviour.WhomToRevive(cards);
+            Module_Controller.instance.GetInputModule().HandleCardSelection(cardID, this.playerKey);
+        }
+
+        //Eldobat egy lapot egy másik játékossal
+        private IEnumerator ExecuteCard()
+        {
+            //Várunk, hogy a főszál beérjen a lockhoz
+            while (controller.GetSkillWaitStatus()) 
+            {
+            	yield return null;
+            }
+
+            List<int> temp = Module_Controller.instance.GetDataModule().GetOtherKeyList(this.playerKey);
+            this.choosenPlayersKey = Bot_Behaviour.WhichPlayerToExecute(temp);
+
+            Module_Controller.instance.GetInputModule().ReportNameBoxTapping(this.choosenPlayersKey);
+
+            //Várunk, amíg véget ér a skill
+            yield return controller.WaitForEndOfAction();
+        }
+
+        #endregion
+
         //Kezeli a képeségekkel járó különböző plusz folyamatokat
         private IEnumerator HandleSkills()
         {
@@ -166,24 +307,10 @@ namespace ClientControll
             	yield return null;
             }
 
-            Debug.Log($"{agentName}: I handle the skill");
-
             //Ha cseréről van szó
             if (controller.GetCurrentAction() == SkillEffectAction.Switch)
             {
-                int handID = -1;
-
-                //Ha kézből cserélünk
-                if (controller.GetCurrentListType() == CardListTarget.Hand)
-                {
-                    handID = Bot_Behaviour.HandSwitch(
-                        Module_Controller.instance.GetDataModule().GetCardsFromPlayer(this.playerKey, CardListTarget.Hand),
-                        Module_Controller.instance.GetDataModule().GetCardsFromPlayer(this.playerKey, CardListTarget.Field),
-                        Module_Controller.instance.GetDataModule().GetOpponentsCard(this.playerKey), 
-                        controller.GetActiveStat());
-
-                    Module_Controller.instance.GetSkillModule().SwitchCard(this.playerKey, controller.GetActiveCardID(), handID);
-                }
+                
             }
 
             //Ha skill lopásról van szó
@@ -197,23 +324,6 @@ namespace ClientControll
                 Module_Controller.instance.GetInputModule().HandleCardSelection(cards[index].cardPosition, cards[index].playerKey);
                 yield break;
             }
-
-            //Ha felélesztésről van szó
-            else if (controller.GetCurrentAction() == SkillEffectAction.Revive)
-            {
-                List<Card> cards = Module_Controller.instance.GetDataModule().GetCardsFromPlayer(this.playerKey, CardListTarget.Losers);
-                int cardID = Bot_Behaviour.WhomToRevive(cards);
-                Module_Controller.instance.GetInputModule().HandleCardSelection(cardID, this.playerKey);
-            }
-
-            else if(controller.GetCurrentAction() == SkillEffectAction.Execute)
-             {
-                List<int> temp = Module_Controller.instance.GetDataModule().GetOtherKeyList(this.playerKey);
-                this.choosenPlayersKey = Bot_Behaviour.WhichPlayerToExecute(temp);
-
-                Module_Controller.instance.GetInputModule().ReportNameBoxTapping(this.choosenPlayersKey);
-                yield return controller.WaitForEndOfAction();
-             }
 
              else if(controller.GetCurrentAction() == SkillEffectAction.SwitchOpponentCard)
              {
@@ -246,18 +356,7 @@ namespace ClientControll
             //Ha kézből eldobásról van szó
             else if (controller.GetCurrentAction() == SkillEffectAction.TossCard)
             {
-                //Csak akkor dobunk el lapot, ha van a kezünkben
-                if(cardsInHand.Count > 1)
-                {
-                    int cardID = Bot_Behaviour.WhomToToss(cardsInHand);
-                    Module_Controller.instance.GetInputModule().HandleCardSelection(cardID, this.playerKey);
-                }
-
-                else 
-                {
-                    Debug.Log("Nincs mit eldobni");
-                    controller.ActionFinished();
-                }
+                
             }
 
             else if(controller.GetCurrentAction() == SkillEffectAction.SacrificeFromHand)
@@ -289,7 +388,7 @@ namespace ClientControll
             }
 
             //Skill lock feloldása
-            controller.SkillFinished();
+            //controller.SkillFinished();
         }
 	}
 }

@@ -9,11 +9,10 @@ namespace GameControll
 		private int currentKey;
 		private bool gameOver;
 
-		public SummonState(Module_Controller in_module, GameState_Controller in_controller, Interactions in_interactions) : base(in_module, in_controller, in_interactions)
+		public SummonState(Module_Controller in_module, GameState_Controller in_controller) : base(in_module, in_controller)
 		{
 			this.modules = in_module;
 			this.controller = in_controller;
-			this.interactions = in_interactions;
 		}
 
 		public override void Init()
@@ -35,6 +34,7 @@ namespace GameControll
                 {
                     controller.StartCoroutine(modules.GetClientModule().DisplayNotification(modules.GetDataModule().GetPlayerWithKey(currentKey).GetUsername() + " kifogyott a lapokból!\nJáték vége!"));
                     yield return controller.WaitForEndOfText();
+
                     gameOver = true;
                     ChangeState();
                 }
@@ -46,14 +46,14 @@ namespace GameControll
                     controller.StartCoroutine(modules.GetClientModule().DisplayNotification(modules.GetDataModule().GetPlayerWithKey(currentKey).GetUsername() + " következik!"));
                     yield return controller.WaitForEndOfText();
 
-                    modules.GetClientModule().WaitForSummon();
-
                     //A támadó az előző fázisban már húzott lapot, de a védők húzhatnak a kör elején
                     if(modules.GetDataModule().GetPlayerWithKey(currentKey).GetRole() == PlayerTurnRole.Defender)
                     {   
                         //Húzunk fel a játékosnak 1 lapot a kör elején
                         controller.StartCoroutine(controller.DrawCardsUp(currentKey));
                         yield return controller.WaitForEndOfAction();
+
+                        //Megnézzük, hogy nincs e sok lap a kezében
                         controller.StartCoroutine(controller.CardAmountCheck());
                         yield return controller.WaitForEndOfAction();
                     }
@@ -61,7 +61,6 @@ namespace GameControll
                     //Ha a játékos státusza szerint a kártyahúzásra vár
                     if (modules.GetDataModule().GetPlayerWithKey(currentKey).GetStatus() == PlayerTurnStatus.ChooseCard)
                     {
-
                         //Engedélyezzük neki a kártyák dragelését
                         modules.GetClientModule().SetDragStatus(currentKey, true);
 
@@ -76,7 +75,6 @@ namespace GameControll
                         yield return controller.WaitForTurnsEnd();
                     }
                 }
-
                 //Átállítjuk a játékos státuszát: A képesség kiválasztására vár
                 modules.GetDataModule().GetPlayerWithKey(playerKey).SetStatus(PlayerTurnStatus.ChooseSkill);
             }

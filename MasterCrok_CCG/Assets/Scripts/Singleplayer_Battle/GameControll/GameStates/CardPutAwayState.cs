@@ -7,11 +7,10 @@ namespace GameControll
 {
 	public class CardPutAwayState : GameState
 	{
-		public CardPutAwayState(Module_Controller in_module, GameState_Controller in_controller, Interactions in_interactions) : base(in_module, in_controller, in_interactions)
+		public CardPutAwayState(Module_Controller in_module, GameState_Controller in_controller) : base(in_module, in_controller)
 		{
 			this.modules = in_module;
             this.controller = in_controller;
-            this.interactions = in_interactions;
 		}
 
 		public override void Init()
@@ -47,9 +46,6 @@ namespace GameControll
 
                 //Csökkentjük a bónuszok számlálóját és megválunk a lejárt bónuszoktól
                 modules.GetDataModule().GetPlayerWithKey(key).UpdateBonuses();
-
-                //Jelezzük a kliens felé a kör végét.
-                modules.GetClientModule().EndOfRound();
 		}
 
 		ChangeState();

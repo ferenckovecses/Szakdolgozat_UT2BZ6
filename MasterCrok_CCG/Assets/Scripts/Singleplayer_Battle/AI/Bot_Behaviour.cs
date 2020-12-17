@@ -2,11 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
+/*
+	TODO:
+	-Kártya értékének kalkulálása: (1.5 * aktív érték) + (másik kettő érték összege) + (képesség hasznossági index * képesség használhatóság[0,1]).
+	-Képesség hasznossági index: A kártyák által tárolt változó, maunálisan beállított a képesség hasznosságát figyelembe véve.
+	-
+*/
 
 public static class Bot_Behaviour
 {
 	static int randomMaxTreshold = 1000;
+
+	//Nehézségi szint szerint változtatható: minél könnyebb a játék, annál több potencionálisan szuboptimális, véletlen lépés
 	static float errorTreshold = 0.5f;
 
 	//A kézben lévő lapok értékei alapján eldönti, hogy melyik típussal játsszunk
@@ -52,9 +59,10 @@ public static class Bot_Behaviour
 		}
 	}
 
+
 	//A megadott típus alapján visszaadja a kézben lévő lapok közül az optimális megoldást
 	//Hogy ne legyen túl tökéletes a játék és "emberi hibát" is mutasson esélyt rá hogy random döntsön
-	//TODO: Képességeket is nézze és vegye számításba
+	//TODO: Képességeket is nézze és vegye számításba a fenti formula szerint
 	public static int ChooseRightCard(List<Card> cardsInHand, CardStatType type)
 	{
 
@@ -63,7 +71,7 @@ public static class Bot_Behaviour
 		//Véletlen döntés
 		if(choiceValue < randomMaxTreshold * errorTreshold)
 		{
-			return UnityEngine.Random.Range(0, cardsInHand.Count - 1);
+			return UnityEngine.Random.Range(0, cardsInHand.Count);
 		}
 
 		//"Okos" döntés
@@ -98,15 +106,15 @@ public static class Bot_Behaviour
 	}
 
 	//Eldönti, hogy a megadott kártyalistából melyik lapot áldozza be
-	//TODO: Do the AI stuff
+	//TODO: A legértéktelenebb lapot dobja el, aktív stat szorzó nélkül kalkulált értékekkel
 	public static int WhichCardToSacrifice(List<Card> winners)
 	{
-		int choiceID = UnityEngine.Random.Range(0,(winners.Count)-1);
+		int choiceID = UnityEngine.Random.Range(0,winners.Count);
 		return choiceID;
 	}
 
 	//Döntést ad arról, hogy a bot mit kezdjen a képességével.
-	//TODO: Do the AI stuff
+	//TODO: Ellenséges lapokat ellenörző behaviour tree
 	public static SkillState ChooseSkill(int activeCardID, List<Card> cardsInHand, List<Card> cardsOnField, List<PlayerCardPairs> opponentCards, int numberOfWinners)
 	{
 		int choiceValue = UnityEngine.Random.Range(1,randomMaxTreshold);
@@ -119,7 +127,7 @@ public static class Bot_Behaviour
 		else if(choiceValue >= (randomMaxTreshold * (errorTreshold / 2)) && choiceValue < (randomMaxTreshold * errorTreshold )
 			&& numberOfWinners > 0f)
 		{
-			return SkillState.Use;	//TODO: Fix Store
+			return SkillState.Store;
 		}
 
 		else 
@@ -130,17 +138,16 @@ public static class Bot_Behaviour
 	}
 
 	//Megadja, hogy váltson-e ki a gép, vagy tartsa benn a kártyáját
-	//TODO: AI stuff
 	public static int HandSwitch(List<Card> cardsInHand, List<Card> activeCards, List<PlayerCardPairs> opponentCards, CardStatType stat)
 	{
-		return UnityEngine.Random.Range(0,cardsInHand.Count-1);
+		return UnityEngine.Random.Range(0,cardsInHand.Count);
 	}
 
 	//Az új információk birtokában megváltoztatja vagy sem a harc típusát
-	//TODO: AI stuff
+	//TODO: Viselkedés fa: Ellenfelek és saját értékek összevetése, annak a választása, amelyikben a legmagasabbak vagyunk más lapokhoz képest
 	public static CardStatType ChangeFightType(List<Card> activeCards, List<PlayerCardPairs> opponentCards, CardStatType currentStat)
 	{
-		int result = UnityEngine.Random.Range(0,2);
+		int result = UnityEngine.Random.Range(0,3);
 
 		switch (result) 
 		{
@@ -153,25 +160,25 @@ public static class Bot_Behaviour
 
 	public static int WhichSkillToUse(List<PlayerCardPairs> cardList)
 	{
-		int index = UnityEngine.Random.Range(0,cardList.Count-1);
+		int index = UnityEngine.Random.Range(0,cardList.Count);
 		return index;
 	}
 
 	public static int WhomToRevive(List<Card> cardList)
 	{
-		int choice = UnityEngine.Random.Range(0,cardList.Count-1);
+		int choice = UnityEngine.Random.Range(0,cardList.Count);
 		return choice;
 	}
 
 	public static int WhomToToss(List<Card> cardList)
 	{
-		int choice = UnityEngine.Random.Range(0,cardList.Count-1);
+		int choice = UnityEngine.Random.Range(0,cardList.Count);
 		return choice;
 	}
 
 	public static int WhichPlayerToExecute(List<int> playerKeys)
 	{
-		int choice = UnityEngine.Random.Range(0,playerKeys.Count-1);
+		int choice = UnityEngine.Random.Range(0,playerKeys.Count);
 		return playerKeys[choice];
 	}
 
@@ -193,7 +200,7 @@ public static class Bot_Behaviour
 		//Ha nincs 0-nál több nyertessel rendelkező, akkor véletlen értéket adunk vissza, mert úgyis mindegy
 		if(index == -1)
 		{
-			return UnityEngine.Random.Range(0,playerWins.Count-1);
+			return UnityEngine.Random.Range(0,playerWins.Count);
 		}
 
 		else {
@@ -201,9 +208,10 @@ public static class Bot_Behaviour
 		}
 	}
 
+	//Az ellenséges lapok közül a legmagasabb kalkulált értékkel rendelkezőt váltjuk le
 	public static int WhichCardToSwitch(List<Card> cards)
 	{
-		return UnityEngine.Random.Range(0, cards.Count - 1);
+		return UnityEngine.Random.Range(0, cards.Count);
 	}
 
 	public static List<Card> OrganiseCardsInDeck(List<Card> cards, System.Random rng)

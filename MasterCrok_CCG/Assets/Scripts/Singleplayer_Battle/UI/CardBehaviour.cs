@@ -202,9 +202,9 @@ public class CardBehaviour : BaseCard
         }
     }
 
-    private Player_UI GetParentField()
+    private PlayerField GetParentField()
     {
-        return playerField.GetComponent<Player_UI>();
+        return playerField.GetComponent<PlayerField>();
     }
 
     //Ha tartalékoltuk a képességet, akkor az új ciklusban megint lehet dönteni a sorsáról 

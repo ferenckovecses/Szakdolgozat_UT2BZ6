@@ -59,3 +59,5 @@ public enum DeckStatus{Verified, Illegal};
 
 public enum AI_States{Idle, ChooseStat, SummonCard, DecideSkill, HandleSkill};
 
+public enum NodeStates{Running, Success, Failure};
+

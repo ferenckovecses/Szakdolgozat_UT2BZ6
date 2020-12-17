@@ -176,6 +176,7 @@ namespace GameControll
                 case CardListTarget.Field: cardList = modules.GetDataModule().GetCardsFromPlayer(currentKey, CardListTarget.Field, filter, limit); break;
                 default: break;
             }
+
             SkillEffectAction currentAction = modules.GetGameModule().GetCurrentAction();
 
             string msg = "";
@@ -248,39 +249,10 @@ namespace GameControll
             client.GetFieldFromKey(playerKey).Toss(cardID);
         }
 
-        #region Client State Modifiers
-
-        public void StartOfRound()
+        public void TriggerAction(int playerKey)
         {
-            client.SetClientStates(ClientStates.WaitingForTurn);
+            client.GetBot(playerKey).TriggerAction();
         }
-
-        public void WaitForSummon()
-        {
-            client.SetClientStates(ClientStates.WaitingForSummon);
-        }
-
-        public void SummonEnded()
-        {
-            client.SetClientStates(ClientStates.SummonFinished);
-        }
-
-        public void WaitForSkill()
-        {
-            client.SetClientStates(ClientStates.WaitingForSkills);
-        }
-
-        public void SkillStateEnded()
-        {
-            client.SetClientStates(ClientStates.SkillStateFinished);
-        }
-
-        public void EndOfRound()
-        {
-            client.SetClientStates(ClientStates.RoundEnded);
-        }
-
-        #endregion
 
     }
 }
